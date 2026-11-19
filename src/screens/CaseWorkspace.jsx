@@ -278,8 +278,8 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
   const exportReport = () => { setBusy('report'); api.post(`/cases/${caseId}/report`).then(() => go('report', { caseId, refresh: true }), alertLine).finally(() => setBusy('')); };
 
   const stacked = compact || mode === 'stack';
-  const gridCols = stacked ? 'minmax(0,1fr)' : mode === 'mid' ? '220px minmax(0,1fr)' : '248px minmax(0,1fr) 384px';
-  const gridAreas = stacked ? "'list' 'viewer' 'findings' 'corr'" : mode === 'mid' ? "'list viewer' 'findings findings' 'corr corr'" : "'list viewer findings' 'corr corr findings'";
+  const wide = !stacked && mode !== 'mid';
+  const gridCols = stacked ? 'minmax(0,1fr)' : mode === 'mid' ? '220px minmax(0,1fr)' : '248px minmax(0,1fr)';
   const workspacePadding = compact ? '24px 24px 48px' : '32px clamp(16px, 3vw, 40px) 56px';
   const trackLabel = { position: 'absolute', left: -76, fontSize: 11.5, fontWeight: 600, color: c.ink2 };
   const v = cs?.verdict;
@@ -327,8 +327,10 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gridTemplateAreas: gridAreas, gap: 20, alignItems: 'start', minWidth: 0 }}>
-        <section style={{ gridArea: 'list', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Keep the findings column independent so its height cannot stretch the evidence rows. */}
+      <div style={{ display: 'grid', gridTemplateColumns: wide ? 'minmax(0,1fr) 384px' : 'minmax(0,1fr)', gap: 20, alignItems: 'start', minWidth: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: 20, alignItems: 'start', minWidth: 0 }}>
+        <section style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 20, padding: '0 2px' }}>
             <span style={eyebrow}>Evidence · {evidence.length}</span>
             <span style={{ fontSize: 12, color: c.ink2 }}>originals read-only</span>
@@ -361,7 +363,8 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
           </div>
         </section>
 
-        <section style={{ gridArea: 'viewer', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
+        <section style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <span style={{ ...eyebrow, display: 'flex', alignItems: 'center', minHeight: 20, padding: '0 2px' }}>Evidence viewer</span>
           <div style={{ minWidth: 0, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8, padding: '14px 18px', borderBottom: `1px solid ${c.border}` }}>
@@ -444,38 +447,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
           </div>
         </section>
 
-        <section style={{ gridArea: 'findings', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 20, padding: '0 2px' }}>
-            <span style={eyebrow}>Findings · {F.length} <span style={{ color: '#8A8A85' }}>· {openCount} awaiting review</span></span>
-          </div>
-          {cs.status !== 'analyzed' && <Muted>{cs.status === 'draft' ? 'Not analyzed yet. Use Re-run analysis to start.' : cs.status === 'failed' ? 'The last analysis failed; see the run log.' : 'Analysis in progress…'}</Muted>}
-          {cs.status === 'analyzed' && !F.length && <Muted>No analyzer flagged anything above its threshold. See Limitations for what was not checked.</Muted>}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 10 }}>
-            {F.map((f) => (
-              <FindingCard
-                key={f.id}
-                f={f}
-                selected={sel === f.id}
-                decision={f.review.status}
-                decidedAt={f.review.decided_at}
-                reviewer={f.review.reviewer || cs.investigator}
-                altOpen={!!alt[f.id]}
-                note={f.review.note}
-                noteOpen={noteOpen === f.id}
-                draft={drafts[f.id] ?? f.review.note ?? ''}
-                onSelect={() => selectF(f)}
-                onJump={() => jump(f)}
-                onToggleAlt={() => setAlt((s) => ({ ...s, [f.id]: !s[f.id] }))}
-                onDecide={(d) => decide(f, d)}
-                onToggleNote={() => setNoteOpen((cur) => (cur === f.id ? null : f.id))}
-                onDraft={(val) => setDrafts((s) => ({ ...s, [f.id]: val }))}
-                onSaveNote={() => { review(f, { note: drafts[f.id] ?? f.review.note ?? '' }); setNoteOpen(null); }}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section style={{ gridArea: 'corr', minWidth: 0, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
+        <section style={{ minWidth: 0, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={eyebrow}>Cross-modal correlations · {rules.length} rule{rules.length === 1 ? '' : 's'} fired</span>
@@ -522,6 +494,40 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
             </div>
           )}
         </section>
+        </div>
+      </div>
+
+        <section style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 20, padding: '0 2px' }}>
+            <span style={eyebrow}>Findings · {F.length} <span style={{ color: '#8A8A85' }}>· {openCount} awaiting review</span></span>
+          </div>
+          {cs.status !== 'analyzed' && <Muted>{cs.status === 'draft' ? 'Not analyzed yet. Use Re-run analysis to start.' : cs.status === 'failed' ? 'The last analysis failed; see the run log.' : 'Analysis in progress…'}</Muted>}
+          {cs.status === 'analyzed' && !F.length && <Muted>No analyzer flagged anything above its threshold. See Limitations for what was not checked.</Muted>}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 10 }}>
+            {F.map((f) => (
+              <FindingCard
+                key={f.id}
+                f={f}
+                selected={sel === f.id}
+                decision={f.review.status}
+                decidedAt={f.review.decided_at}
+                reviewer={f.review.reviewer || cs.investigator}
+                altOpen={!!alt[f.id]}
+                note={f.review.note}
+                noteOpen={noteOpen === f.id}
+                draft={drafts[f.id] ?? f.review.note ?? ''}
+                onSelect={() => selectF(f)}
+                onJump={() => jump(f)}
+                onToggleAlt={() => setAlt((s) => ({ ...s, [f.id]: !s[f.id] }))}
+                onDecide={(d) => decide(f, d)}
+                onToggleNote={() => setNoteOpen((cur) => (cur === f.id ? null : f.id))}
+                onDraft={(val) => setDrafts((s) => ({ ...s, [f.id]: val }))}
+                onSaveNote={() => { review(f, { note: drafts[f.id] ?? f.review.note ?? '' }); setNoteOpen(null); }}
+              />
+            ))}
+          </div>
+        </section>
+
       </div>
 
       {drawer && <CustodyDrawer caseId={caseId} onClose={() => setDrawer(false)} />}
