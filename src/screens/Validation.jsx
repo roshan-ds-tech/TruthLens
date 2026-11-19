@@ -56,6 +56,9 @@ export default function Validation({ active }) {
         </div>
       </div>
 
+      <DeepfakeDetectors d={data.deepfake} />
+
+      <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.012em' }}>Manipulation analyzers · seeded test set</span>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 12 }}>
         {TILES.map((t) => (
           <div key={t.key} style={{ border: `1px solid ${c.border}`, borderRadius: 16, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12, boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
@@ -125,5 +128,55 @@ export default function Validation({ active }) {
         </section>
       </div>
     </div>
+  );
+}
+
+const DF_META = {
+  ai_image: ['image', 'AI-generated image'], ai_voice: ['graphic_eq', 'Synthetic / cloned voice'], ai_text: ['notes', 'AI-written text'],
+};
+const pct = (v) => (v == null ? '—' : `${Math.round(v * 100)}%`);
+
+// Learned deepfake detectors, measured on public labelled real-vs-AI samples (validation/run_deepfake_validation.py).
+function DeepfakeDetectors({ d }) {
+  if (!d) {
+    return (
+      <section style={{ border: `1px solid ${c.border}`, borderRadius: 16, padding: '16px 20px' }}>
+        <span style={{ fontSize: 17, fontWeight: 700 }}>Deepfake detectors</span>
+        <Muted style={{ display: 'block', marginTop: 6 }}>Not measured yet. Run python validation/run_deepfake_validation.py after downloading the samples.</Muted>
+      </section>
+    );
+  }
+  return (
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.012em' }}>Deepfake detectors · public labelled samples</span>
+        <span style={{ fontSize: 12.5, color: c.ink2 }}>5-fold cross-validated; rates at the 50% decision point</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 12 }}>
+        {d.detectors.map((t) => {
+          const [icon, name] = DF_META[t.detector] || ['help', t.detector];
+          return (
+            <div key={t.detector} style={{ border: `1px solid ${c.border}`, borderRadius: 16, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12, boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Icon name={icon} size={19} style={{ color: c.ink2 }} />
+                <span style={{ fontFamily: MONO, fontSize: 11, color: c.ink2 }}>n = {t.n} ({t.n_ai} AI · {t.n_real} human)</span>
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 700 }}>{name}</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                {[['AUC', t.auc?.toFixed(2)], ['Accuracy', pct(t.accuracy)], ['Detected', pct(t.detection_rate)]].map(([k, v]) => (
+                  <div key={k} style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: 11.5, color: c.ink2 }}>{k}</span>
+                    <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.018em' }}>{v ?? '—'}</span>
+                  </div>
+                ))}
+              </div>
+              <span style={{ fontSize: 12.5, color: c.ink2 }}>False alarms on human samples: <b style={{ color: c.ink }}>{pct(t.false_alarm_rate)}</b>{t.short_text_auc_30_words != null ? ` · AUC on 30-word snippets ${t.short_text_auc_30_words.toFixed(2)}` : ''}</span>
+              <span style={{ fontFamily: MONO, fontSize: 10.5, color: '#8A8A85', overflowWrap: 'anywhere' }}>{t.model} · {t.source}</span>
+            </div>
+          );
+        })}
+      </div>
+      <Muted style={{ fontSize: 12.5 }}>{d.label} Video frames are scored with the image detector.</Muted>
+    </section>
   );
 }

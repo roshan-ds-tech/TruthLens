@@ -28,6 +28,10 @@ test:                 ## all backend tests
 validate:             ## seeded test set → validation/results/metrics.json + calibration.json
 	$(PY) validation/run_validation.py
 
+validate-deepfake:    ## public real-vs-AI samples → deepfake detector choice, calibration and metrics (online once)
+	test -f validation/data/deepfake/manifest.json || $(PY) validation/fetch_deepfake_sets.py --per-class 120
+	$(PY) validation/run_deepfake_validation.py
+
 demo:                 ## build the demo case, analyze it, compare with samples/expected_report.json
 	test -f samples/demo_case/clip.mp4 || $(PY) samples/make_demo.py
 	$(PY) samples/check_demo.py

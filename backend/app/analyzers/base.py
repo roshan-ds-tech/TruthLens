@@ -95,3 +95,17 @@ def squash(x: float, mid: float, scale: float) -> float:
     import math
 
     return 1.0 / (1.0 + math.exp(-(x - mid) / scale))
+
+
+def isolated(fn, *args):
+    """Run a large model in a short-lived child process. The memory allocator keeps much of a model's memory after it
+    is freed (about 0.7 GB for the 440M-parameter image detector); a child process gives it all back on exit, which
+    keeps the whole analysis under the 3 GB budget. ``fn`` and its arguments must be picklable."""
+    import multiprocessing as mp
+    import os
+    from concurrent.futures import ProcessPoolExecutor
+
+    if mp.current_process().name != "MainProcess" or os.environ.get("TRUTHLENS_NO_ISOLATION"):
+        return fn(*args)
+    with ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context("spawn")) as pool:
+        return pool.submit(fn, *args).result()

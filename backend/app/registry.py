@@ -8,18 +8,35 @@ from typing import Optional
 from sqlmodel import Session
 
 from . import config
-from .analyzers import audio, image, text, video
+from .analyzers import audio, deepfake, image, text, video
 from .analyzers.base import FnAnalyzer
 from .models import JsonMixin, Setting
 
 ORDER = {
-    "video": ["av_metadata", "frames", "frame_dupes", "optical_flow", "face_flicker", "frame_forensics"],
-    "audio": ["av_metadata", "noise_floor", "band_limit", "prosody", "transcript"],
-    "image": ["exif", "ela", "noise", "jpeg_ghost", "copy_move"],
-    "text": ["claims", "consistency"],
+    "video": ["av_metadata", "frames", "frame_dupes", "optical_flow", "face_flicker", "frame_forensics", "ai_video"],
+    "audio": ["av_metadata", "noise_floor", "band_limit", "prosody", "transcript", "ai_voice"],
+    "image": ["exif", "ela", "noise", "jpeg_ghost", "copy_move", "ai_image"],
+    "text": ["claims", "consistency", "ai_text"],
 }
-ALL: dict[str, FnAnalyzer] = {a.key: a for a in image.ANALYZERS + video.ANALYZERS + audio.ANALYZERS + text.ANALYZERS}
+DEEPFAKE = [
+    FnAnalyzer("ai_image", "AI-image detector", ("image",), deepfake.run_image, "AI-generated image detector",
+               "Pretrained classifiers: camera photo vs image generator", "ai-image-detector + distilled",
+               optional_dep="transformers"),
+    FnAnalyzer("ai_video", "AI-frames detector", ("video",), deepfake.run_video, "AI-generated video detector",
+               "AI-image classifiers on sampled frames and face crops", "ai-image-detector + distilled",
+               optional_dep="transformers"),
+    FnAnalyzer("ai_voice", "Voice-clone detector", ("audio",), deepfake.run_audio, "Synthetic voice detector",
+               "wav2vec2 anti-spoofing: human speech vs TTS / voice cloning", "deepfake-audio-detection-v2",
+               optional_dep="transformers"),
+    FnAnalyzer("ai_text", "AI-text detector", ("text",), deepfake.run_text, "AI-written text detector",
+               "RoBERTa classifier: human vs language-model writing", "chatgpt-detector-roberta",
+               optional_dep="transformers"),
+]
+ALL: dict[str, FnAnalyzer] = {a.key: a for a in image.ANALYZERS + video.ANALYZERS + audio.ANALYZERS + text.ANALYZERS + DEEPFAKE}
 DATA_STEPS = {"frames", "transcript", "claims"}   # produce data, not detections; failure is not a detector gap
+# learned deepfake detectors: if one cannot run, the deepfake probability rests on the other evidence instead;
+# the forensic manipulation verdict is not affected
+AI_STEPS = {"ai_image", "ai_video", "ai_voice", "ai_text"}
 
 
 def steps_for(kind: str) -> list[FnAnalyzer]:

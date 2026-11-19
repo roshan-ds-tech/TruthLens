@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { c, VERDICTS, MONO, Icon, hover, VerdictPill, chipStyle, eyebrow, h1, page, Muted } from '../ui.jsx';
+import { DeepfakePill } from '../Deepfake.jsx';
 import { useApi, relTime } from '../api/client.js';
 import { TypeIcons } from './Dashboard.jsx';
 
@@ -62,7 +63,10 @@ export default function Cases({ go, active, query = '', onClearQuery }) {
                 <span style={{ fontSize: 12.5, color: c.ink2 }}>{matchWhy[r.id] ? `Matched ${matchWhy[r.id]} · ` : ''}Why: {r.why}</span>
               </div>
               <TypeIcons types={r.types} />
-              <VerdictPill dot={VERDICTS[r.verdict.key][1]} label={r.verdict.label} style={{ justifySelf: 'start' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, justifySelf: 'start' }}>
+                <VerdictPill dot={VERDICTS[r.verdict.key][1]} label={r.verdict.label} />
+                <DeepfakePill d={r.deepfake} h={24} fs={12} style={{ padding: '0 10px' }} />
+              </div>
               <span style={{ fontFamily: MONO, fontSize: 13 }}>{r.status === 'analyzed' ? r.findings_count : '—'}</span>
               <span style={{ fontSize: 13 }}>{r.investigator}</span>
               <span style={{ fontSize: 12.5, color: c.ink2 }}>{relTime(r.updated_at)}</span>

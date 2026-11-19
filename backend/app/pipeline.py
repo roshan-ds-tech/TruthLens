@@ -23,6 +23,7 @@ from .correlate import lipsync
 from .correlate import rules as rules_mod
 from .models import Case, Correlation, Evidence, FindingRow, Job, JsonMixin, utcnow
 from .scoring import calibrate, fuse
+from .scoring import deepfake as deepfake_score
 
 REPORT_FLOOR = 0.30
 PREFIX = {"image": "IMG", "video": "VID", "audio": "AUD", "text": "TXT", "cross-modal": "XM"}
@@ -142,6 +143,7 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
     shutil.rmtree(config.ARTIFACT_DIR / case_id, ignore_errors=True)
     shutil.rmtree(config.DERIVED_DIR / case_id, ignore_errors=True)
     calibrate.reload()
+    deepfake_score.reload()
 
     contexts: list[AnalysisContext] = []
     shared: dict[str, Any] = {}
@@ -174,7 +176,7 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
                 tr.set_step(item, si, "skipped")
                 tr.log(ev.kind, f"{step.name} skipped on {ev.label}: {step.optional_dep} is not installed")
                 limitations.append(f"{step.name} did not run on {ev.label} ({step.optional_dep} is not installed).")
-                if step.key not in registry.DATA_STEPS:
+                if step.key not in registry.DATA_STEPS | registry.AI_STEPS:
                     failed_detectors.setdefault(ev.label, []).append(step.name)
                 continue
             tr.set_step(item, si, "running")
@@ -189,8 +191,12 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
                 tr.set_step(item, si, "failed")
                 msg = f"{exc.__class__.__name__}: {_scrub(str(exc))[:160]}"
                 tr.log(ev.kind, f"{step.name} failed on {ev.label} · {msg}")
-                limitations.append(f"{step.name} failed on {ev.label} ({msg}); its signal is missing from the verdict.")
-                if step.key not in registry.DATA_STEPS:
+                if step.key in registry.AI_STEPS:
+                    limitations.append(f"{step.name} did not run on {ev.label} ({msg}); the deepfake probability for "
+                                       f"{ev.label} rests on the manipulation evidence only.")
+                else:
+                    limitations.append(f"{step.name} failed on {ev.label} ({msg}); its signal is missing from the verdict.")
+                if step.key not in registry.DATA_STEPS | registry.AI_STEPS:
                     failed_detectors.setdefault(ev.label, []).append(step.name)
                 traceback.print_exc()
             gc.collect()
@@ -222,7 +228,11 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
         modality = "cross-modal" if f.family == "lipsync" else ctx.kind
         pre = PREFIX[modality]
         counters[pre] = counters.get(pre, 0) + 1
-        cal = calibrate.calibrate(f.indicator, f.raw_score)
+        if f.extra.get("detector"):   # learned deepfake detectors use their own real-vs-AI calibration
+            d = deepfake_score.calibrate(f.family, f.raw_score)
+            cal = calibrate.Calibrated(round(d["p"], 4), round(d["lo"], 4), round(d["hi"], 4), d["calibrated"])
+        else:
+            cal = calibrate.calibrate(f.indicator, f.raw_score)
         loc = f.location
         loc_time = fmt_t(loc["start"]) if loc.get("start") is not None and loc["type"] in ("frame_range", "time_range") else ""
         scored.append({"finding_id": f"F-{pre}-{counters[pre]:03d}", "ctx": ctx, "evidence_id": ctx.evidence_id,
@@ -267,7 +277,11 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
     fam = {f["finding_id"]: f["family"] for f in scored}
 
     def signals(fs: list[dict]) -> list[fuse.Signal]:
-        return [fuse.Signal(f["finding_id"], f["family"], f["score"], f["lo"], f["hi"], f["weight_scale"]) for f in fs]
+        # manipulation evidence only: the learned deepfake detectors are combined separately (scoring/deepfake.py)
+        return [fuse.Signal(f["finding_id"], f["family"], f["score"], f["lo"], f["hi"], f["weight_scale"])
+                for f in fs if not f["family"].startswith("ai_")]
+
+    deepfake_items: dict[str, dict] = {}
 
     # per-evidence verdicts
     for ev, ctx in zip(evs, contexts):
@@ -280,8 +294,13 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
         if b == "none" and failed:
             b = "inconclusive"
         why = _why(mine, internal, by_id, b, failed)
+        manip_n = sum(1 for f in mine if not f["family"].startswith("ai_"))
+        dfa = deepfake_score.assess_item(ctx.extra.get("ai_detector"),
+                                         {"p": fz.p, "lo": fz.lo, "hi": fz.hi, "findings": manip_n}, ev.kind,
+                                         (ctx.extra.get("ai_detector") or {}).get("words"))
+        deepfake_items[ev.label] = dfa
         ev.verdict_json = JsonMixin.dumps({"band": b, "p": fz.p, "lo": fz.lo, "hi": fz.hi, "corroborated": fz.corroborated,
-                                           "why": why, "families": fz.families})
+                                           "why": why, "families": fz.families, "deepfake": dfa})
         ev.extra_json = JsonMixin.dumps(_persistable(ctx.extra))
         s.add(ev)
 
@@ -293,7 +312,8 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
     case_why = _why(scored, edges, by_id, case_band, all_failed)
     case.overall_verdict_json = JsonMixin.dumps({"band": case_band, "p": cz.p, "lo": cz.lo, "hi": cz.hi,
                                                  "corroborated": cz.corroborated, "why": case_why,
-                                                 "independent_supports": supports, "families": cz.families})
+                                                 "independent_supports": supports, "families": cz.families,
+                                                 "deepfake": deepfake_score.assess_case(deepfake_items)})
     seen: set[str] = set()
     case.limitations_json = JsonMixin.dumps([x for x in config.GENERAL_LIMITATIONS + limitations if not (x in seen or seen.add(x))])
 

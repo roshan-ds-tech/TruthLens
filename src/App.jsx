@@ -10,12 +10,13 @@ import NewCase from './screens/NewCase.jsx';
 import Analysis from './screens/Analysis.jsx';
 import CaseWorkspace from './screens/CaseWorkspace.jsx';
 import ImageViewer from './screens/ImageViewer.jsx';
+import VideoViewer from './screens/VideoViewer.jsx';
 import AudioViewer from './screens/AudioViewer.jsx';
 import TextViewer from './screens/TextViewer.jsx';
 import ReportPreview from './screens/ReportPreview.jsx';
 import { api, useApi, getToken, setToken, useServerMode, PRIVACY } from './api/client.js';
 
-const SCREENS = ['dashboard', 'cases', 'library', 'validation', 'settings', 'newcase', 'analysis', 'workspace', 'image', 'audio', 'text', 'report'];
+const SCREENS = ['dashboard', 'cases', 'library', 'validation', 'settings', 'newcase', 'analysis', 'workspace', 'video', 'image', 'audio', 'text', 'report'];
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: 'space_dashboard' },
@@ -28,6 +29,7 @@ const NAV = [
 const CASE_NAV = [
   { id: 'workspace', label: 'Workspace', icon: 'center_focus_strong' },
   { id: 'analysis', label: 'Analysis run', icon: 'motion_photos_on' },
+  { id: 'video', label: 'Video evidence', icon: 'movie' },
   { id: 'image', label: 'Image evidence', icon: 'image' },
   { id: 'audio', label: 'Audio evidence', icon: 'graphic_eq' },
   { id: 'text', label: 'Text evidence', icon: 'notes' },
@@ -225,6 +227,7 @@ export default function App() {
               <div style={shown('newcase')}><NewCase go={go} active={is('newcase')} investigator={investigator} draftId={nav.draftId} /></div>
               <div style={shown('analysis')}><Analysis go={go} active={is('analysis')} caseId={nav.caseId} jobId={nav.jobId} /></div>
               <div style={shown('workspace')}><CaseWorkspace go={go} active={is('workspace')} compact={tablet} caseId={nav.caseId} /></div>
+              <div style={shown('video')}><VideoViewer go={go} active={is('video')} caseId={nav.caseId} evidenceId={nav.evidenceId} /></div>
               <div style={shown('image')}><ImageViewer go={go} active={is('image')} caseId={nav.caseId} evidenceId={nav.evidenceId} /></div>
               <div style={shown('audio')}><AudioViewer go={go} active={is('audio')} caseId={nav.caseId} evidenceId={nav.evidenceId} /></div>
               <div style={shown('text')}><TextViewer go={go} active={is('text')} caseId={nav.caseId} evidenceId={nav.evidenceId} /></div>

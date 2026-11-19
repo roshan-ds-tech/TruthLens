@@ -1,4 +1,5 @@
 import { c, VERDICTS, YELLOW, MONO, Icon, hover, VerdictPill, eyebrow, h1, page, preventThen, Muted } from '../ui.jsx';
+import { DeepfakePill } from '../Deepfake.jsx';
 import { useApi, relTime, useServerMode, PRIVACY } from '../api/client.js';
 
 const STEPS = [
@@ -113,7 +114,10 @@ export default function Dashboard({ go, active, investigator }) {
                 <span style={{ fontSize: 12.5, color: c.ink2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Why: {cs.why}</span>
               </div>
               <TypeIcons types={cs.types} />
-              <VerdictPill dot={VERDICTS[cs.verdict.key][1]} label={cs.verdict.label} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+                <VerdictPill dot={VERDICTS[cs.verdict.key][1]} label={cs.verdict.label} />
+                <DeepfakePill d={cs.deepfake} h={24} fs={12} style={{ padding: '0 10px' }} />
+              </div>
               <span style={{ fontSize: 12, color: c.ink2, textAlign: 'right', whiteSpace: 'nowrap' }}>{relTime(cs.updated_at)}</span>
             </button>
           ))}

@@ -51,3 +51,21 @@ TruthLens reports **indicators**, never "fake" or "real". These are the limits w
   voice as "Beep."), which can make caption-vs-speech checks unverifiable.
 - **Screenshots** of the UI are not included in the README yet.
 - The PDF export needs `pango` (installed by Homebrew on macOS). Without it the HTML and JSON reports are still produced.
+
+## Deepfake detectors
+
+- **Generalisation is the main risk.** Learned detectors recognise the generators they were trained on. An older image
+  detector we tried scored recent generators (GPT-Image, FLUX.2) no better than chance, which is why validation picks the
+  model per modality on recent samples. New generators released after the model will be missed more often.
+- **The validation samples are small** (240 images, 240 voice clips from 42 speakers, 116 texts) and the model was
+  chosen on the same samples, so the reported numbers are optimistic. Social-media recompression, screenshots and re-recordings were not
+  part of the test.
+- **Text detection is the weakest.** Short captions carry very little signal (see the 30-word AUC on the Validation
+  page); formal, edited or non-native human writing is flagged more often.
+- **Voice detection** is trained on known TTS and voice-conversion systems; heavy noise suppression and phone audio
+  can raise the score on human speech.
+- **Compressed video.** On our own heavily compressed 960×540 demo clip of genuine stock footage, a few single frames
+  scored as AI-generated. Video is therefore scored by the median frame, with a wider range, and the video detector
+  has not been validated on a labelled set of real vs generated videos.
+- **"Likely authentic" is not proof of authenticity.** It means the detectors and forensic analyzers found nothing; a
+  generator the detector does not know can still produce it.

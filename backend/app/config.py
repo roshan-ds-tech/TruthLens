@@ -90,6 +90,7 @@ FAMILY_WEIGHTS = {
     "frame_dupes": 0.8, "optical_flow": 0.9, "face_flicker": 0.6, "frame_forensics": 0.5,
     "noise_floor": 0.9, "band_limit": 0.6, "prosody": 0.3,
     "claim_date": 0.9, "claim_speech": 0.7, "claim_entity": 0.4, "lipsync": 0.4,
+    "ai_image": 0.9, "ai_video": 0.9, "ai_voice": 0.9, "ai_text": 0.6,
 }
 
 VERDICT_LABELS = {

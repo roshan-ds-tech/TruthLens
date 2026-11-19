@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { c, VERDICTS, YELLOW, MONO, Icon, hover, VerdictPill, RangeBar, eyebrow, fmtRange, preventThen, PrimaryButton, SecondaryButton, Muted } from '../ui.jsx';
 import { api, useApi, useMediaUrl, fmtT, fmtDate, shortHash } from '../api/client.js';
 import { AuthImg, EvidencePreview } from '../api/media.jsx';
+import { DeepfakeCard, DeepfakePill } from '../Deepfake.jsx';
 
 const fmt = fmtT;
 
@@ -303,6 +304,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
           <div style={eyebrow}>Case · <span style={{ fontFamily: MONO, letterSpacing: '.02em' }}>{cs.id}</span> · Opened {fmtDate(cs.created_at)}</div>
           <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 700, letterSpacing: '-0.022em', textWrap: 'balance' }}>{cs.title}</h1>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 14px' }}>
+            <DeepfakePill d={cs.deepfake} h={32} fs={13.5} style={{ borderColor: c.ink }} />
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 32, padding: '0 14px', borderRadius: 999, background: c.hero, color: '#fff', fontSize: 13.5, fontWeight: 700 }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: VERDICTS[v.key][1] === c.ink ? '#fff' : VERDICTS[v.key][1] }} />{v.label} {v.lo != null && <span style={{ fontFamily: MONO, fontWeight: 500, color: YELLOW }}>{fmtRange(v.lo, v.hi)}</span>}
             </span>
@@ -326,6 +328,11 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
           <PrimaryButton onClick={exportReport} disabled={!!busy || cs.status !== 'analyzed'} style={{ height: 40, padding: '0 18px', opacity: cs.status === 'analyzed' ? 1 : 0.55 }}>{busy === 'report' ? 'Building report…' : 'Export report'}<Icon name="arrow_forward" size={19} /></PrimaryButton>
         </div>
       </div>
+
+      {cs.deepfake && (() => {
+        const drv = evidence.find((e) => e.label === cs.deepfake.driver);
+        return <DeepfakeCard d={cs.deepfake} title="Is this case a deepfake?" onDriver={drv ? () => go(drv.kind, { caseId, evidenceId: drv.id }) : undefined} />;
+      })()}
 
       {/* Keep the findings column independent so its height cannot stretch the evidence rows. */}
       <div style={{ display: 'grid', gridTemplateColumns: wide ? 'minmax(0,1fr) 384px' : 'minmax(0,1fr)', gap: 20, alignItems: 'start', minWidth: 0 }}>
@@ -356,6 +363,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
                   <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '6px 8px', width: '100%', minWidth: 0 }}>
                     <VerdictPill dot={VERDICTS[ev.key][1]} label={ev.label} h={22} fs={11.5} pad={9} dotSize={6} style={{ background: c.bg }} />
                     <span style={{ fontFamily: MONO, fontSize: 10.5, color: c.ink2 }}>{e.sha_short}</span>
+                    {e.deepfake && <DeepfakePill d={e.deepfake} h={22} fs={11.5} style={{ padding: '0 9px', background: c.bg }} />}
                   </div>
                 </button>
               );
@@ -373,7 +381,10 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
               <span style={{ fontSize: 14, fontWeight: 700, minWidth: 0, overflowWrap: 'anywhere' }}>{primary ? primary.display_name : 'No video or image in this case'}</span>
               <span style={{ fontSize: 12.5, color: c.ink2 }}>{primary ? primary.meta_label.split(' · ').slice(1).join(' · ') : ''}</span>
             </div>
-            <span style={{ fontFamily: MONO, fontSize: 11.5, color: c.ink2 }}>{primary ? `sha256 ${primary.sha_short}` : ''}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontFamily: MONO, fontSize: 11.5, color: c.ink2 }}>{primary ? `sha256 ${primary.sha_short}` : ''}</span>
+              {primary && <button onClick={() => go(primary.kind, { caseId, evidenceId: primary.id })} style={{ ...linkBtn, fontFamily: 'inherit', fontSize: 12.5, fontWeight: 700 }}>Open {primary.kind} page</button>}
+            </span>
           </div>
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 12, overflow: 'hidden', background: 'repeating-linear-gradient(135deg,#1A1A1A 0 12px,#202020 12px 24px)' }}>

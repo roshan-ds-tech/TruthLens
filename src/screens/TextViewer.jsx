@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { c, VERDICTS, YELLOW, MONO, Icon, eyebrow, h1, Muted, VerdictPill, fmtRange, preventThen } from '../ui.jsx';
 import { useApi } from '../api/client.js';
+import { DeepfakeCard } from '../Deepfake.jsx';
 
 const CLAIM_STATUS = {
   consistent: { label: 'Consistent', color: '#3E9B5F' },
@@ -62,6 +63,8 @@ export default function TextViewer({ go, active, caseId, evidenceId }) {
       </div>
       {verdict.why && <span style={{ fontSize: 14, color: c.ink2 }}><b style={{ color: c.ink }}>Why:</b> {verdict.why}</span>}
     </div>
+
+    <DeepfakeCard d={ev.deepfake} title="AI-written text assessment" subject={ev.label} />
 
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 20, minWidth: 0 }}>
       <section style={{ ...panel, flex: '2 1 520px' }}>

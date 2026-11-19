@@ -100,3 +100,24 @@ natural movement (people, a hand-held camera) were reported as motion breaks. A 
 still match once a pure camera shift is undone (phase correlation; a new shot does not), and (2) it is one isolated
 frame at least 3× the surrounding motion (flow or pixel difference). Validation is unchanged at recall 1.00 with no
 false positives, and `test_shot_change_is_not_a_motion_break` guards it.
+
+### D-21 · Deepfake probability alongside the manipulation bands
+The project goal is to say whether media is a deepfake. The forensic analyzers find editing traces but cannot recognise
+fully AI-generated media, so pretrained detectors were added per modality (image/video frames, voice, text). They raise
+the download from about 0.3 GB to about 1.9 GB (approved by the user). Each item and case now shows "Likely deepfake",
+"Likely authentic" or "Uncertain" with a calibrated probability and range (rules in methodology.md). "Uncertain" was
+kept, at the user's choice, so that close calls are not stated with confidence. The user asked for the word "deepfake"
+in outputs, which supersedes the earlier rule against the word "fake" for this one label; "real" is still not used.
+The models were chosen by measured AUC on public samples: two older image detectors scored 0.62–0.68 on 2025–26
+generators against 0.99 for Smaug, and an older ChatGPT-era text detector was dropped in favour of a 2026 ModernBERT
+model. For voices, the first test set (`garystafford/deepfake-audio-detection`) was discarded because every human clip
+is 44.1 kHz stereo and every synthetic one 16 kHz mono, so the format alone gives the label away. On In-The-Wild
+(genuine vs cloned speech of the same public figures) the first voice model scored below chance (AUC 0.39); the
+ASVspoof2019-trained XLS-R model scored 0.93 and was chosen over a model with equal AUC but undisclosed training data.
+
+### D-22 · Memory: large detectors run in a child process
+The image detector needs about 2.1 GB while loaded, and the memory allocator keeps about 0.7 GB after it is freed.
+The image, voice and transcription models now run in a short-lived child process (`analyzers/base.py: isolated`),
+the image detector is loaded in its stored bfloat16 and converted to float32 per module with the 262k-token
+vocabulary table left in bfloat16 (identical scores), and crops are encoded one at a time. Measured on the demo case:
+main process peak 0.94 GB, largest child 2.29 GB while the main process holds about 0.5 GB, so about 2.8 GB in all.

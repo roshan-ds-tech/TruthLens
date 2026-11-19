@@ -4,13 +4,15 @@
 the media and the caption that came with it, and gets a reviewable report. Each finding points to a region, frame or
 time span, carries a calibrated confidence *range* and names alternative explanations. Cross-modal rules show where
 signals from different media support or weaken each other, and a hash-chained custody log records every step.
-TruthLens never says "fake" or "real". It shows where the evidence disagrees, how strongly, and what a human should
+Every item and case also gets a **deepfake assessment**: "Likely deepfake", "Likely authentic" or "Uncertain", with a
+calibrated probability and range, from pretrained AI-generation detectors (image and video frames, voice, text)
+combined with the manipulation evidence. It shows where the evidence disagrees, how strongly, and what a human should
 check next. Everything runs locally for ₹0 (INNOVEDGE Hackathon 2026 · Problem Statement 04).
 
 ## Quick start
 
 ```sh
-make setup     # Python 3.11 venv, pinned deps, models (needs the network once), UI build
+make setup     # Python 3.11 venv, pinned deps, models (about 2.8 GB, needs the network once), UI build
 make run       # http://127.0.0.1:8000 — API and UI, fully offline from here on
 make demo      # analyze samples/demo_case and compare with samples/expected_report.json
 ```
@@ -47,7 +49,8 @@ Photoshop CS5 and one metadata signal is never enough on its own.
 Dashboard · Cases · New case (drag-and-drop upload, hashing, caption) · Analysis (live per-analyzer progress and log) ·
 Case workspace (video player, suspicion timeline, finding cards with accept / reject / note, correlation graph, custody
 drawer) · Image viewer (original vs ELA / noise / copy-move layers, numbered regions, EXIF conflicts) · Audio viewer
-(waveform, spectrogram, word-timed transcript) · Report preview (PDF / JSON export) · Validation · Settings (analyzer
+(waveform, spectrogram, word-timed transcript) · Video viewer (player with frame stepping, suspicion curve, per-frame
+AI-detector strip, finding thumbnails) · Text viewer · Report preview (PDF / JSON export) · Validation · Settings (analyzer
 toggles). Screenshots are not included yet; see `docs/limitations.md`.
 
 ## Requirements map
@@ -81,7 +84,19 @@ the scorer uses. **Small self-made test set, not a general accuracy claim.**
 | Flow jump / duplicate frame | 1.00 / 0.88 (median error 0.04 s) | 0.00 |
 | Caption date / quote conflict | 1.00 / 1.00 | 0.00 |
 
-Image region IoU 0.71. The Validation screen shows the full table, the reliability chart (5-fold cross-validated) and
+Image region IoU 0.71.
+
+`make validate-deepfake` downloads small public labelled samples and measures the deepfake detectors (5-fold
+cross-validated, decision point 50 %). **Small samples; the model was chosen on them, so these are optimistic.**
+
+| Detector (model) | Samples | AUC | Accuracy | AI detected | False alarms on human |
+|---|---|---|---|---|---|
+| Image / video frames (Smaug-AI-Image-Detector) | 240 OpenFake test images, 2025–26 generators | 0.99 | 0.93 | 0.86 | 0.01 |
+| Voice (XLS-R, ASVspoof2019-trained) | 240 In-The-Wild clips, 42 speakers | 0.93 | 0.82 | 0.68 | 0.05 |
+| Text (ModernBERT AI-text detector) | 116 texts, 2026 LLMs vs human | 0.91 | 0.82 | 0.68 | 0.05 |
+
+On 30-word snippets the text AUC falls to 0.73, so short captions are never called AI-written on the detector alone.
+Video uses the image detector on sampled frames and has not been validated on labelled videos. The Validation screen shows the full table, the reliability chart (5-fold cross-validated) and
 the false-positive table.
 
 ## Repository

@@ -83,6 +83,43 @@ sum on the findings' low and high ends, at least ±0.05.
 | Indicators of manipulation | lo ≥ 0.55 |
 | Inconclusive | otherwise (the range touches the middle band), or no findings while a detector failed |
 
+## Deepfake assessment (`analyzers/deepfake.py`, `scoring/deepfake.py`)
+
+The bands above answer "was this edited?". The deepfake assessment answers "is this AI-generated or manipulated?"
+with one probability per item and per case.
+
+**Learned detectors** (pretrained, CPU, offline after `make setup`):
+
+| Modality | Detector | Input |
+|---|---|---|
+| Image | `abacusai/Smaug-AI-Image-Detector` (Apache 2.0), or the best older candidate if validation prefers it | 3 × 528 px crops, logits averaged |
+| Video | the same image detector | 12 evenly spaced frames (1 centre crop each); median. Range widened by ±0.15 because the calibration comes from still images |
+| Voice | `Gustking/wav2vec2-large-xlsr-deepfake-audio-classification` (XLS-R, trained on ASVspoof2019, Apache 2.0) | 4 s windows at 16 kHz; median |
+| Text | `rasbt/ai-text-detector-modernbert` (Apache 2.0) | first 512 tokens |
+
+`validation/run_deepfake_validation.py` scores every downloaded candidate on public labelled samples (OpenFake test
+split for images, In-The-Wild for voices, `textsightai/ai-text-detection-benchmark-2026` for text), keeps the best by
+AUC (within 0.01, the model with documented training data wins), and fits Platt scaling with 200 bootstrap refits (5-fold cross-validated metrics go
+to `metrics.json["deepfake"]`). An uncalibrated detector uses its raw score with a ±0.20 range.
+
+**Combination per item:**
+
+    P(deepfake) = 1 − (1 − P_ai)(1 − P_manip)
+
+`P_ai` is the calibrated detector probability; `P_manip` is the fused manipulation probability above, counted only when
+the item has at least one finding, and never for text (a caption that contradicts the other evidence is misleading,
+not AI-written). P stays within 1–99 %. The low and high ends go through the same formula. Texts under 40 words get a
+range that always spans 45–55 %, so the text detector alone never gives a confident answer on a caption.
+
+| Label | Condition |
+|---|---|
+| Likely deepfake | P ≥ 0.65 and low end ≥ 0.50 |
+| Likely authentic | P ≤ 0.35 and high end ≤ 0.50 |
+| Uncertain | otherwise, or no detector ran and no finding exists |
+
+A case takes the assessment of its most likely item and names it ("decided by E-02"). A detector that cannot run does
+not change the manipulation band; it only leaves the deepfake probability to the remaining evidence.
+
 ## Cross-modal rules (`correlate/rules.py`)
 
 | ID | Rule | Effect |

@@ -1,29 +1,40 @@
 {
   "case": "C-0007",
-  "findings_digest": "bc0b5dfe4ef4216050e3813bab0cec91a66e45c1cdc5fcf92a201992d4a5d730",
+  "findings_digest": "6ac3f84deef0e2a72db09f218cf3293276c501f3bad92829013ea29e70a8b2f7",
   "verdict": {
     "band": "strong",
     "lo": 0.92,
     "hi": 0.97
   },
+  "deepfake": {
+    "key": "deepfake",
+    "p": 0.99,
+    "lo": 0.99,
+    "hi": 0.99,
+    "driver": "E-02"
+  },
   "evidence": {
     "E-01": {
       "kind": "video",
       "band": "indicators",
+      "deepfake": "deepfake",
       "sha256": "6e848d48f96ed72389915154b7ead5c2d2fbe7ca2718dd04925a38779003cce5"
     },
     "E-02": {
       "kind": "audio",
-      "band": "indicators"
+      "band": "indicators",
+      "deepfake": "deepfake"
     },
     "E-03": {
       "kind": "image",
       "band": "inconclusive",
+      "deepfake": "uncertain",
       "sha256": "14c611cfe51f1efa2aeae200623ab07a9be15c073e0d07bb47b9da9c9fc38fd0"
     },
     "E-04": {
       "kind": "text",
       "band": "indicators",
+      "deepfake": "uncertain",
       "sha256": "e481e8f17061e3f5977dd223ed4b55a838df39b8c85a783037a6973807734e17"
     }
   },
@@ -44,6 +55,15 @@
       "loc_label": "00:14.2 \u00b7 +24 dB jump",
       "conf_low": 0.86,
       "conf_high": 0.95,
+      "band": "indicators"
+    },
+    {
+      "finding_id": "F-AUD-002",
+      "evidence_id": "E-02",
+      "indicator": "synthetic_voice",
+      "loc_label": "Whole track \u00b7 7 \u00d7 4 s windows",
+      "conf_low": 0.9434,
+      "conf_high": 1.0,
       "band": "indicators"
     },
     {

@@ -2,6 +2,7 @@
 // The clip and its analysis come from samples/make_home_demo.py (public/media/home-demo.{mp4,json}).
 import { useEffect, useRef, useState } from 'react';
 import { c, VERDICTS, YELLOW, MONO, Icon, fmtRange } from '../ui.jsx';
+import { DeepfakePill } from '../Deepfake.jsx';
 
 const pad = (n) => String(n).padStart(2, '0');
 const clock = (t) => `${pad(Math.floor(t / 60))}:${(t % 60).toFixed(1).padStart(4, '0')}`;
@@ -162,12 +163,14 @@ export default function HomePreview() {
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: VERDICTS[data.verdict.key][1] }} />{data.verdict.label}
                 <span style={{ fontFamily: MONO, fontWeight: 500, color: YELLOW }}>{fmtRange(data.verdict.lo, data.verdict.hi)}</span>
               </span>
+              {data.deepfake?.p != null && <DeepfakePill d={data.deepfake} h={26} fs={12.5} style={{ alignSelf: 'flex-start' }} />}
             </div>
           ) : <Pending label={seenV || seenA ? 'Waiting for an independent second signal' : 'Cross-checking video and audio'} meter={(seenV ? 0.5 : 0) + (seenA ? 0.5 : 0)} detail="a finding counts as corroborated only when two methods agree" />}
         </Card>
         <span style={{ fontSize: 11.5, color: c.ink2, lineHeight: 1.45 }}>
           Demo clip made for this page: we cut it at {clock(data?.ground_truth?.video_cut_s ?? 8)} and joined speech from a noisier room at{' '}
-          {clock(data?.ground_truth?.audio_splice_s ?? 8.2)}. The cards replay TruthLens's actual analysis of it.
+          {clock(data?.ground_truth?.audio_splice_s ?? 8.2)}. The footage is genuine stock video; the narration is computer-generated
+          speech, which the voice detector recognises. The cards replay TruthLens's actual analysis of it.
         </span>
       </div>
     </div>

@@ -9,7 +9,7 @@ import gc
 import os
 
 from ... import config
-from ..base import AnalysisContext, RawFinding
+from ..base import AnalysisContext, RawFinding, isolated
 from .common import decode
 
 
@@ -19,6 +19,10 @@ def model_path() -> str:
 
 
 def transcribe(wav_path) -> dict:
+    return isolated(_transcribe, str(wav_path))
+
+
+def _transcribe(wav_path) -> dict:
     os.environ.setdefault("HF_HUB_OFFLINE", "1")
     from faster_whisper import WhisperModel
 

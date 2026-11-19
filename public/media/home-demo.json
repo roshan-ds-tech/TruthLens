@@ -13,6 +13,15 @@
   "hi": 0.97,
   "why": "an audio splice at 00:08.2 lines up with a motion break at 00:08.0"
  },
+ "deepfake": {
+  "key": "deepfake",
+  "label": "Likely deepfake",
+  "p": 0.99,
+  "lo": 0.9876,
+  "hi": 0.99,
+  "why": "E-02: AI-generation detector 96% and manipulation evidence 92%",
+  "driver": "E-02"
+ },
  "findings": [
   {
    "id": "F-VID-001",
@@ -78,6 +87,19 @@
    "key": "ind",
    "label": "Indicators of manipulation",
    "explanation": "Background noise rises by 23 dB at 00:08.2, and the spectrum of the quietest frames changes at the same point. Two recordings joined together usually have different room noise."
+  },
+  {
+   "id": "F-AUD-002",
+   "modality": "audio",
+   "name": "Synthetic or cloned voice likelihood",
+   "loc": "Whole track \u00b7 4 \u00d7 4 s windows",
+   "start": 0.0,
+   "end": 16.0,
+   "lo": 0.9322,
+   "hi": 0.9922,
+   "key": "ind",
+   "label": "Indicators of manipulation",
+   "explanation": "The voice classifier rates the speech as likely produced by text-to-speech or voice cloning."
   }
  ],
  "rules": [

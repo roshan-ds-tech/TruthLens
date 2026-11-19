@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { c, VERDICTS, YELLOW, MONO, Icon, chipStyle, eyebrow, fmtRange, preventThen, Muted } from '../ui.jsx';
 import { useApi } from '../api/client.js';
 import { AuthImg } from '../api/media.jsx';
+import { DeepfakeCard } from '../Deepfake.jsx';
 
 const LAYERS = [['ela', 'Error level', 'contrast'], ['noise', 'Noise map', 'grain'], ['copy', 'Copy-move', 'content_copy'], ['regions', 'Regions', 'crop_free']];
 const ARTIFACT = { ela: 'ela.png', noise: 'noise.png', copy: 'copymove.png' };
@@ -59,10 +60,12 @@ export default function ImageViewer({ go, active, caseId, evidenceId }) {
         </div>
         {limOpen && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 760 }}>
-            {[...notes, 'Error-level and noise maps react to sharp edges, text and platform recompression; read them with the region cards.', 'A fully AI-generated image without later editing may show no indicator at all.'].map((n) => <Muted key={n}>· {n}</Muted>)}
+            {[...notes, 'Error-level and noise maps react to sharp edges, text and platform recompression; read them with the region cards.', 'The AI-image detector can miss generators it was not trained on, and can flag heavily filtered or upscaled photos.'].map((n) => <Muted key={n}>· {n}</Muted>)}
           </div>
         )}
       </div>
+
+      <DeepfakeCard d={ev.deepfake} subject={ev.label} />
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
         <section style={{ flex: '2 1 600px', minWidth: 0, border: `1px solid ${c.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>

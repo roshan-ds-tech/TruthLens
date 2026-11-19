@@ -25,6 +25,16 @@ def verdict(v: Optional[dict]) -> Optional[dict]:
             "lo": v["lo"], "hi": v["hi"], "p": v.get("p"), "why": v.get("why", ""), "corroborated": v.get("corroborated", False)}
 
 
+def deepfake(v: Optional[dict]) -> Optional[dict]:
+    """The deepfake assessment as the UI shows it: Likely deepfake / Likely authentic / Uncertain, with P and range."""
+    d = (v or {}).get("deepfake")
+    if not d:
+        return None
+    return {"key": d["label"], "label": d["text"], "p": d.get("p"), "lo": d.get("lo"), "hi": d.get("hi"),
+            "why": d.get("why", ""), "driver": d.get("driver"), "calibrated": d.get("calibrated", False),
+            "ai": d.get("ai"), "manipulation": d.get("manipulation")}
+
+
 def latest_reviews(s: Session, case_id: str) -> dict[str, Review]:
     out: dict[str, Review] = {}
     for r in s.exec(select(Review).where(Review.case_id == case_id).order_by(Review.id)):
@@ -44,6 +54,7 @@ def evidence_summary(ev: Evidence, n_findings: int = 0) -> dict[str, Any]:
             "filename": ev.filename, "display_name": display_name(ev), "meta_label": meta_label(ev.kind, ev.size, meta),
             "sha256": ev.sha256, "sha_short": custody.short(ev.sha256), "size": ev.size, "mime": ev.mime,
             "status": ev.status, "derived_from": meta.get("derived_from"), "verdict": verdict(JsonMixin.loads(ev.verdict_json)),
+            "deepfake": deepfake(JsonMixin.loads(ev.verdict_json)),
             "warnings": meta.get("warnings", []), "findings_count": n_findings,
             "media_url": f"/api/evidence/{ev.id}/media", "thumb_url": f"/api/evidence/{ev.id}/thumb",
             "duration": meta.get("duration"), "width": meta.get("width"), "height": meta.get("height"),
@@ -100,6 +111,7 @@ def case_summary(s: Session, c: Case) -> dict[str, Any]:
     return {"id": c.id, "title": c.title, "description": c.description, "investigator": c.investigator,
             "created_at": c.created_at.isoformat(), "updated_at": c.updated_at.isoformat(), "status": c.status,
             "closed": c.closed, "types": [ICON[k] for k in kinds], "kinds": kinds, "verdict": v, "why": v["why"],
+            "deepfake": deepfake(JsonMixin.loads(c.overall_verdict_json)) if c.status == "analyzed" else None,
             "findings_count": len(finding_ids), "pending_review": pending,
             "needs_review": c.status == "analyzed" and pending > 0, "evidence_count": len(evs),
             "analysis_seconds": c.analysis_seconds, "run_count": c.run_count}

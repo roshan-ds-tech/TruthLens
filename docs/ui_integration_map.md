@@ -156,3 +156,13 @@ Evidence slots show the evidence itself, never stock imagery:
 | Evidence Library card | Image/video: real thumbnail · Audio: waveform from `/evidence/{id}/waveform` · Text: opening lines of the caption |
 | Workspace viewer, case without video or image | Waveform of the case's audio, else the caption text |
 | Report preview finding thumbnails | `GET /cases/{id}/findings/{finding_id}/thumb`: region crop, video frame, spectrogram slice, or the whole image for metadata findings; caption findings show "caption" |
+
+## Deepfake assessment and Video evidence page (2026-11-20)
+
+| UI element | Source | Status |
+|---|---|---|
+| Video evidence page (`VideoViewer.jsx`, sidebar "Video evidence") | `GET /evidence/{id}` (media, `extra.suspicion_curve`, `extra.ai_detector.frames`), `GET /cases/{id}/findings`, finding thumbnails | done |
+| Deepfake card on the workspace, Video, Image, Audio and Text pages (`Deepfake.jsx`) | `deepfake` on `GET /cases/{id}` (case and each evidence item) | done |
+| Deepfake pill on workspace evidence cards | `evidence[].deepfake` | done |
+| Validation page "Deepfake detectors" tiles | `metrics.json["deepfake"]` | done |
+| Report "Deepfake assessment" box and table column | `report.deepfake`, `evidence[].deepfake` | done |

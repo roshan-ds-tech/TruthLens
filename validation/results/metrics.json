@@ -387,5 +387,297 @@
     "modified_after_capture",
     "camera_tags_missing"
   ],
-  "runtime_s": 59.0
+  "runtime_s": 59.0,
+  "deepfake": {
+    "detectors": [
+      {
+        "detector": "ai_image",
+        "n": 240,
+        "n_ai": 120,
+        "n_real": 120,
+        "auc": 0.991,
+        "accuracy": 0.925,
+        "detection_rate": 0.858,
+        "false_alarm_rate": 0.008,
+        "raw_accuracy_at_0_5": 0.917,
+        "reliability": [
+          {
+            "bin_lo": 0.0,
+            "mid": 0.05,
+            "count": 25,
+            "predicted": 0.095,
+            "observed": 0.08
+          },
+          {
+            "bin_lo": 0.1,
+            "mid": 0.15,
+            "count": 106,
+            "predicted": 0.125,
+            "observed": 0.113
+          },
+          {
+            "bin_lo": 0.2,
+            "mid": 0.25,
+            "count": 1,
+            "predicted": 0.251,
+            "observed": 0.0
+          },
+          {
+            "bin_lo": 0.3,
+            "mid": 0.35,
+            "count": 2,
+            "predicted": 0.339,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.4,
+            "mid": 0.45,
+            "count": 2,
+            "predicted": 0.444,
+            "observed": 0.5
+          },
+          {
+            "bin_lo": 0.5,
+            "mid": 0.55,
+            "count": 1,
+            "predicted": 0.58,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.6,
+            "mid": 0.65,
+            "count": 1,
+            "predicted": 0.674,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.7,
+            "mid": 0.75,
+            "count": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin_lo": 0.8,
+            "mid": 0.85,
+            "count": 1,
+            "predicted": 0.888,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.9,
+            "mid": 0.95,
+            "count": 101,
+            "predicted": 0.992,
+            "observed": 0.99
+          }
+        ],
+        "model": "smaug-ai-image-detector",
+        "candidates_auc": {
+          "smaug-ai-image-detector": 0.991,
+          "ai-image-detector": 0.619,
+          "ai-image-detect-distilled": 0.676
+        },
+        "generators": [
+          "ernie-image",
+          "ernie-image-turbo",
+          "flux.2-klein-9b",
+          "frames-23-1-25",
+          "gpt-image-1.5",
+          "gpt-image-2",
+          "illustrious",
+          "midjourney-7",
+          "nano-banana-pro",
+          "recraft-v2",
+          "recraft-v3",
+          "sora-2",
+          "veo-3",
+          "wan-video-2.5",
+          "z-image-turbo"
+        ],
+        "source": "ComplexDataLab/OpenFake core/test (CC BY-NC 4.0)"
+      },
+      {
+        "detector": "ai_voice",
+        "n": 240,
+        "n_ai": 120,
+        "n_real": 120,
+        "auc": 0.927,
+        "accuracy": 0.817,
+        "detection_rate": 0.683,
+        "false_alarm_rate": 0.05,
+        "raw_accuracy_at_0_5": 0.779,
+        "reliability": [
+          {
+            "bin_lo": 0.0,
+            "mid": 0.05,
+            "count": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin_lo": 0.1,
+            "mid": 0.15,
+            "count": 14,
+            "predicted": 0.19,
+            "observed": 0.071
+          },
+          {
+            "bin_lo": 0.2,
+            "mid": 0.25,
+            "count": 113,
+            "predicted": 0.23,
+            "observed": 0.168
+          },
+          {
+            "bin_lo": 0.3,
+            "mid": 0.35,
+            "count": 16,
+            "predicted": 0.345,
+            "observed": 0.625
+          },
+          {
+            "bin_lo": 0.4,
+            "mid": 0.45,
+            "count": 9,
+            "predicted": 0.442,
+            "observed": 0.889
+          },
+          {
+            "bin_lo": 0.5,
+            "mid": 0.55,
+            "count": 2,
+            "predicted": 0.532,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.6,
+            "mid": 0.65,
+            "count": 3,
+            "predicted": 0.647,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.7,
+            "mid": 0.75,
+            "count": 4,
+            "predicted": 0.743,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.8,
+            "mid": 0.85,
+            "count": 8,
+            "predicted": 0.861,
+            "observed": 0.75
+          },
+          {
+            "bin_lo": 0.9,
+            "mid": 0.95,
+            "count": 71,
+            "predicted": 0.967,
+            "observed": 0.944
+          }
+        ],
+        "model": "wav2vec2-large-xlsr-deepfake-audio-classification",
+        "candidates_auc": {
+          "wav2vec2-large-xlsr-deepfake-audio-classification": 0.927,
+          "deepfake-audio-detection": 0.929,
+          "deepfake-audio-detection-v2": 0.389
+        },
+        "source": "SpeechAntiSpoofingBenchmarks/InTheWild (Apache 2.0)"
+      },
+      {
+        "detector": "ai_text",
+        "n": 116,
+        "n_ai": 56,
+        "n_real": 60,
+        "auc": 0.913,
+        "accuracy": 0.819,
+        "detection_rate": 0.679,
+        "false_alarm_rate": 0.05,
+        "raw_accuracy_at_0_5": 0.81,
+        "reliability": [
+          {
+            "bin_lo": 0.0,
+            "mid": 0.05,
+            "count": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin_lo": 0.1,
+            "mid": 0.15,
+            "count": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin_lo": 0.2,
+            "mid": 0.25,
+            "count": 74,
+            "predicted": 0.248,
+            "observed": 0.23
+          },
+          {
+            "bin_lo": 0.3,
+            "mid": 0.35,
+            "count": 1,
+            "predicted": 0.386,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.4,
+            "mid": 0.45,
+            "count": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin_lo": 0.5,
+            "mid": 0.55,
+            "count": 1,
+            "predicted": 0.542,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.6,
+            "mid": 0.65,
+            "count": 1,
+            "predicted": 0.699,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.7,
+            "mid": 0.75,
+            "count": 2,
+            "predicted": 0.724,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.8,
+            "mid": 0.85,
+            "count": 3,
+            "predicted": 0.857,
+            "observed": 1.0
+          },
+          {
+            "bin_lo": 0.9,
+            "mid": 0.95,
+            "count": 34,
+            "predicted": 0.941,
+            "observed": 0.912
+          }
+        ],
+        "model": "ai-text-detector-modernbert",
+        "candidates_auc": {
+          "ai-text-detector-modernbert": 0.913
+        },
+        "source": "textsightai/ai-text-detection-benchmark-2026 (CC BY-SA 4.0)",
+        "short_text_auc_30_words": 0.731
+      }
+    ],
+    "runtime_s": 763.0,
+    "label": "Small public labelled samples. The best model per modality was chosen on these same samples, and accuracy on other generators and on compressed social-media copies will be lower."
+  }
 }

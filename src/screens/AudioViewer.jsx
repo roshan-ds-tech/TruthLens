@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { c, VERDICTS, YELLOW, MONO, Icon, eyebrow, fmtRange, preventThen, Muted } from '../ui.jsx';
 import { useApi, useMediaUrl, fmtT } from '../api/client.js';
+import { DeepfakeCard } from '../Deepfake.jsx';
 
 const fmt = fmtT;
 const mono = { fontFamily: MONO };
@@ -102,6 +103,8 @@ export default function AudioViewer({ go, active, caseId, evidenceId }) {
           </div>
         )}
       </div>
+
+      <DeepfakeCard d={ev.deepfake} subject={ev.label} />
 
       <section style={{ border: `1px solid ${c.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `1px solid ${c.border}` }}>

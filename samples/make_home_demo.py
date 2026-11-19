@@ -122,6 +122,8 @@ def analyse(clip: Path) -> dict:
         "duration": round(len(frames_cache) / FPS, 2),
         "fps": FPS,
         "verdict": {k: detail["verdict"][k] for k in ("key", "label", "lo", "hi", "why")},
+        "deepfake": {k: v for k, v in (detail.get("deepfake") or {}).items() if k in ("key", "label", "p", "lo", "hi", "why", "driver")}
+                    or None,
         "findings": [{"id": f["finding_id"], "modality": f["modality"], "name": f["name"], "loc": f["loc_label"],
                       "start": f["location"].get("start"), "end": f["location"].get("end"), "lo": f["conf_low"],
                       "hi": f["conf_high"], "key": f["verdict"]["key"], "label": f["verdict"]["label"],

@@ -52,9 +52,21 @@
   <p style="margin:0;color:#333">{{ r.summary }}</p>
 </section>
 
+{% if r.deepfake and r.deepfake.p is not none %}
+{% set dfc = {'deepfake': '#D64545', 'authentic': '#3E9B5F'}.get(r.deepfake.key, '#8A8A85') %}
+<section style="border:1px solid #DDD;border-left:5px solid {{ dfc }};border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:1fr 1.4fr;gap:16px">
+  <div>
+    <div class="eyebrow">Deepfake assessment</div>
+    <div class="vlabel" style="color:{{ dfc }}">{{ r.deepfake.label }} · <span class="mono">{{ (r.deepfake.p*100)|round|int }}%</span></div>
+    <div class="muted mono" style="font-size:8pt">range {{ (r.deepfake.lo*100)|round|int }}–{{ (r.deepfake.hi*100)|round|int }}%{% if r.deepfake.driver %} · decided by {{ r.deepfake.driver }}{% endif %}</div>
+  </div>
+  <p style="margin:0;color:#333"><b>Based on:</b> {{ r.deepfake.why }}. "Deepfake" here means AI-generated or manipulated. Likely deepfake needs 65% or more with the low end at 50% or more; likely authentic needs 35% or less with the high end at 50% or less; anything else is uncertain. Detectors can miss generators they were not trained on.</p>
+</section>
+{% endif %}
+
 <section class="verdict">
   <div>
-    <div class="eyebrow">Verdict</div>
+    <div class="eyebrow">Manipulation verdict</div>
     <div class="vlabel"><span class="dot" style="background:{{ dots.get(r.verdict.band, '#8A8A85') }}"></span>{{ r.verdict.label }}</div>
     {% if r.verdict.lo is not none %}
     <div style="display:flex;align-items:center;gap:8px;margin-top:8px"><div class="bar"><i style="left:{{ (r.verdict.lo*100)|round(1) }}%;width:{{ ((r.verdict.hi-r.verdict.lo)*100)|round(1) }}%"></i></div><span class="mono" style="color:#FFD23F;font-size:8pt">{{ '%.2f'|format(r.verdict.lo) }}–{{ '%.2f'|format(r.verdict.hi) }}</span></div>
@@ -66,10 +78,11 @@
 <section>
   <div class="eyebrow">Evidence</div>
   <table>
-    <tr><th>Item</th><th>File</th><th>Type</th><th>Verdict</th><th>SHA-256</th></tr>
+    <tr><th>Item</th><th>File</th><th>Type</th><th>Verdict</th><th>Deepfake</th><th>SHA-256</th></tr>
     {% for e in r.evidence %}
     <tr><td class="mono">{{ e.label }}</td><td><b>{{ e.name }}</b><br><span class="muted">{{ e.meta }}{% if e.derived_from %} · derived from {{ e.derived_from }}{% endif %}</span></td><td>{{ e.type }}</td>
       <td>{% if e.verdict %}<span class="dot" style="background:{{ dots.get(e.verdict.band) }}"></span> {{ e.verdict.label }}{% else %}—{% endif %}</td>
+      <td>{% if e.deepfake and e.deepfake.p is not none %}{{ e.deepfake.label }} <span class="mono">{{ (e.deepfake.p*100)|round|int }}%</span>{% else %}—{% endif %}</td>
       <td class="mono" style="font-size:7pt;word-break:break-all">{{ e.sha256 }}</td></tr>
     {% endfor %}
   </table>
