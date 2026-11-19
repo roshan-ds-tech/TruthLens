@@ -1,0 +1,470 @@
+{
+ "generated_by": "samples/make_home_demo.py (TruthLens analysis of this exact clip)",
+ "ground_truth": {
+  "video_cut_s": 8.0,
+  "audio_splice_s": 8.2
+ },
+ "duration": 16.0,
+ "fps": 25,
+ "verdict": {
+  "key": "strong",
+  "label": "Strong indicators",
+  "lo": 0.92,
+  "hi": 0.97,
+  "why": "an audio splice at 00:08.2 lines up with a motion break at 00:08.0"
+ },
+ "findings": [
+  {
+   "id": "F-VID-001",
+   "modality": "video",
+   "name": "Optical-flow discontinuity",
+   "loc": "00:08.0 \u00b7 frames 199\u2013200",
+   "start": 7.96,
+   "end": 8.0,
+   "lo": 0.8739,
+   "hi": 0.95,
+   "key": "ind",
+   "label": "Indicators of manipulation",
+   "explanation": "Motion jumps at 00:08.0 inside what is otherwise one continuous shot. This pattern is consistent with a cut or an inserted segment."
+  },
+  {
+   "id": "F-VID-002",
+   "modality": "video",
+   "name": "Optical-flow discontinuity",
+   "loc": "00:10.0 \u00b7 frames 249\u2013250",
+   "start": 9.96,
+   "end": 10.0,
+   "lo": 0.0972,
+   "hi": 0.4548,
+   "key": "inc",
+   "label": "Inconclusive",
+   "explanation": "Motion jumps at 00:10.0 inside what is otherwise one continuous shot. This pattern is consistent with a cut or an inserted segment."
+  },
+  {
+   "id": "F-VID-003",
+   "modality": "video",
+   "name": "Noise map discontinuity (frame 200)",
+   "loc": "00:08.0 \u00b7 frame 200 \u00b7 centre region \u00b7 320\u00d7288 px",
+   "start": 8.0,
+   "end": 8.0,
+   "lo": 0.4339,
+   "hi": 0.6739,
+   "key": "inc",
+   "label": "Inconclusive",
+   "explanation": "Sensor noise in the centre region is stronger than in the rest of the image (|z| = 6.0). Content from another camera or a retouched patch often has a different noise level."
+  },
+  {
+   "id": "F-VID-004",
+   "modality": "video",
+   "name": "Noise map discontinuity (frame 352)",
+   "loc": "00:14.1 \u00b7 frame 352 \u00b7 centre region \u00b7 320\u00d7256 px",
+   "start": 14.08,
+   "end": 14.08,
+   "lo": 0.1441,
+   "hi": 0.3841,
+   "key": "none",
+   "label": "No indicators found",
+   "explanation": "Sensor noise in the centre region is stronger than in the rest of the image (|z| = 4.2). Content from another camera or a retouched patch often has a different noise level."
+  },
+  {
+   "id": "F-AUD-001",
+   "modality": "audio",
+   "name": "Noise-floor step (possible splice)",
+   "loc": "00:08.2 \u00b7 +23 dB jump",
+   "start": 8.2,
+   "end": 8.7,
+   "lo": 0.86,
+   "hi": 0.95,
+   "key": "ind",
+   "label": "Indicators of manipulation",
+   "explanation": "Background noise rises by 23 dB at 00:08.2, and the spectrum of the quietest frames changes at the same point. Two recordings joined together usually have different room noise."
+  }
+ ],
+ "rules": [
+  {
+   "id": "R-03",
+   "name": "Audio splice within 0.5 s of a motion break",
+   "links": "F-AUD-001 \u2194 F-VID-001 \u00b7 \u0394 0.2 s",
+   "tag": "Supports"
+  }
+ ],
+ "waveform": [
+  0.0088,
+  0.0089,
+  0.2346,
+  0.705,
+  0.5474,
+  0.6637,
+  0.5117,
+  0.6985,
+  0.3441,
+  0.0134,
+  0.2891,
+  0.8624,
+  0.7634,
+  0.7762,
+  0.9141,
+  0.3875,
+  0.1171,
+  0.0081,
+  0.5049,
+  0.8741,
+  0.5145,
+  0.6015,
+  0.6097,
+  0.8048,
+  0.9595,
+  0.4767,
+  0.8689,
+  0.7459,
+  0.6648,
+  0.5363,
+  0.8157,
+  0.2952,
+  0.8433,
+  0.8599,
+  0.5239,
+  0.8293,
+  0.6277,
+  0.7055,
+  0.1462,
+  0.0455,
+  0.0082,
+  0.2023,
+  0.7355,
+  0.4499,
+  0.7415,
+  0.2909,
+  0.7879,
+  0.7368,
+  0.1841,
+  0.6538,
+  0.6588,
+  0.8428,
+  0.8581,
+  0.6132,
+  0.7604,
+  0.6634,
+  0.7435,
+  0.6464,
+  0.6478,
+  0.7838,
+  0.4692,
+  0.0211,
+  0.0092,
+  0.0092,
+  0.0088,
+  0.0083,
+  0.0073,
+  0.0079,
+  0.008,
+  0.0089,
+  0.0083,
+  0.0294,
+  0.0338,
+  0.1034,
+  0.7881,
+  0.7461,
+  0.9351,
+  0.5911,
+  0.7693,
+  0.2893,
+  0.7541,
+  0.4443,
+  0.7012,
+  0.7952,
+  0.8102,
+  0.7483,
+  0.1847,
+  0.5966,
+  0.723,
+  0.7119,
+  0.9335,
+  0.9057,
+  0.7286,
+  0.689,
+  0.7186,
+  0.7344,
+  0.7445,
+  1.0,
+  0.7286,
+  0.7568,
+  0.6953,
+  0.8743,
+  0.5532,
+  0.5283,
+  0.8922,
+  0.8717,
+  0.6192,
+  0.2111,
+  0.0296,
+  0.0774,
+  0.3039,
+  0.6077,
+  0.548,
+  0.7066,
+  0.7162,
+  0.8313,
+  0.7599,
+  0.6803,
+  0.6863,
+  0.674,
+  0.7329,
+  0.7873,
+  0.697,
+  0.8158,
+  0.7825,
+  0.4977,
+  0.7112,
+  0.6855,
+  0.398,
+  0.0359,
+  0.0253,
+  0.0264,
+  0.0276,
+  0.0285,
+  0.0266,
+  0.0275,
+  0.027,
+  0.0249,
+  0.026,
+  0.0238
+ ],
+ "curve": [
+  0.082,
+  0.05,
+  0.056,
+  0.061,
+  0.065,
+  0.05,
+  0.05,
+  1.0,
+  1.0,
+  0.153,
+  0.365,
+  0.054,
+  0.064,
+  0.065,
+  0.264,
+  0.05,
+  0.05
+ ],
+ "words": [
+  {
+   "end": 0.44,
+   "p": 0.944,
+   "start": 0.0,
+   "w": "Good"
+  },
+  {
+   "end": 0.86,
+   "p": 0.937,
+   "start": 0.44,
+   "w": "evening,"
+  },
+  {
+   "end": 1.66,
+   "p": 0.932,
+   "start": 1.22,
+   "w": "everyone,"
+  },
+  {
+   "end": 2.3,
+   "p": 0.845,
+   "start": 2.1,
+   "w": "thank"
+  },
+  {
+   "end": 2.56,
+   "p": 0.981,
+   "start": 2.3,
+   "w": "you"
+  },
+  {
+   "end": 2.82,
+   "p": 0.997,
+   "start": 2.56,
+   "w": "for"
+  },
+  {
+   "end": 3.24,
+   "p": 0.993,
+   "start": 2.82,
+   "w": "joining"
+  },
+  {
+   "end": 3.52,
+   "p": 0.754,
+   "start": 3.24,
+   "w": "at"
+  },
+  {
+   "end": 3.78,
+   "p": 0.625,
+   "start": 3.52,
+   "w": "short"
+  },
+  {
+   "end": 4.28,
+   "p": 0.984,
+   "start": 3.78,
+   "w": "notice,"
+  },
+  {
+   "end": 4.88,
+   "p": 0.966,
+   "start": 4.72,
+   "w": "the"
+  },
+  {
+   "end": 5.12,
+   "p": 0.957,
+   "start": 4.88,
+   "w": "state"
+  },
+  {
+   "end": 5.4,
+   "p": 0.998,
+   "start": 5.12,
+   "w": "has"
+  },
+  {
+   "end": 5.72,
+   "p": 0.997,
+   "start": 5.4,
+   "w": "seen"
+  },
+  {
+   "end": 6.06,
+   "p": 0.976,
+   "start": 5.72,
+   "w": "heavy"
+  },
+  {
+   "end": 6.34,
+   "p": 0.961,
+   "start": 6.06,
+   "w": "rain"
+  },
+  {
+   "end": 6.6,
+   "p": 0.997,
+   "start": 6.34,
+   "w": "this"
+  },
+  {
+   "end": 7.02,
+   "p": 0.997,
+   "start": 6.6,
+   "w": "week."
+  },
+  {
+   "end": 8.6,
+   "p": 0.935,
+   "start": 8.2,
+   "w": "The"
+  },
+  {
+   "end": 8.92,
+   "p": 0.93,
+   "start": 8.6,
+   "w": "government"
+  },
+  {
+   "end": 9.26,
+   "p": 0.997,
+   "start": 8.92,
+   "w": "has"
+  },
+  {
+   "end": 9.78,
+   "p": 0.998,
+   "start": 9.26,
+   "w": "decided"
+  },
+  {
+   "end": 10.04,
+   "p": 0.999,
+   "start": 9.78,
+   "w": "to"
+  },
+  {
+   "end": 10.38,
+   "p": 0.985,
+   "start": 10.04,
+   "w": "declare"
+  },
+  {
+   "end": 10.6,
+   "p": 0.994,
+   "start": 10.38,
+   "w": "a"
+  },
+  {
+   "end": 10.8,
+   "p": 0.395,
+   "start": 10.6,
+   "w": "three"
+  },
+  {
+   "end": 10.98,
+   "p": 0.688,
+   "start": 10.8,
+   "w": "day"
+  },
+  {
+   "end": 11.3,
+   "p": 0.995,
+   "start": 10.98,
+   "w": "holiday"
+  },
+  {
+   "end": 11.66,
+   "p": 0.997,
+   "start": 11.3,
+   "w": "from"
+  },
+  {
+   "end": 12.1,
+   "p": 0.994,
+   "start": 11.66,
+   "w": "tomorrow,"
+  },
+  {
+   "end": 12.78,
+   "p": 0.992,
+   "start": 12.54,
+   "w": "schools"
+  },
+  {
+   "end": 13.14,
+   "p": 0.987,
+   "start": 12.78,
+   "w": "and"
+  },
+  {
+   "end": 13.58,
+   "p": 0.994,
+   "start": 13.14,
+   "w": "offices"
+  },
+  {
+   "end": 13.88,
+   "p": 0.997,
+   "start": 13.58,
+   "w": "will"
+  },
+  {
+   "end": 14.16,
+   "p": 0.999,
+   "start": 13.88,
+   "w": "remain"
+  },
+  {
+   "end": 14.62,
+   "p": 0.998,
+   "start": 14.16,
+   "w": "closed."
+  }
+ ]
+}

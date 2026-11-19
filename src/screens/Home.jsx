@@ -1,20 +1,9 @@
 import { useState } from 'react';
-import { c, YELLOW, YELLOW_HOVER, MONO, Icon, Logo, hover, fmtRange, Muted } from '../ui.jsx';
+import { c, YELLOW, YELLOW_HOVER, MONO, Icon, Logo, hover, Muted } from '../ui.jsx';
 import { api, setToken, useServerMode, PRIVACY } from '../api/client.js';
+import HomePreview from './HomePreview.jsx';
 
 const KINDS = [{ icon: 'image', label: 'Image' }, { icon: 'movie', label: 'Video' }, { icon: 'graphic_eq', label: 'Audio' }, { icon: 'notes', label: 'Text' }];
-
-const BARS = Array.from({ length: 64 }, (_, i) => {
-  const t = (i / 64) * 42;
-  const e = t > 14 && t < 19 ? 0.9 : 0.35 + 0.4 * Math.abs(Math.sin(i * 1.7) * Math.sin(i * 0.6));
-  return Math.round(e * 80) + '%';
-});
-
-const SAMPLES = [
-  ['F-AUD-001', 'Noise-floor step (possible splice)', 0.70, 0.86, 'Strong indicators', '#D64545'],
-  ['F-VID-002', 'Optical-flow discontinuity', 0.64, 0.81, 'Strong indicators', '#D64545'],
-  ['F-XM-001', 'Lip-sync weak correlation', 0.40, 0.62, 'Inconclusive', '#8A8A85', true],
-];
 
 const POINTS = [
   { icon: 'lock', title: null, text: null },   // wording depends on local vs hosted mode (PRIVACY)
@@ -110,43 +99,7 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
               Case · <span style={{ fontFamily: MONO }}>C-0007</span> · Viral clip: minister announces holiday
             </span>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ flex: '3 1 420px', minWidth: 0, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 14, padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', background: '#1A1A1A' }}>
-                {/* Illustration only (stock photo, Pexels licence); real cases always show the uploaded evidence. */}
-                <img src="/img/press-briefing.jpg" alt="Microphone in an empty briefing room" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(.78)' }} />
-                <span style={{ position: 'absolute', left: 14, top: 12, fontFamily: MONO, fontSize: 10.5, color: '#fff', background: 'rgba(17,17,17,.55)', padding: '2px 7px', borderRadius: 5 }}>sample frame · press briefing</span>
-                <div style={{ position: 'absolute', left: '36%', top: '27%', width: '27%', height: '44%', border: `2px solid ${YELLOW}`, borderRadius: 6 }}>
-                  <span style={{ position: 'absolute', left: -2, top: -24, background: YELLOW, color: '#111111', fontFamily: MONO, fontSize: 10.5, fontWeight: 600, padding: '2px 7px', borderRadius: 5, whiteSpace: 'nowrap' }}>F-VID-002 · 00:14.0</span>
-                </div>
-              </div>
-              <div style={{ position: 'relative', height: 40, borderRadius: 8, background: c.surface, overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', left: '33.3%', width: '11.9%', top: 0, bottom: 0, background: 'rgba(255,210,63,.35)', borderLeft: `1.5px solid ${YELLOW}`, borderRight: `1.5px solid ${YELLOW}` }} />
-                <div style={{ position: 'absolute', inset: '0 4px', display: 'flex', alignItems: 'center', gap: 2 }}>
-                  {BARS.map((h, i) => <span key={i} style={{ flex: 1, height: h, background: c.ink, borderRadius: 1, opacity: 0.75 }} />)}
-                </div>
-              </div>
-            </div>
-            <div style={{ flex: '2 1 280px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {SAMPLES.map(([id, name, lo, hi, verdict, dotColor, inc]) => (
-                <div key={id} style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 14, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600 }}>{id}</span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 20, padding: '0 8px', borderRadius: 999, background: c.surface, border: `1px solid ${c.border}`, fontSize: 11, fontWeight: 600 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: dotColor }} />{verdict}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: 14, fontWeight: 700 }}>{name}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ position: 'relative', flex: 1, height: 6, borderRadius: 999, background: c.line }}>
-                      <div style={{ position: 'absolute', top: 0, bottom: 0, left: lo * 100 + '%', width: (hi - lo) * 100 + '%', borderRadius: 999, background: inc ? '#8A8A85' : c.ink }} />
-                    </div>
-                    <span style={{ fontFamily: MONO, fontSize: 11 }}>{fmtRange(lo, hi)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <HomePreview />
         </section>
 
         <div style={{ width: '100%', maxWidth: 1040, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 28 }}>
