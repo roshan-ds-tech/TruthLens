@@ -55,6 +55,17 @@ def _thumb(f: dict, ev: Evidence) -> Optional[str]:
             d.rectangle([x - box[0], y - box[1], x - box[0] + w, y - box[1] + h], outline=(255, 210, 63), width=3)
             crop.thumbnail((240, 150))
             return _png_uri(crop)
+        if loc.get("type") == "frame_range" and ev.kind == "video":
+            import cv2
+
+            cap = cv2.VideoCapture(str(custody.original_path(ev.case_id, ev.sha256)))
+            cap.set(cv2.CAP_PROP_POS_MSEC, float(loc.get("start", 0)) * 1000)
+            ok, frame = cap.read()
+            cap.release()
+            if ok:
+                im = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                im.thumbnail((240, 150))
+                return _png_uri(im)
         if loc.get("type") == "time_range" and ev.kind == "audio":
             spec = config.ARTIFACT_DIR / ev.case_id / ev.label / "spectrogram.png"
             dur = JsonMixin.loads(ev.metadata_json, {}).get("duration") or 1
@@ -79,7 +90,8 @@ def _summary(case: dict, findings: list[dict]) -> str:
     acc = sum(f["review"]["status"] == "accepted" for f in findings)
     rej = sum(f["review"]["status"] == "rejected" for f in findings)
     open_ = len(findings) - acc - rej
-    lead = (case["description"].strip() + " ") if case["description"].strip() else ""
+    desc = case["description"].strip()
+    lead = (desc + ("" if desc.endswith((".", "!", "?")) else ".") + " ") if desc else ""
     return (f"{lead}{len(kinds)} evidence item{'s' if len(kinds) != 1 else ''} ({parts}) were analyzed on this device. "
             f"{len(findings)} finding{'s were' if len(findings) != 1 else ' was'} produced; {acc} accepted by the reviewer, "
             f"{rej} rejected and {open_} still open.")
