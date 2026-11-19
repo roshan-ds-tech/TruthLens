@@ -31,6 +31,22 @@ def _quiet_spectrum(y: np.ndarray, sr: int, t0: float, t1: float) -> np.ndarray 
     return spec - spec.mean()
 
 
+PERSIST_S = 4.0
+
+
+def _persistent(db: np.ndarray, times: np.ndarray, t: float, step: float) -> bool:
+    """A splice changes the background for good: even the quietest frame on the louder side stays above
+    the quietest frame on the quieter side. Dense speech only *looks* louder, since somewhere in it is a
+    pause back at the old floor, so it fails this test."""
+    before = db[(times >= t - PERSIST_S) & (times < t - GUARD_S)]
+    after = db[(times > t + GUARD_S) & (times <= t + PERSIST_S)]
+    if len(before) < 50 or len(after) < 50:
+        return False
+    low_b, low_a = np.percentile(before, 1), np.percentile(after, 1)
+    gap = (low_a - low_b) if step > 0 else (low_b - low_a)
+    return gap >= config.NOISE_FLOOR_STEP_DB * 0.75
+
+
 def _refine(db: np.ndarray, times: np.ndarray, t: float, step: float) -> float:
     """Robust change point of a rolling-minimum floor trace (quietest 20 ms frame per 0.5 s).
 
@@ -77,6 +93,8 @@ def splice_candidates(y: np.ndarray, sr: int) -> list[dict]:
         if abs(step) < config.NOISE_FLOOR_STEP_DB:
             break
         if any(abs(t - c["t"]) < NMS_S for c in out):
+            continue
+        if not _persistent(db, times, float(t), float(step)):
             continue
         sb, sa = _quiet_spectrum(y, sr, t - SIDE_S, t - GUARD_S), _quiet_spectrum(y, sr, t + GUARD_S, t + SIDE_S)
         spec_dist = float(np.sqrt(np.mean((sa - sb) ** 2))) if sb is not None and sa is not None else 0.0

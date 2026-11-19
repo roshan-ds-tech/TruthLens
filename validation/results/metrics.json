@@ -2,7 +2,7 @@
   "version": "v1.0",
   "seed": 7,
   "quick": false,
-  "generated_at": "2026-11-19T09:16:06+00:00",
+  "generated_at": "2026-11-19T09:31:45+00:00",
   "label": "Small self-made test set. Not a general accuracy claim.",
   "n_items": 204,
   "sets": {
@@ -224,7 +224,7 @@
   "localization": {
     "image_iou_mean": 0.706,
     "image_n": 46,
-    "audio_splice_err_median_s": 0.006,
+    "audio_splice_err_median_s": 0.007,
     "audio_n": 16,
     "video_edit_err_median_s": 0.04,
     "video_n": 15
@@ -387,5 +387,5 @@
     "modified_after_capture",
     "camera_tags_missing"
   ],
-  "runtime_s": 59.5
+  "runtime_s": 58.5
 }

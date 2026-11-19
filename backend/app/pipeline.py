@@ -24,6 +24,7 @@ from .correlate import rules as rules_mod
 from .models import Case, Correlation, Evidence, FindingRow, Job, JsonMixin, utcnow
 from .scoring import calibrate, fuse
 
+REPORT_FLOOR = 0.30
 PREFIX = {"image": "IMG", "video": "VID", "audio": "AUD", "text": "TXT", "cross-modal": "XM"}
 KIND_ORDER = {"video": 0, "audio": 1, "image": 2, "text": 3}
 NOUN = {"video": "Video", "audio": "Audio", "image": "Image", "text": "Text"}
@@ -224,6 +225,19 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
                        "calibrated": cal.calibrated, "method": f.method, "explanation": f.explanation,
                        "alternatives": list(f.alternatives), "artifacts": list(f.artifacts), "extra": dict(f.extra),
                        "weight_scale": 1.0, "sort_key": f"{order[ctx.label]:03d}-{si:02d}-{f.sort:012.4f}"})
+    # findings whose whole range sits below the reporting floor are logged, not listed
+    hidden = [f for f in scored if f["hi"] < REPORT_FLOOR]
+    if hidden:
+        scored = [f for f in scored if f["hi"] >= REPORT_FLOOR]
+        for f in hidden:
+            tr.log(f["ctx"].kind, f"below reporting floor: {f['name'].lower()} · {f['loc_label']} ({f['lo']:.2f}–{f['hi']:.2f})")
+        limitations.append(f"{len(hidden)} weak signal{'s' if len(hidden) != 1 else ''} with a range entirely below "
+                           f"{REPORT_FLOOR:.2f} {'were' if len(hidden) != 1 else 'was'} logged but not listed as findings.")
+        counters = {}
+        for f in scored:   # renumber so IDs stay consecutive (still deterministic)
+            pre = f["finding_id"].split("-")[1]
+            counters[pre] = counters.get(pre, 0) + 1
+            f["finding_id"] = f"F-{pre}-{counters[pre]:03d}"
     if any(not f["calibrated"] for f in scored):
         names = sorted({f["indicator"] for f in scored if not f["calibrated"]})
         limitations.append("Uncalibrated indicators (no validation data yet): " + ", ".join(names) + ". Their ranges use a fixed ±0.12.")

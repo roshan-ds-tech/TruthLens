@@ -1,0 +1,92 @@
+{
+  "case": "C-0007",
+  "findings_digest": "9005f97c300b2005bc2bab7315178cc48b709d8e0829087c908f908626a3ee5b",
+  "verdict": {
+    "band": "strong",
+    "lo": 0.92,
+    "hi": 0.97
+  },
+  "evidence": {
+    "E-01": {
+      "kind": "video",
+      "sha256": "6e848d48f96ed72389915154b7ead5c2d2fbe7ca2718dd04925a38779003cce5",
+      "band": "indicators"
+    },
+    "E-02": {
+      "kind": "audio",
+      "sha256": "af0798addb17343e75dfde16a1dc4a01599e615ddd5614d0bea6aa51ee5c6e05",
+      "band": "indicators"
+    },
+    "E-03": {
+      "kind": "image",
+      "sha256": "14c611cfe51f1efa2aeae200623ab07a9be15c073e0d07bb47b9da9c9fc38fd0",
+      "band": "inconclusive"
+    },
+    "E-04": {
+      "kind": "text",
+      "sha256": "e481e8f17061e3f5977dd223ed4b55a838df39b8c85a783037a6973807734e17",
+      "band": "indicators"
+    }
+  },
+  "findings": [
+    {
+      "finding_id": "F-VID-001",
+      "evidence_id": "E-01",
+      "indicator": "flow_discontinuity",
+      "loc_label": "00:14.0 \u00b7 frames 349\u2013350",
+      "conf_low": 0.8739,
+      "conf_high": 0.95,
+      "band": "indicators"
+    },
+    {
+      "finding_id": "F-AUD-001",
+      "evidence_id": "E-02",
+      "indicator": "noise_floor_step",
+      "loc_label": "00:14.2 \u00b7 +24 dB jump",
+      "conf_low": 0.86,
+      "conf_high": 0.95,
+      "band": "indicators"
+    },
+    {
+      "finding_id": "F-IMG-001",
+      "evidence_id": "E-03",
+      "indicator": "editor_software_tag",
+      "loc_label": "EXIF Software \u00b7 Adobe Photoshop 25.1 (Windows)",
+      "conf_low": 0.7665,
+      "conf_high": 0.95,
+      "band": "indicators"
+    },
+    {
+      "finding_id": "F-IMG-002",
+      "evidence_id": "E-03",
+      "indicator": "modified_after_capture",
+      "loc_label": "Captured 2024-03-03 \u00b7 modified 2026-11-12",
+      "conf_low": 0.38,
+      "conf_high": 0.62,
+      "band": "inconclusive"
+    },
+    {
+      "finding_id": "F-IMG-003",
+      "evidence_id": "E-03",
+      "indicator": "thumbnail_mismatch",
+      "loc_label": "EXIF thumbnail \u00b7 pHash distance 32",
+      "conf_low": 0.7683,
+      "conf_high": 0.95,
+      "band": "indicators"
+    },
+    {
+      "finding_id": "F-TXT-001",
+      "evidence_id": "E-04",
+      "indicator": "claim_date_conflict",
+      "loc_label": "Caption \u2194 EXIF DateTimeOriginal of E-03",
+      "conf_low": 0.7554,
+      "conf_high": 0.95,
+      "band": "indicators"
+    }
+  ],
+  "rules": [
+    "R-03",
+    "R-11"
+  ],
+  "report_pdf": true
+}
