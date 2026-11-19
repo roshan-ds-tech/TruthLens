@@ -32,12 +32,15 @@ export default function Dashboard({ go, active, investigator }) {
   const metrics = useApi(active ? '/validation/metrics' : null);
   const st = stats.data;
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
-  const STATS = st ? [
+  const retry = (e) => { e.preventDefault(); stats.reload(); cases.reload(); metrics.reload(); };
+  const STATS = !st ? [
+    ['Active cases', 'folder_open'], ['Evidence analyzed', 'inventory_2'], ['Findings awaiting review', 'rate_review'], ['Avg. analysis time', 'timer'],
+  ].map(([label, icon]) => ({ label, icon, value: '—', unit: '', foot: stats.error ? 'Unavailable' : 'Loading…' })) : [
     { label: 'Active cases', value: String(st.active_cases), unit: '', icon: 'folder_open', foot: `${st.opened_this_week} opened this week` },
     { label: 'Evidence analyzed', value: String(st.evidence_count), unit: '', icon: 'inventory_2', foot: st.evidence_kinds.length ? st.evidence_kinds.map((k) => k[0].toUpperCase() + k.slice(1)).join(', ') : 'No evidence yet' },
     { label: 'Findings awaiting review', value: String(st.pending_review), unit: '', icon: 'rate_review', foot: st.top_pending_case.count ? `${st.top_pending_case.count} in ${st.top_pending_case.id}` : 'Nothing pending' },
     { label: 'Avg. analysis time', value: st.avg_analysis_seconds == null ? '—' : String(st.avg_analysis_seconds), unit: st.avg_analysis_seconds == null ? '' : 's', icon: 'timer', foot: 'On this device, per case' },
-  ] : [];
+  ];
   const CASES = (cases.data || []).slice(0, 5);
   const VAL = (metrics.data?.indicators || []).filter((v) => v.precision != null && v.n_findings >= 6)
     .sort((x, y) => y.n_findings - x.n_findings).slice(0, 4);
@@ -47,7 +50,8 @@ export default function Dashboard({ go, active, investigator }) {
         <div style={eyebrow}>Overview · {today}</div>
         <h1 style={h1}>{greeting()}{investigator ? `, ${investigator.split(' ')[0]}` : ''}.</h1>
         <p style={{ margin: 0, fontSize: 15, color: c.ink2 }}>
-          {st ? `You have ${st.pending_review} finding${st.pending_review === 1 ? '' : 's'} waiting for review across ${st.active_cases} active case${st.active_cases === 1 ? '' : 's'}.` : stats.error ? `Could not reach the analysis service: ${stats.error.message}` : 'Loading…'}
+          {st ? `You have ${st.pending_review} finding${st.pending_review === 1 ? '' : 's'} waiting for review across ${st.active_cases} active case${st.active_cases === 1 ? '' : 's'}.`
+            : stats.error ? <>{stats.error.message} <a href="#" onClick={retry} style={{ fontWeight: 700 }}>Retry</a></> : 'Loading…'}
         </p>
       </div>
 
@@ -96,6 +100,8 @@ export default function Dashboard({ go, active, investigator }) {
             <a href="#" onClick={preventThen(() => go('cases'))} style={{ fontSize: 13, fontWeight: 700 }}>All cases</a>
           </div>
           {cases.data && !CASES.length && <div style={{ padding: '6px 20px 18px' }}><Muted>No cases yet. Use New case to add evidence.</Muted></div>}
+          {cases.error && !cases.data && <div style={{ padding: '6px 20px 18px' }}><Muted>Couldn’t load cases. <a href="#" onClick={retry} style={{ fontWeight: 700 }}>Retry</a></Muted></div>}
+          {!cases.data && !cases.error && <div style={{ padding: '6px 20px 18px' }}><Muted>Loading cases…</Muted></div>}
           {CASES.map((cs) => (
             <button key={cs.id} onClick={() => go('workspace', { caseId: cs.id })} {...hover({ bg: c.surface }, { width: '100%', display: 'grid', gridTemplateColumns: '72px minmax(0,1fr) auto auto 90px', alignItems: 'center', gap: 16, padding: '14px 20px', border: 'none', borderTop: `1px solid ${c.line}`, background: c.bg, fontFamily: 'inherit', color: c.ink, textAlign: 'left', cursor: 'pointer' })}>
               <span style={{ fontFamily: MONO, fontSize: 12, color: c.ink2 }}>{cs.id}</span>

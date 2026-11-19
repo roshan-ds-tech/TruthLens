@@ -69,3 +69,15 @@ Piper needs its voice models downloaded and was not installed. The validation ha
 Platt scaling needs both classes. When every validation finding of an indicator was a hit (or a miss), its probability
 is the smoothed hit rate and its range comes from a Beta(hits+1, misses+1) posterior, so 16/16 on a small set gives
 0.86–0.95 rather than near-certainty.
+
+### D-16 · Accounts (sign-up / log-in) for the hosted deployment
+The design is a single-user local tool. To put it on the internet, the existing log-in dialog now creates real
+accounts: scrypt password hashes (standard library), random bearer tokens stored only as SHA-256, 7-day expiry,
+8 failed log-ins per email per 15 minutes, and every case owned by one account. Bearer tokens (not cookies) because
+the UI (Vercel) and API (Hugging Face) are on different sites; protected media is fetched with the token and shown
+from object URLs.
+
+### D-17 · Hosted on Hugging Face Spaces, which departs from "offline, no data leaves the device"
+Hosting was requested. The backend runs as a Docker Space (CPU, models baked in, no outbound calls during analysis);
+the UI says plainly that it is a hosted server and that evidence is visible only to the uploading account. Local
+mode keeps the original promise. Free Spaces have no persistent disk, so hosted data is temporary.

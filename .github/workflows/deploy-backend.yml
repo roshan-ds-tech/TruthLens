@@ -1,0 +1,70 @@
+name: Deploy backend to Hugging Face
+
+# Runs after CI passes on main (or by hand). Needs:
+#   secret   HF_TOKEN   a Hugging Face token with write access
+#   variable HF_SPACE   the Space id, e.g. your-hf-user/truthlens-api (created if missing)
+#   variable FRONTEND_ORIGINS        e.g. https://truthlens.vercel.app   (CORS allow-list, comma separated)
+#   variable FRONTEND_ORIGIN_REGEX   e.g. https://truthlens-.*\.vercel\.app  (optional, preview deployments)
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: deploy-backend
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_SPACE: ${{ vars.HF_SPACE }}
+      FRONTEND_ORIGINS: ${{ vars.FRONTEND_ORIGINS }}
+      FRONTEND_ORIGIN_REGEX: ${{ vars.FRONTEND_ORIGIN_REGEX }}
+    steps:
+      - name: Check configuration
+        run: |
+          if [ -z "$HF_TOKEN" ] || [ -z "$HF_SPACE" ]; then
+            echo "::warning::HF_TOKEN secret or HF_SPACE variable not set; skipping the backend deploy."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+          fi
+      - uses: actions/checkout@v4
+        if: env.SKIP != '1'
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-python@v5
+        if: env.SKIP != '1'
+        with:
+          python-version: "3.11"
+      - name: Assemble the Space
+        if: env.SKIP != '1'
+        run: |
+          mkdir -p space/validation
+          rsync -a --exclude '.venv' --exclude 'models' --exclude '__pycache__' --exclude 'tests' backend space/
+          cp -r validation/results space/validation/
+          cp validation/synth.py validation/run_validation.py space/validation/
+          cp Dockerfile .dockerignore space/
+          cp deploy/hf-space/README.md space/README.md
+      - name: Upload to Hugging Face
+        if: env.SKIP != '1'
+        run: |
+          pip install --quiet "huggingface_hub>=0.25"
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          space = os.environ["HF_SPACE"]
+          api.create_repo(space, repo_type="space", space_sdk="docker", exist_ok=True)
+          for key, value in {"TRUTHLENS_MODE": "hosted",
+                             "TRUTHLENS_ALLOWED_ORIGINS": os.environ.get("FRONTEND_ORIGINS", ""),
+                             "TRUTHLENS_ALLOWED_ORIGIN_REGEX": os.environ.get("FRONTEND_ORIGIN_REGEX", "")}.items():
+              if value:
+                  api.add_space_variable(space, key, value)
+          api.upload_folder(folder_path="space", repo_id=space, repo_type="space", delete_patterns=["*"],
+                            commit_message=f"Deploy {os.environ['GITHUB_SHA'][:7]} from GitHub")
+          print(f"Deployed to https://huggingface.co/spaces/{space}")
+          PY

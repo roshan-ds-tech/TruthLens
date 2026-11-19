@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { c, VERDICTS, YELLOW, MONO, Icon, chipStyle, eyebrow, fmtRange, preventThen, Muted } from '../ui.jsx';
 import { useApi } from '../api/client.js';
+import { AuthImg } from '../api/media.jsx';
 
 const LAYERS = [['ela', 'Error level', 'contrast'], ['noise', 'Noise map', 'grain'], ['copy', 'Copy-move', 'content_copy'], ['regions', 'Regions', 'crop_free']];
 const ARTIFACT = { ela: 'ela.png', noise: 'noise.png', copy: 'copymove.png' };
@@ -77,11 +78,11 @@ export default function ImageViewer({ go, active, caseId, evidenceId }) {
           </div>
           <div style={{ padding: 16 }}>
             <div style={{ position: 'relative', aspectRatio: `${W}/${H}`, maxHeight: '70vh', margin: '0 auto', borderRadius: 12, overflow: 'hidden', background: 'repeating-linear-gradient(135deg,#EFEFEB 0 12px,#F7F7F5 12px 24px)', userSelect: 'none' }}>
-              <img src={ev.media_url} alt="original" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
+              <AuthImg path={ev.media_url} alt="original" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill' }} />
               <div style={{ position: 'absolute', inset: 0, clipPath: `inset(0 0 0 ${posPct})`, background: '#151515' }}>
-                <img src={ev.media_url} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', filter: 'grayscale(1) brightness(.35)' }} />
+                <AuthImg path={ev.media_url} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', filter: 'grayscale(1) brightness(.35)' }} />
                 {['ela', 'noise', 'copy'].map((k) => layers[k] && !missing[k] && (
-                  <img key={k} src={`/api/evidence/${ev.id}/artifacts/${ARTIFACT[k]}`} alt="" draggable={false} onError={() => setMissing((m) => ({ ...m, [k]: true }))}
+                  <AuthImg key={k} path={`/api/evidence/${ev.id}/artifacts/${ARTIFACT[k]}`} alt="" draggable={false} onError={() => setMissing((m) => ({ ...m, [k]: true }))}
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', mixBlendMode: 'screen' }} />
                 ))}
                 <span style={{ position: 'absolute', right: 12, bottom: 12, ...mono, fontSize: 10.5, color: '#fff', background: 'rgba(0,0,0,.55)', padding: '3px 8px', borderRadius: 6, whiteSpace: 'nowrap' }}>ANALYSIS · {layerLabel}{Object.keys(missing).length ? ' · run analysis for maps' : ''}</span>

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import importlib.util
 from importlib import metadata as pkg_meta
+from typing import Optional
 
 from sqlmodel import Session
 
@@ -29,16 +30,20 @@ def dependency_available(a: FnAnalyzer) -> bool:
     return a.optional_dep is None or importlib.util.find_spec(a.optional_dep) is not None
 
 
-def enabled_map(s: Session) -> dict[str, bool]:
-    row = s.get(Setting, "analyzers")
+def _key(user_id: Optional[int]) -> str:
+    return "analyzers" if user_id is None else f"analyzers:{user_id}"
+
+
+def enabled_map(s: Session, user_id: Optional[int] = None) -> dict[str, bool]:
+    row = s.get(Setting, _key(user_id))
     stored = JsonMixin.loads(row.value_json, {}) if row else {}
     return {k: bool(stored.get(k, True)) for k in ALL}
 
 
-def set_enabled(s: Session, updates: dict[str, bool]) -> dict[str, bool]:
-    current = enabled_map(s)
+def set_enabled(s: Session, updates: dict[str, bool], user_id: Optional[int] = None) -> dict[str, bool]:
+    current = enabled_map(s, user_id)
     current.update({k: bool(v) for k, v in updates.items() if k in ALL})
-    row = s.get(Setting, "analyzers") or Setting(key="analyzers", value_json="{}")
+    row = s.get(Setting, _key(user_id)) or Setting(key=_key(user_id), value_json="{}")
     row.value_json = JsonMixin.dumps(current)
     s.add(row)
     s.commit()

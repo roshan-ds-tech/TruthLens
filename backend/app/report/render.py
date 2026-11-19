@@ -109,13 +109,13 @@ def _checks(findings: list[dict]) -> list[str]:
 
 
 def build(s: Session, case_row: Case) -> dict[str, Any]:
-    from ..api.routes import case_custody, case_graph
+    from ..api.routes import custody_for, graph_for
 
     case = adapters.case_detail(s, case_row)
     findings = adapters.case_findings(s, case_row.id)
-    graph = case_graph(case_row.id, s)
+    graph = graph_for(s, case_row)
     evs = {e.id: e for e in s.exec(select(Evidence).where(Evidence.case_id == case_row.id))}
-    custody_info = case_custody(case_row.id, s)
+    custody_info = custody_for(s, case_row.id)
     draft = len(s.exec(select(ReportRow).where(ReportRow.case_id == case_row.id)).all()) + 1
     claims = []
     for e in case["evidence"]:

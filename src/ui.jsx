@@ -100,6 +100,6 @@ export function Logo({ size = 38 }) {
 export const preventThen = (fn) => (e) => { e.preventDefault(); fn(); };
 
 /** Loading / empty / error line, in the same muted footnote style the screens already use. */
-export function Muted({ children, style }) {
-  return <span style={{ fontSize: 13, color: c.ink2, ...style }}>{children}</span>;
+export function Muted({ children, style, ...rest }) {
+  return <span style={{ fontSize: 13, color: c.ink2, ...style }} {...rest}>{children}</span>;
 }

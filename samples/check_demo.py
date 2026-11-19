@@ -23,7 +23,7 @@ EXPECTED = ROOT / "samples" / "expected_report.json"
 def run() -> dict:
     from app import config, db, pipeline
     from app.api import adapters
-    from app.api.routes import case_graph
+    from app.api.routes import graph_for
     from app.ingest.service import ingest_file, ingest_text
     from app.models import Case
     from app.report import render
@@ -43,7 +43,7 @@ def run() -> dict:
         detail = adapters.case_detail(s, case)
         report = render.build(s, case)
         findings = adapters.case_findings(s, case.id)
-        rules = case_graph(case.id, s)["rules"]
+        rules = graph_for(s, case)["rules"]
     return {
         "case": case.id,
         "findings_digest": out["digest"],

@@ -41,6 +41,7 @@ class Case(SQLModel, table=True):
     limitations_json: Optional[str] = None
     analysis_seconds: Optional[float] = None
     run_count: int = 0
+    owner_id: Optional[int] = Field(default=None, index=True)   # NULL = created locally by the CLI
 
 
 class Evidence(SQLModel, table=True):
@@ -147,6 +148,24 @@ class Job(SQLModel, table=True):
     log_json: str = "[]"
     error: Optional[str] = None
     findings_count: int = 0
+
+
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(index=True, unique=True)
+    name: str
+    password_hash: str                                # scrypt$n$r$p$salt_hex$hash_hex
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class AuthSession(SQLModel, table=True):
+    __tablename__ = "auth_sessions"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True, foreign_key="users.id")
+    token_hash: str = Field(index=True, unique=True)  # SHA-256 of the bearer token; the token itself is never stored
+    created_at: datetime = Field(default_factory=utcnow)
+    expires_at: datetime
 
 
 class Setting(SQLModel, table=True):

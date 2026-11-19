@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { c, YELLOW, MONO, Icon, eyebrow, h1, page, PrimaryButton, SecondaryButton, Muted } from '../ui.jsx';
-import { api } from '../api/client.js';
+import { api, useServerMode } from '../api/client.js';
 
 const KINDS = [{ icon: 'image', label: 'Image' }, { icon: 'movie', label: 'Video' }, { icon: 'graphic_eq', label: 'Audio' }, { icon: 'notes', label: 'Text' }];
 
@@ -20,6 +20,7 @@ export default function NewCase({ go, active, caseId, investigator }) {
   const [busy, setBusy] = useState(false);
   const [drag, setDrag] = useState(false);
   const input = useRef(null);
+  const hosted = useServerMode() === 'hosted';
 
   // Resume a draft case; any other case opens an empty form.
   useEffect(() => {
@@ -198,7 +199,7 @@ export default function NewCase({ go, active, caseId, investigator }) {
       </section>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 14, paddingTop: 4 }}>
-        <span style={{ fontSize: 13, color: c.ink2 }}>Runs on this device. Estimated time 40–60 s.</span>
+        <span style={{ fontSize: 13, color: c.ink2 }}>{hosted ? 'Runs on the TruthLens server.' : 'Runs on this device.'} Estimated time 40–60 s.</span>
         <div style={{ display: 'flex', gap: 10 }}>
           <SecondaryButton onClick={saveDraft} disabled={busy} style={{ height: 42, padding: '0 18px' }}>Save draft</SecondaryButton>
           <PrimaryButton onClick={start} disabled={busy || (!evidence.length && !caption.trim())} style={{ opacity: busy || (!evidence.length && !caption.trim()) ? 0.55 : 1 }}>Start analysis<Icon name="arrow_forward" size={19} /></PrimaryButton>

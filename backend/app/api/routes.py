@@ -15,8 +15,9 @@ from pydantic import BaseModel
 from sqlmodel import Session, func, select
 
 from .. import config, custody, db, jobs, registry
+from ..auth import can_see, current_user
 from ..ingest.service import IngestError, copy_upload_to_temp, ingest_file, ingest_text
-from ..models import Case, CustodyLog, Evidence, FindingRow, Job, JsonMixin, ReportRow, Review, utcnow
+from ..models import Case, CustodyLog, Evidence, FindingRow, Job, JsonMixin, ReportRow, Review, User, utcnow
 from . import adapters
 
 router = APIRouter(prefix="/api")
@@ -27,16 +28,16 @@ def get_session():
         yield s
 
 
-def _case(s: Session, case_id: str) -> Case:
+def _case(s: Session, case_id: str, u: User) -> Case:
     c = s.get(Case, case_id)
-    if c is None:
+    if c is None or not can_see(c, u):
         raise HTTPException(404, f"Case {case_id} not found")
     return c
 
 
-def _evidence(s: Session, evidence_id: int) -> Evidence:
+def _evidence(s: Session, evidence_id: int, u: User) -> Evidence:
     ev = s.get(Evidence, evidence_id)
-    if ev is None:
+    if ev is None or not can_see(s.get(Case, ev.case_id), u):
         raise HTTPException(404, "Evidence not found")
     return ev
 
@@ -61,12 +62,12 @@ def next_case_id(s: Session) -> str:
 
 
 @router.post("/cases")
-def create_case(body: CaseIn, s: Session = Depends(get_session)) -> dict:
+def create_case(body: CaseIn, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
     title = body.title.strip()
     if not title:
         raise HTTPException(400, "Case title is required")
-    who = (body.investigator or registry.investigator(s)).strip()
-    case = Case(id=next_case_id(s), title=title, description=body.description.strip(), investigator=who)
+    who = (body.investigator or u.name).strip()
+    case = Case(id=next_case_id(s), title=title, description=body.description.strip(), investigator=who, owner_id=u.id)
     s.add(case)
     s.commit()
     custody.log(s, case.id, who, "Case opened", f"truthlens {config.APP_VERSION}", "—", f"case {custody.sha256_json([case.id, title])}")
@@ -74,19 +75,19 @@ def create_case(body: CaseIn, s: Session = Depends(get_session)) -> dict:
 
 
 @router.get("/cases")
-def list_cases(s: Session = Depends(get_session)) -> list[dict]:
+def list_cases(s: Session = Depends(get_session), u: User = Depends(current_user)) -> list[dict]:
     rows = s.exec(select(Case).order_by(Case.updated_at.desc(), Case.id.desc())).all()  # type: ignore[attr-defined]
-    return [adapters.case_summary(s, c) for c in rows]
+    return [adapters.case_summary(s, c) for c in rows if can_see(c, u)]
 
 
 @router.get("/cases/{case_id}")
-def get_case(case_id: str, s: Session = Depends(get_session)) -> dict:
-    return adapters.case_detail(s, _case(s, case_id))
+def get_case(case_id: str, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    return adapters.case_detail(s, _case(s, case_id, u))
 
 
 @router.patch("/cases/{case_id}")
-def patch_case(case_id: str, body: CasePatch, s: Session = Depends(get_session)) -> dict:
-    c = _case(s, case_id)
+def patch_case(case_id: str, body: CasePatch, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    c = _case(s, case_id, u)
     for k in ("title", "description", "closed"):
         v = getattr(body, k)
         if v is not None:
@@ -101,8 +102,8 @@ def patch_case(case_id: str, body: CasePatch, s: Session = Depends(get_session))
 
 @router.post("/cases/{case_id}/evidence")
 async def upload_evidence(case_id: str, file: Optional[UploadFile] = File(None), text: Optional[str] = Form(None),
-                          source: Optional[str] = Form(None), s: Session = Depends(get_session)) -> dict:
-    c = _case(s, case_id)
+                          source: Optional[str] = Form(None), s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    c = _case(s, case_id, u)
     who = c.investigator
     try:
         if file is not None:
@@ -125,16 +126,18 @@ async def upload_evidence(case_id: str, file: Optional[UploadFile] = File(None),
 
 
 @router.get("/evidence")
-def library(s: Session = Depends(get_session)) -> dict:
-    evs = s.exec(select(Evidence).order_by(Evidence.created_at.desc(), Evidence.id.desc())).all()  # type: ignore[attr-defined]
+def library(s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    visible = {c.id for c in s.exec(select(Case)).all() if can_see(c, u)}
+    evs = [e for e in s.exec(select(Evidence).order_by(Evidence.created_at.desc(), Evidence.id.desc())).all()  # type: ignore[attr-defined]
+           if e.case_id in visible]
     counts = dict(s.exec(select(FindingRow.evidence_id, func.count()).group_by(FindingRow.evidence_id)).all())
     items = [adapters.evidence_summary(e, counts.get(e.id, 0)) for e in evs]
     return {"count": len(items), "total_bytes": sum(e.size for e in evs), "items": items}
 
 
 @router.get("/evidence/{evidence_id}")
-def evidence_detail(evidence_id: int, s: Session = Depends(get_session)) -> dict:
-    ev = _evidence(s, evidence_id)
+def evidence_detail(evidence_id: int, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    ev = _evidence(s, evidence_id, u)
     allf = adapters.case_findings(s, ev.case_id)
     mine = [f for f in allf if f["evidence_db_id"] == ev.id]
     out = adapters.evidence_summary(ev, len(mine))
@@ -151,21 +154,21 @@ def evidence_detail(evidence_id: int, s: Session = Depends(get_session)) -> dict
 
 
 @router.get("/evidence/{evidence_id}/findings")
-def evidence_findings(evidence_id: int, s: Session = Depends(get_session)) -> list[dict]:
-    ev = _evidence(s, evidence_id)
+def evidence_findings(evidence_id: int, s: Session = Depends(get_session), u: User = Depends(current_user)) -> list[dict]:
+    ev = _evidence(s, evidence_id, u)
     return [f for f in adapters.case_findings(s, ev.case_id) if f["evidence_db_id"] == ev.id]
 
 
 @router.get("/evidence/{evidence_id}/media")
-def evidence_media(evidence_id: int, s: Session = Depends(get_session)):
-    ev = _evidence(s, evidence_id)
+def evidence_media(evidence_id: int, s: Session = Depends(get_session), u: User = Depends(current_user)):
+    ev = _evidence(s, evidence_id, u)
     return FileResponse(custody.original_path(ev.case_id, ev.sha256), media_type=ev.mime,
                         headers={"Cache-Control": "private, max-age=3600"})
 
 
 @router.get("/evidence/{evidence_id}/thumb")
-def evidence_thumb(evidence_id: int, s: Session = Depends(get_session)):
-    ev = _evidence(s, evidence_id)
+def evidence_thumb(evidence_id: int, s: Session = Depends(get_session), u: User = Depends(current_user)):
+    ev = _evidence(s, evidence_id, u)
     src = custody.original_path(ev.case_id, ev.sha256)
     cache = config.DERIVED_DIR / ev.case_id / ev.label / "thumb.jpg"
     if not cache.exists():
@@ -200,8 +203,8 @@ def evidence_thumb(evidence_id: int, s: Session = Depends(get_session)):
 
 
 @router.get("/evidence/{evidence_id}/artifacts/{name}")
-def evidence_artifact(evidence_id: int, name: str, s: Session = Depends(get_session)):
-    ev = _evidence(s, evidence_id)
+def evidence_artifact(evidence_id: int, name: str, s: Session = Depends(get_session), u: User = Depends(current_user)):
+    ev = _evidence(s, evidence_id, u)
     if "/" in name or ".." in name:
         raise HTTPException(400, "Bad artifact name")
     path = config.ARTIFACT_DIR / ev.case_id / ev.label / name
@@ -211,8 +214,8 @@ def evidence_artifact(evidence_id: int, name: str, s: Session = Depends(get_sess
 
 
 @router.get("/evidence/{evidence_id}/waveform")
-def evidence_waveform(evidence_id: int, s: Session = Depends(get_session)) -> dict:
-    ev = _evidence(s, evidence_id)
+def evidence_waveform(evidence_id: int, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    ev = _evidence(s, evidence_id, u)
     extra = JsonMixin.loads(ev.extra_json, {})
     wf = extra.get("waveform")
     if not wf:
@@ -224,8 +227,8 @@ def evidence_waveform(evidence_id: int, s: Session = Depends(get_session)) -> di
 # ------------------------------------------------------------------ analysis
 
 @router.post("/cases/{case_id}/analyze")
-def analyze(case_id: str, s: Session = Depends(get_session)) -> dict:
-    c = _case(s, case_id)
+def analyze(case_id: str, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    c = _case(s, case_id, u)
     if not s.exec(select(Evidence).where(Evidence.case_id == case_id)).first():
         raise HTTPException(400, "Add evidence before starting the analysis")
     job = jobs.submit(case_id, c.investigator)
@@ -245,15 +248,16 @@ def _job_out(job: Job) -> dict:
 
 
 @router.get("/jobs/{job_id}")
-def get_job(job_id: int, s: Session = Depends(get_session)) -> dict:
+def get_job(job_id: int, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
     job = s.get(Job, job_id)
-    if job is None:
+    if job is None or not can_see(s.get(Case, job.case_id), u):
         raise HTTPException(404, "Job not found")
     return _job_out(job)
 
 
 @router.get("/cases/{case_id}/jobs/latest")
-def latest_job(case_id: str, s: Session = Depends(get_session)) -> dict:
+def latest_job(case_id: str, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    _case(s, case_id, u)
     job = s.exec(select(Job).where(Job.case_id == case_id).order_by(Job.id.desc())).first()  # type: ignore[attr-defined]
     if job is None:
         raise HTTPException(404, "No analysis has run for this case")
@@ -261,17 +265,21 @@ def latest_job(case_id: str, s: Session = Depends(get_session)) -> dict:
 
 
 @router.get("/cases/{case_id}/findings")
-def case_findings(case_id: str, s: Session = Depends(get_session)) -> list[dict]:
-    _case(s, case_id)
+def case_findings(case_id: str, s: Session = Depends(get_session), u: User = Depends(current_user)) -> list[dict]:
+    _case(s, case_id, u)
     return adapters.case_findings(s, case_id)
 
 
 @router.get("/cases/{case_id}/graph")
-def case_graph(case_id: str, s: Session = Depends(get_session)) -> dict:
+def case_graph(case_id: str, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    return graph_for(s, _case(s, case_id, u))
+
+
+def graph_for(s: Session, c: Case) -> dict:
     from ..correlate import graph as graph_mod
     from ..correlate import rules as rules_mod
 
-    c = _case(s, case_id)
+    case_id = c.id
     findings = adapters.case_findings(s, case_id)
     evs = {e.label: e for e in s.exec(select(Evidence).where(Evidence.case_id == case_id))}
     rf = [rules_mod.F(f["finding_id"], f["evidence_id"], f["evidence_kind"], None, f["modality"], f["indicator"],
@@ -294,11 +302,11 @@ class ReviewIn(BaseModel):
 
 
 @router.patch("/findings/{finding_db_id}/review")
-def review_finding(finding_db_id: int, body: ReviewIn, s: Session = Depends(get_session)) -> dict:
+def review_finding(finding_db_id: int, body: ReviewIn, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
     f = s.get(FindingRow, finding_db_id)
     if f is None:
         raise HTTPException(404, "Finding not found")
-    case = _case(s, f.case_id)
+    case = _case(s, f.case_id, u)
     prev = adapters.latest_reviews(s, f.case_id).get(f.finding_id)
     decision = body.decision or (prev.decision if prev else "pending")
     note = body.note if body.note is not None else (prev.note if prev else None)
@@ -318,8 +326,11 @@ def review_finding(finding_db_id: int, body: ReviewIn, s: Session = Depends(get_
 # ------------------------------------------------------------------ custody, report
 
 @router.get("/cases/{case_id}/custody")
-def case_custody(case_id: str, s: Session = Depends(get_session)) -> dict:
-    _case(s, case_id)
+def case_custody(case_id: str, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    return custody_for(s, _case(s, case_id, u).id)
+
+
+def custody_for(s: Session, case_id: str) -> dict:
     rows = custody.entries(s, case_id)
     return {"chain_valid": custody.verify_chain(rows),
             "entries": [{"id": r.id, "ts": r.ts.isoformat(), "actor": r.actor, "action": r.action, "tool": r.tool_version,
@@ -327,10 +338,10 @@ def case_custody(case_id: str, s: Session = Depends(get_session)) -> dict:
 
 
 @router.post("/cases/{case_id}/report")
-def build_report(case_id: str, s: Session = Depends(get_session)) -> dict:
+def build_report(case_id: str, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
     from ..report import render
 
-    c = _case(s, case_id)
+    c = _case(s, case_id, u)
     if c.status != "analyzed":
         raise HTTPException(409, "Run the analysis before exporting a report")
     return render.build(s, c)
@@ -344,7 +355,8 @@ def _latest_report(s: Session, case_id: str) -> ReportRow:
 
 
 @router.get("/cases/{case_id}/report")
-def get_report(case_id: str, s: Session = Depends(get_session)) -> dict:
+def get_report(case_id: str, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    _case(s, case_id, u)
     r = _latest_report(s, case_id)
     data = json.loads(Path(r.path_json).read_text())
     data["files"] = {"pdf": f"/api/cases/{case_id}/report.pdf" if r.path_pdf else None,
@@ -353,7 +365,8 @@ def get_report(case_id: str, s: Session = Depends(get_session)) -> dict:
 
 
 @router.get("/cases/{case_id}/report.{fmt}")
-def download_report(case_id: str, fmt: Literal["pdf", "json", "html"], s: Session = Depends(get_session)):
+def download_report(case_id: str, fmt: Literal["pdf", "json", "html"], s: Session = Depends(get_session), u: User = Depends(current_user)):
+    _case(s, case_id, u)
     r = _latest_report(s, case_id)
     path = {"pdf": r.path_pdf, "json": r.path_json, "html": r.path_html}[fmt]
     if not path or not Path(path).exists():
@@ -365,8 +378,9 @@ def download_report(case_id: str, fmt: Literal["pdf", "json", "html"], s: Sessio
 # ------------------------------------------------------------------ dashboard, validation, settings
 
 @router.get("/stats")
-def stats(s: Session = Depends(get_session)) -> dict:
-    cases = s.exec(select(Case)).all()
+def stats(s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    cases = [c for c in s.exec(select(Case)).all() if can_see(c, u)]
+    ids = {c.id for c in cases}
     active = [c for c in cases if not c.closed]
     week = utcnow().replace(tzinfo=None) - timedelta(days=7)
     pending_by_case: dict[str, int] = {}
@@ -374,10 +388,10 @@ def stats(s: Session = Depends(get_session)) -> dict:
         pending_by_case[c.id] = adapters.case_summary(s, c)["pending_review"]
     top = max(pending_by_case.items(), key=lambda kv: (kv[1], kv[0]), default=(None, 0))
     timed = [c.analysis_seconds for c in cases if c.analysis_seconds]
-    kinds = sorted(set(s.exec(select(Evidence.kind)).all()))
+    kinds = sorted({k for k, cid in s.exec(select(Evidence.kind, Evidence.case_id)).all() if cid in ids})
     return {"active_cases": len(active), "closed_cases": len(cases) - len(active),
             "opened_this_week": sum(1 for c in cases if c.created_at.replace(tzinfo=None) >= week),
-            "evidence_count": s.exec(select(func.count()).select_from(Evidence)).one(), "evidence_kinds": kinds,
+            "evidence_count": sum(1 for e in s.exec(select(Evidence.case_id)).all() if e in ids), "evidence_kinds": kinds,
             "pending_review": sum(pending_by_case.values()), "top_pending_case": {"id": top[0], "count": top[1]},
             "avg_analysis_seconds": round(sum(timed) / len(timed)) if timed else None}
 
@@ -400,8 +414,9 @@ def models_lock() -> str:
     return h.hexdigest()
 
 
-def _dir_bytes(p: Path) -> int:
-    return sum(f.stat().st_size for f in p.rglob("*") if f.is_file()) if p.exists() else 0
+def _user_bytes(s: Session, u: User) -> int:
+    visible = {c.id for c in s.exec(select(Case)).all() if can_see(c, u)}
+    return sum(size for size, cid in s.exec(select(Evidence.size, Evidence.case_id)).all() if cid in visible)
 
 
 class SettingsIn(BaseModel):
@@ -409,35 +424,34 @@ class SettingsIn(BaseModel):
     analyzers: Optional[dict[str, bool]] = None
 
 
-def _settings(s: Session) -> dict[str, Any]:
-    enabled = registry.enabled_map(s)
-    return {"investigator": registry.investigator(s),
+def _settings(s: Session, u: User) -> dict[str, Any]:
+    enabled = registry.enabled_map(s, u.id)
+    return {"investigator": u.name, "email": u.email, "mode": config.MODE,
             "analyzers": [{"key": a.key, "name": a.name, "desc": a.desc, "version": a.version, "kinds": list(a.kinds),
                            "enabled": enabled[a.key], "available": registry.dependency_available(a)}
                           for a in registry.ALL.values()],
-            "models_lock": models_lock(), "vault": {"path": str(config.EVIDENCE_DIR), "bytes": _dir_bytes(config.EVIDENCE_DIR)},
+            "models_lock": models_lock(),
+            "vault": {"path": "server evidence store" if config.MODE == "hosted" else str(config.EVIDENCE_DIR),
+                      "bytes": _user_bytes(s, u)},
             "versions": registry.versions(), "app_version": config.APP_VERSION}
 
 
 @router.get("/settings")
-def get_settings(s: Session = Depends(get_session)) -> dict:
-    return _settings(s)
+def get_settings(s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    return _settings(s, u)
 
 
 @router.put("/settings")
-def put_settings(body: SettingsIn, s: Session = Depends(get_session)) -> dict:
-    from ..models import Setting
-
+def put_settings(body: SettingsIn, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
     if body.analyzers:
-        registry.set_enabled(s, body.analyzers)
+        registry.set_enabled(s, body.analyzers, u.id)
     if body.investigator and body.investigator.strip():
-        row = s.get(Setting, "investigator") or Setting(key="investigator", value_json="")
-        row.value_json = JsonMixin.dumps(body.investigator.strip())
-        s.add(row)
+        u.name = body.investigator.strip()[:80]
+        s.add(u)
         s.commit()
-    return _settings(s)
+    return _settings(s, u)
 
 
 @router.get("/health")
 def health() -> dict:
-    return {"ok": True, "version": config.APP_VERSION}
+    return {"ok": True, "version": config.APP_VERSION, "mode": config.MODE}

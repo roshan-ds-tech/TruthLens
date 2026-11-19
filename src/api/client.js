@@ -1,21 +1,74 @@
 // Data layer: the only place the UI talks to the TruthLens backend (served under /api).
+// VITE_API_BASE points a hosted build at the backend (e.g. https://user-truthlens.hf.space); empty = same origin.
 import { useCallback, useEffect, useRef, useState } from 'react';
+
+export const API_BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
+const TOKEN_KEY = 'tl-token';
+
+export function getToken() {
+  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+}
+export function setToken(token) {
+  try { if (token) localStorage.setItem(TOKEN_KEY, token); else localStorage.removeItem(TOKEN_KEY); } catch { /* storage unavailable */ }
+}
 
 async function request(method, path, body, isForm = false) {
   const opts = { method, headers: {} };
+  const token = getToken();
+  if (token) opts.headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) {
     if (isForm) opts.body = body;
     else { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
   }
-  const res = await fetch(`/api${path}`, opts);
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api${path}`, opts);
+  } catch {
+    throw Object.assign(new Error('Could not reach the analysis service. Check your connection and try again.'), { status: 0 });
+  }
   const text = await res.text();
   const data = text ? (() => { try { return JSON.parse(text); } catch { return text; } })() : null;
   if (!res.ok) {
-    const err = new Error((data && data.detail) || `${res.status} ${res.statusText}`);
+    if (res.status === 401 && !path.startsWith('/auth/')) window.dispatchEvent(new Event('tl-unauthorized'));
+    const detail = data && typeof data === 'object' ? data.detail : null;
+    const msg = typeof detail === 'string' ? detail : Array.isArray(detail) ? detail.map((d) => d.msg).join('; ')
+      : res.status >= 500 ? 'The analysis service had a problem. Try again in a moment.' : `${res.status} ${res.statusText}`;
+    const err = new Error(msg);
     err.status = res.status;
     throw err;
   }
   return data;
+}
+
+/** Fetch a protected file (media, heatmap, report) and return an object URL usable in <img>, <video>, <audio>. */
+export function useMediaUrl(path) {
+  const [url, setUrl] = useState(null);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    if (!path) { setUrl(null); return undefined; }
+    let alive = true, made = null;
+    setError(null);
+    const token = getToken();
+    fetch(`${API_BASE}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+      .then((r) => (r.ok ? r.blob() : Promise.reject(Object.assign(new Error(`${r.status}`), { status: r.status }))))
+      .then((b) => { if (alive) { made = URL.createObjectURL(b); setUrl(made); } })
+      .catch((e) => { if (alive) { setUrl(null); setError(e); } });
+    return () => { alive = false; if (made) URL.revokeObjectURL(made); };
+  }, [path]);
+  return { url, error };
+}
+
+/** Download a protected file (report PDF / JSON) through fetch, so the auth header is sent. */
+export async function download(path, filename) {
+  const token = getToken();
+  const r = await fetch(`${API_BASE}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  if (!r.ok) throw new Error(`Download failed (${r.status})`);
+  const href = URL.createObjectURL(await r.blob());
+  const a = Object.assign(document.createElement('a'), { href, download: filename });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(href), 10000);
 }
 
 export const api = {
@@ -87,3 +140,15 @@ export const fmtDate = (iso) => {
 export const fmtBytes = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.round(n / 1e3)} KB`);
 
 export const shortHash = (h) => (h && h.length > 12 ? `${h.slice(0, 8)}…${h.slice(-4)}` : h || '—');
+
+/** "local" (analysis on this machine) or "hosted" (analysis on the TruthLens server); drives the privacy copy. */
+export function useServerMode() {
+  const h = useApi('/health');
+  return h.data?.mode || (API_BASE ? 'hosted' : 'local');
+}
+
+export const PRIVACY = {
+  local: { badge: 'Running locally · ₹0', detail: 'No data leaves this device', short: 'Local · ₹0', home: 'Runs locally · No data leaves this device' },
+  hosted: { badge: 'Hosted analysis server', detail: 'Evidence is stored on the server, visible only to your account', short: 'Hosted',
+    home: 'Hosted demo · Your evidence is visible only to your account' },
+};

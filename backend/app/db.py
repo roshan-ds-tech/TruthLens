@@ -34,6 +34,10 @@ def init_db(eng) -> None:
 
     SQLModel.metadata.create_all(eng)
     with eng.begin() as conn:
+        # databases created before accounts existed: add the owner column in place
+        cols = [r[1] for r in conn.execute(text("PRAGMA table_info(cases)"))]
+        if "owner_id" not in cols:
+            conn.execute(text("ALTER TABLE cases ADD COLUMN owner_id INTEGER"))
         # The custody log is append-only: the database itself refuses edits and deletes.
         conn.execute(text(
             "CREATE TRIGGER IF NOT EXISTS custody_no_update BEFORE UPDATE ON custody_log "

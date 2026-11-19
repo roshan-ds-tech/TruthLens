@@ -12,7 +12,7 @@ import CaseWorkspace from './screens/CaseWorkspace.jsx';
 import ImageViewer from './screens/ImageViewer.jsx';
 import AudioViewer from './screens/AudioViewer.jsx';
 import ReportPreview from './screens/ReportPreview.jsx';
-import { api, useApi } from './api/client.js';
+import { api, useApi, getToken, setToken, useServerMode, PRIVACY } from './api/client.js';
 
 const SCREENS = ['dashboard', 'cases', 'library', 'validation', 'settings', 'newcase', 'analysis', 'workspace', 'image', 'audio', 'report'];
 
@@ -45,13 +45,25 @@ function readParams() {
 export default function App() {
   const [{ start, viewport }] = useState(readParams);
   const [theme, setTheme] = useState(readTheme);
-  const [authed, setAuthed] = useState(start !== 'home');
+  // Signed in when a stored session token is still accepted by the server (checked on load).
+  const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(() => !!getToken());
+  useEffect(() => {
+    if (!getToken()) return;
+    api.get('/auth/me').then(() => setAuthed(true), () => setToken(null)).finally(() => setChecking(false));
+  }, []);
+  useEffect(() => {
+    const out = () => { setToken(null); setAuthed(false); setNav({ caseId: null, evidenceId: null, jobId: null }); };
+    window.addEventListener('tl-unauthorized', out);
+    return () => window.removeEventListener('tl-unauthorized', out);
+  }, []);
   const [screen, setScreen] = useState(start === 'home' || !SCREENS.includes(start) ? 'dashboard' : start);
   const [collapsed, setCollapsed] = useState(false);
   const [width, setWidth] = useState(() => window.innerWidth);
   // Open case, selected evidence item and analysis job; set by go(screen, { caseId, evidenceId, jobId }).
   const [nav, setNav] = useState({ caseId: null, evidenceId: null, jobId: null });
   const [dataVersion, setDataVersion] = useState(0);
+  const privacy = PRIVACY[useServerMode()];
   const settings = useApi(authed ? '/settings' : null, { reloadKey: dataVersion });
   const investigator = settings.data?.investigator || '';
   const initials = investigator.split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -71,7 +83,7 @@ export default function App() {
   useEffect(() => { document.body.style.background = THEMES[theme]['--tl-bg']; }, [theme]);
 
   const tablet = viewport === 'tablet';
-  const expanded = !(tablet || collapsed);
+  const expanded = !(tablet || collapsed || width < 900);   // narrow windows get the icon-only sidebar
   const wideBar = expanded && width >= 1240;
 
   const go = (s, opts = {}) => {
@@ -93,10 +105,11 @@ export default function App() {
 
   const rootStyle = { minHeight: '100vh', background: 'var(--tl-bg)', color: 'var(--tl-ink)', colorScheme: theme, ...THEMES[theme] };
 
+  if (checking) return <div style={rootStyle} />;
   if (!authed) {
     return (
       <div style={rootStyle}>
-        <Home theme={theme} onToggleTheme={toggleTheme} onEnter={() => { setAuthed(true); setScreen('dashboard'); }} />
+        <Home theme={theme} onToggleTheme={toggleTheme} onEnter={() => { setAuthed(true); setScreen(start !== 'home' && SCREENS.includes(start) ? start : 'dashboard'); setDataVersion((v) => v + 1); }} />
       </div>
     );
   }
@@ -149,7 +162,11 @@ export default function App() {
               return navBtn(n, on, { h: 36, fs: 13.5, fw: on ? 700 : 500, iconSize: 19, iconColor: c.ink2, bg: on ? c.bg : 'transparent', hoverBg: on ? c.bg : c.hover });
             })}
             <div style={{ flex: 1 }} />
-            {footBtn('Sign out', 'logout', () => { setAuthed(false); setScreen('dashboard'); setCollapsed(false); }, 'Sign out')}
+            {footBtn('Sign out', 'logout', () => {
+              api.post('/auth/logout').catch(() => {});
+              setToken(null); setAuthed(false); setScreen('dashboard'); setCollapsed(false);
+              setNav({ caseId: null, evidenceId: null, jobId: null });
+            }, 'Sign out')}
             {footBtn('Collapse', expanded ? 'left_panel_close' : 'left_panel_open', () => setCollapsed((v) => !v), 'Collapse sidebar')}
           </aside>
 
@@ -161,11 +178,11 @@ export default function App() {
                 <span style={{ fontFamily: MONO, fontSize: 11, color: c.ink2, border: `1px solid ${c.border}`, background: c.bg, borderRadius: 6, padding: '2px 6px' }}>⌘K</span>
               </div>
               <div style={{ flex: 1 }} />
-              <div title="Running locally · ₹0 · No data leaves this device" style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 12px', borderRadius: 999, border: `1px solid ${c.border}`, fontSize: 12.5, fontWeight: 600, color: c.ink, whiteSpace: 'nowrap' }}>
+              <div title={`${privacy.badge} · ${privacy.detail}`} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 12px', borderRadius: 999, border: `1px solid ${c.border}`, fontSize: 12.5, fontWeight: 600, color: c.ink, whiteSpace: 'nowrap' }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3E9B5F' }} />
                 {wideBar
-                  ? <span>Running locally · ₹0 · <span style={{ color: c.ink2, fontWeight: 500 }}>No data leaves this device</span></span>
-                  : <span>Local · ₹0</span>}
+                  ? <span>{privacy.badge} · <span style={{ color: c.ink2, fontWeight: 500 }}>{privacy.detail}</span></span>
+                  : <span>{privacy.short}</span>}
               </div>
               <button onClick={toggleTheme} title="Switch theme" {...hover({ bg: c.surface }, { width: 40, height: 40, flex: 'none', borderRadius: '50%', border: `1px solid ${c.border}`, background: c.bg, color: c.ink, cursor: 'pointer' })}>
                 <Icon name={theme === 'dark' ? 'light_mode' : 'dark_mode'} />

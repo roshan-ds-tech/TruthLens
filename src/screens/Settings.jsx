@@ -6,12 +6,17 @@ const ICONS = { exif: 'data_object', ela: 'image', noise: 'grain', jpeg_ghost: '
   frame_forensics: 'center_focus_strong', noise_floor: 'graphic_eq', band_limit: 'equalizer', prosody: 'record_voice_over',
   transcript: 'subtitles', claims: 'notes', consistency: 'join_inner' };
 
-const PRIVACY = [
-  ['Network access', <span key="n" style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}><span style={{ width: 7, height: 7, borderRadius: '50%', background: '#3E9B5F' }} />Off. All analysis runs on this device.</span>],
-  ['Telemetry', <span key="t" style={{ fontWeight: 600 }}>Off</span>],
-  ['Evidence vault', null],
-  ['Cost per analysis', <span key="c" style={{ fontWeight: 600 }}>₹0</span>],
-];
+function privacyRows(hosted) {
+  const dot = (color) => <span style={{ width: 7, height: 7, borderRadius: '50%', background: color }} />;
+  return [
+    ['Network access', <span key="n" style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>{dot('#3E9B5F')}
+      {hosted ? 'Analysis runs on the TruthLens server and never calls outside services.' : 'Off. All analysis runs on this device.'}</span>],
+    ['Telemetry', <span key="t" style={{ fontWeight: 600 }}>Off</span>],
+    ['Evidence vault', null],
+    ['Who can see your cases', <span key="w" style={{ fontWeight: 600 }}>{hosted ? 'Only your account' : 'Everyone using this device'}</span>],
+    ['Cost per analysis', <span key="c" style={{ fontWeight: 600 }}>₹0</span>],
+  ];
+}
 
 export default function Settings({ active, onSaved }) {
   const st = useApi(active ? '/settings' : null);
@@ -58,7 +63,7 @@ export default function Settings({ active, onSaved }) {
       </section>
       <section style={{ border: `1px solid ${c.border}`, borderRadius: 16, padding: '18px 20px', display: 'grid', gridTemplateColumns: '200px 1fr', gap: '12px 20px', fontSize: 14 }}>
         <span style={{ gridColumn: '1 / -1', fontSize: 16, fontWeight: 800 }}>Privacy and storage</span>
-        {PRIVACY.flatMap(([k, v]) => [<span key={k} style={{ color: c.ink2 }}>{k}</span>, v || vault])}
+        {privacyRows(st.data?.mode === 'hosted').flatMap(([k, v]) => [<span key={k} style={{ color: c.ink2 }}>{k}</span>, v || vault])}
       </section>
     </div>
   );

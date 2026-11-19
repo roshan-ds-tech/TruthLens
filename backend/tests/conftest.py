@@ -32,6 +32,9 @@ def client(data_dir):
     from app.main import create_app
 
     with TestClient(create_app()) as c:
+        r = c.post("/api/auth/signup", json={"name": "Priya S.", "email": "priya@example.test", "password": "correct horse"})
+        assert r.status_code == 200, r.text
+        c.headers.update({"Authorization": f"Bearer {r.json()['token']}"})
         yield c
 
 

@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg libpango-1.0-0 libpangoft2-1.0-0 libgl1 libglib2.0-0
+      - name: Python packages (CPU torch)
+        run: |
+          python -m venv backend/.venv
+          TORCH=$(grep -E '^torch==' backend/requirements.txt | cut -d= -f3)
+          backend/.venv/bin/pip install "torch==${TORCH}" --index-url https://download.pytorch.org/whl/cpu
+          backend/.venv/bin/pip install -r backend/requirements.txt
+      - name: Model cache
+        uses: actions/cache@v4
+        with:
+          path: backend/models
+          key: models-v1-${{ hashFiles('backend/scripts/fetch_models.py') }}
+      - name: Models
+        run: HF_HUB_OFFLINE=0 backend/.venv/bin/python backend/scripts/fetch_models.py
+      - name: Tests
+        run: cd backend && .venv/bin/python -m pytest -q
+      - name: Demo reproduces expected_report.json
+        run: backend/.venv/bin/python samples/check_demo.py
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build

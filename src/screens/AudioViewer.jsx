@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { c, VERDICTS, YELLOW, MONO, Icon, eyebrow, fmtRange, preventThen, Muted } from '../ui.jsx';
-import { useApi, fmtT } from '../api/client.js';
+import { useApi, useMediaUrl, fmtT } from '../api/client.js';
 
 const fmt = fmtT;
 const mono = { fontFamily: MONO };
@@ -23,6 +23,8 @@ export default function AudioViewer({ go, active, caseId, evidenceId }) {
   const wfQ = useApi(ev ? `/evidence/${ev.id}/waveform` : null);
   const allF = useApi(ev ? `/cases/${ev.case_id}/findings` : null);
   const wf = wfQ.data;
+  const audioSrc = useMediaUrl(ev ? ev.media_url : null).url;
+  const specSrc = useMediaUrl(wf?.spectrogram_url || null).url;
   const duration = wf?.duration || ev?.duration || 1;
   const pct = (x) => `${Math.max(0, Math.min(100, (x / duration) * 100))}%`;
 
@@ -32,11 +34,11 @@ export default function AudioViewer({ go, active, caseId, evidenceId }) {
   // the spectrogram is rendered server-side; draw it into the existing canvas
   useEffect(() => {
     const cv = specRef.current;
-    if (!cv || !wf?.spectrogram_url) return;
+    if (!cv || !specSrc) return;
     const img = new Image();
     img.onload = () => { const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(img, 0, 0, cv.width, cv.height); };
-    img.src = wf.spectrogram_url;
-  }, [wf?.spectrogram_url, active]);
+    img.src = specSrc;
+  }, [specSrc, active]);
 
   const scrollTo = (key, smooth = true) => {
     const box = trRef.current;
@@ -81,7 +83,7 @@ export default function AudioViewer({ go, active, caseId, evidenceId }) {
 
   return (
     <div style={{ padding: '32px 40px 56px', display: 'flex', flexDirection: 'column', gap: 22, color: c.ink }}>
-      <audio ref={audioRef} src={ev.media_url} preload="metadata" onTimeUpdate={(e) => setT(e.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
+      <audio ref={audioRef} src={audioSrc || undefined} preload="metadata" onTimeUpdate={(e) => setT(e.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <a href="#" onClick={preventThen(() => go('workspace', { caseId: ev.case_id }))} style={{ fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'flex-start', textDecoration: 'none' }}><Icon name="arrow_back" size={18} />{ev.case_id} workspace</a>
         <div style={eyebrow}>Evidence · <span style={mono}>{ev.case_id}</span> · {ev.label} · Audio{ev.derived_from ? ` track of ${ev.derived_from}` : ''} · sha256 <span style={mono}>{ev.sha_short}</span></div>

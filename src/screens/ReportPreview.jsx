@@ -1,5 +1,6 @@
 import { c, YELLOW, MONO, Icon, eyebrow, fmtRange, preventThen, PrimaryButton, SecondaryButton, Muted } from '../ui.jsx';
-import { useApi, fmtBytes, shortHash } from '../api/client.js';
+import { useState } from 'react';
+import { useApi, fmtBytes, shortHash, download } from '../api/client.js';
 
 // The report pages are print documents: they stay dark-on-white in both themes.
 const DOT = { strong: '#D64545', indicators: '#E8A33D', inconclusive: '#8A8A85', none: '#3E9B5F' };
@@ -17,6 +18,8 @@ const DEC_COLS = '90px 80px 110px 1fr';
 export default function ReportPreview({ go, active, caseId }) {
   const rep = useApi(active && caseId ? `/cases/${caseId}/report` : null);
   const r = rep.data;
+  const [dlError, setDlError] = useState('');
+  const get = (path, ext) => download(path, `TruthLens_${r.case.id}_report.${ext}`).catch((e) => setDlError(e.message));
 
   if (!r) {
     return (
@@ -43,9 +46,10 @@ export default function ReportPreview({ go, active, caseId }) {
           <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.035em' }}>Forensic report preview</h1>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <SecondaryButton onClick={() => window.open(r.files.json, '_blank')}><Icon name="data_object" size={19} />Export JSON</SecondaryButton>
-          <PrimaryButton onClick={() => r.files.pdf && window.open(r.files.pdf, '_blank')} style={{ height: 40, padding: '0 18px', opacity: r.files.pdf ? 1 : 0.55 }}>Download PDF<Icon name="arrow_forward" size={19} /></PrimaryButton>
-          {!r.files.pdf && <Muted style={{ fontSize: 12 }}>PDF unavailable on this machine; <a href={r.files.html} target="_blank" rel="noreferrer">open the HTML</a>.</Muted>}
+          <SecondaryButton onClick={() => get(r.files.json, 'json')}><Icon name="data_object" size={19} />Export JSON</SecondaryButton>
+          <PrimaryButton onClick={() => r.files.pdf && get(r.files.pdf, 'pdf')} style={{ height: 40, padding: '0 18px', opacity: r.files.pdf ? 1 : 0.55 }}>Download PDF<Icon name="arrow_forward" size={19} /></PrimaryButton>
+          {!r.files.pdf && <Muted style={{ fontSize: 12 }}>PDF unavailable on this machine; <a href="#" onClick={(e) => { e.preventDefault(); get(r.files.html, 'html'); }}>download the HTML</a>.</Muted>}
+          {dlError && <Muted style={{ fontSize: 12 }}>{dlError}</Muted>}
         </div>
       </div>
 

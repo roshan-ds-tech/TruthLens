@@ -9,3 +9,7 @@ backend/models/
 data/
 validation/data/
 validation/results/*.png
+*.pdf
+.env
+.env.local
+.vercel

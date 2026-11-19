@@ -112,7 +112,7 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
     evs = _ordered(list(s.exec(select(Evidence).where(Evidence.case_id == case_id))))
     if not evs:
         raise ValueError("case has no evidence")
-    enabled = registry.enabled_map(s)
+    enabled = registry.enabled_map(s, case.owner_id)
     tr = Tracker(s, job)
     case.status = "running"
     s.add(case)

@@ -33,12 +33,13 @@ TruthLens reports **indicators**, never "fake" or "real". These are the limits w
 
 ## Product limits
 
-- **No authentication.** The sign-up / log-in dialog is a local, single-user gate (D-08).
+- **Accounts are basic.** Sign-up / log-in with email and password (D-16): no email verification, password reset or
+  multi-factor sign-in. Sign-up can be closed with `TRUTHLENS_ALLOW_SIGNUP=0`.
+- **The hosted demo is not offline** and its storage resets when the free Hugging Face Space restarts (D-17).
 - **Search box** in the top bar is not wired.
 - **One analysis at a time** (one worker, by design for the 8 GB budget).
 - **The offline gazetteer** has about 45 places; other place names are reported as unverifiable.
 - **Speech recognition** is Whisper *base*; it is unreliable on noise and non-speech (it transcribes our synthetic
   voice as "Beep."), which can make caption-vs-speech checks unverifiable.
-- **Screenshots** of the UI are not included in the README: the browser extension used for screenshots was not
-  connected during the build. All screens were render-checked against the live API in jsdom instead.
+- **Screenshots** of the UI are not included in the README yet.
 - The PDF export needs `pango` (installed by Homebrew on macOS). Without it the HTML and JSON reports are still produced.

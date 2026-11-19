@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { c, VERDICTS, YELLOW, MONO, Icon, hover, VerdictPill, RangeBar, eyebrow, fmtRange, preventThen, PrimaryButton, SecondaryButton, Muted } from '../ui.jsx';
-import { api, useApi, fmtT, fmtDate, shortHash } from '../api/client.js';
+import { api, useApi, useMediaUrl, fmtT, fmtDate, shortHash } from '../api/client.js';
+import { AuthImg } from '../api/media.jsx';
 
 const fmt = fmtT;
 
@@ -200,6 +201,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
   const primary = evidence.find((e) => e.id === viewId) || evidence.find((e) => e.kind === 'video') || evidence.find((e) => e.kind === 'image') || null;
   const primaryQ = useApi(active && primary ? `/evidence/${primary.id}` : null);
   const isVideo = primary?.kind === 'video';
+  const videoSrc = useMediaUrl(isVideo ? primary.media_url : null).url;
   const duration = primary?.duration || 1;
   const pct = (x) => `${Math.max(0, Math.min(100, (x / duration) * 100))}%`;
 
@@ -366,11 +368,11 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 12, overflow: 'hidden', background: 'repeating-linear-gradient(135deg,#1A1A1A 0 12px,#202020 12px 24px)' }}>
               {isVideo && (
-                <video key={primary.id} ref={videoRef} src={primary.media_url} preload="metadata" playsInline
+                <video key={primary.id} ref={videoRef} src={videoSrc || undefined} preload="metadata" playsInline
                   onTimeUpdate={(e) => setT(e.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
                   style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#151515' }} />
               )}
-              {primary?.kind === 'image' && <img src={primary.media_url} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#151515' }} />}
+              {primary?.kind === 'image' && <AuthImg path={primary.media_url} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#151515' }} />}
               {!primary && <div style={{ position: 'absolute', left: 16, top: 14, fontFamily: MONO, fontSize: 11, color: '#8A8A85' }}>no visual evidence · open audio or text from the list</div>}
               {isVideo && <div style={{ position: 'absolute', right: 16, top: 14, fontFamily: MONO, fontSize: 11, color: '#fff', background: 'rgba(17,17,17,.7)', padding: '3px 8px', borderRadius: 6 }}>frame {Math.round(t * (primary.fps || 25))}</div>}
               {boxes.map((f) => {

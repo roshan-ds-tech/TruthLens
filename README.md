@@ -18,6 +18,9 @@ make demo      # analyze samples/demo_case and compare with samples/expected_rep
 Prerequisites on macOS: `brew install python@3.11 ffmpeg pango` and Node 20+. Other targets: `make test`,
 `make validate`, `make dev` (API with reload on :8000 + Vite on :5173).
 
+**Hosted version:** UI on Vercel, analysis API on a Hugging Face Space, both redeployed from `main`; sign up to use it.
+Setup and hosted-mode behaviour: [`docs/deployment.md`](docs/deployment.md).
+
 CLI: `./truthlens analyze clip.mp4 photo.jpg --caption caption.txt --report`, `./truthlens rerun --case C-0001`,
 `./truthlens validate`.
 
@@ -85,7 +88,7 @@ the false-positive table.
 
 ```
 backend/app/        FastAPI app: ingest, custody, analyzers, correlate, scoring, report, api
-backend/tests/      41 pytest tests incl. end-to-end, determinism, failure isolation
+backend/tests/      47 pytest tests incl. end-to-end, determinism, failure isolation, accounts
 src/                React UI (already designed; wired through src/api/client.js)
 validation/         synth.py (seeded generators), run_validation.py, results/
 samples/            demo case + expected_report.json
@@ -95,5 +98,6 @@ docs/               methodology, limitations, requirements map, decisions, UI in
 ## Limitations
 
 Fully AI-generated media without editing traces may not be detected; pixel-level image signals are weak and the
-validation set is small and synthetic; no authentication; search is not wired. Details:
+validation set is small and synthetic; accounts have no password reset; the free hosted demo does not keep data;
+search is not wired. Details:
 [`docs/limitations.md`](docs/limitations.md). Design deviations and why: [`docs/decisions.md`](docs/decisions.md).

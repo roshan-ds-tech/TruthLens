@@ -17,7 +17,19 @@ METRICS_PATH = VALIDATION_DIR / "results" / "metrics.json"
 CALIBRATION_PATH = VALIDATION_DIR / "results" / "calibration.json"
 REQUIREMENTS_PATH = ROOT / "backend" / "requirements.txt"
 
-APP_VERSION = "0.9.1"
+APP_VERSION = "1.0.0"
+
+# --- Deployment ---
+# "local": single machine; cases opened by the CLI (no owner) are visible to every account.
+# "hosted": internet-facing; only the owner of a case can see it.
+MODE = os.environ.get("TRUTHLENS_MODE", "local")
+ALLOWED_ORIGINS = [o.strip() for o in os.environ.get(
+    "TRUTHLENS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174").split(",") if o.strip()]
+ALLOWED_ORIGIN_REGEX = os.environ.get("TRUTHLENS_ALLOWED_ORIGIN_REGEX") or None   # e.g. https://truthlens-.*\.vercel\.app
+SESSION_DAYS = 7
+ALLOW_SIGNUP = os.environ.get("TRUTHLENS_ALLOW_SIGNUP", "1") == "1"
+LOGIN_MAX_FAILURES = 8          # per email per window, then 429
+LOGIN_WINDOW_S = 15 * 60
 DEFAULT_INVESTIGATOR = "Priya S."
 SEED = 7
 
