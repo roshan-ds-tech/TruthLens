@@ -1,0 +1,391 @@
+{
+  "version": "v1.0",
+  "seed": 7,
+  "quick": false,
+  "generated_at": "2026-11-19T09:16:06+00:00",
+  "label": "Small self-made test set. Not a general accuracy claim.",
+  "n_items": 204,
+  "sets": {
+    "image": {
+      "total": 92,
+      "untouched": 36
+    },
+    "audio": {
+      "total": 56,
+      "untouched": 24
+    },
+    "video": {
+      "total": 24,
+      "untouched": 8
+    },
+    "text": {
+      "total": 32,
+      "untouched": 16
+    }
+  },
+  "sources": "Crops of the public-domain sample photos bundled with scikit-image; synthetic voiced speech with room noise; macOS `say` text-to-speech; camera pans rendered from the sample photos.",
+  "indicators": [
+    {
+      "key": "ela_inconsistency",
+      "name": "Error level inconsistency",
+      "modality": "image",
+      "icon": "image",
+      "n_targets": 36,
+      "detected": 17,
+      "recall": 0.472,
+      "n_negatives": 36,
+      "false_positives": 4,
+      "fpr": 0.111,
+      "n_findings": 38,
+      "precision": 0.447,
+      "calibrated": true
+    },
+    {
+      "key": "noise_inconsistency",
+      "name": "Noise map discontinuity",
+      "modality": "image",
+      "icon": "grain",
+      "n_targets": 36,
+      "detected": 10,
+      "recall": 0.278,
+      "n_negatives": 36,
+      "false_positives": 7,
+      "fpr": 0.194,
+      "n_findings": 34,
+      "precision": 0.294,
+      "calibrated": true
+    },
+    {
+      "key": "jpeg_ghost",
+      "name": "JPEG ghost",
+      "modality": "image",
+      "icon": "layers",
+      "n_targets": 24,
+      "detected": 18,
+      "recall": 0.75,
+      "n_negatives": 36,
+      "false_positives": 11,
+      "fpr": 0.306,
+      "n_findings": 50,
+      "precision": 0.36,
+      "calibrated": true
+    },
+    {
+      "key": "copy_move",
+      "name": "Copy-move match",
+      "modality": "image",
+      "icon": "content_copy",
+      "n_targets": 12,
+      "detected": 11,
+      "recall": 0.917,
+      "n_negatives": 36,
+      "false_positives": 0,
+      "fpr": 0.0,
+      "n_findings": 12,
+      "precision": 0.917,
+      "calibrated": true
+    },
+    {
+      "key": "editor_software_tag",
+      "name": "Editing software tag",
+      "modality": "image",
+      "icon": "data_object",
+      "n_targets": 8,
+      "detected": 8,
+      "recall": 1.0,
+      "n_negatives": 36,
+      "false_positives": 0,
+      "fpr": 0.0,
+      "n_findings": 8,
+      "precision": 1.0,
+      "calibrated": true
+    },
+    {
+      "key": "thumbnail_mismatch",
+      "name": "Thumbnail mismatch",
+      "modality": "image",
+      "icon": "photo_size_select_small",
+      "n_targets": 8,
+      "detected": 8,
+      "recall": 1.0,
+      "n_negatives": 36,
+      "false_positives": 0,
+      "fpr": 0.0,
+      "n_findings": 8,
+      "precision": 1.0,
+      "calibrated": true
+    },
+    {
+      "key": "noise_floor_step",
+      "name": "Noise-floor step",
+      "modality": "audio",
+      "icon": "graphic_eq",
+      "n_targets": 16,
+      "detected": 16,
+      "recall": 1.0,
+      "n_negatives": 24,
+      "false_positives": 0,
+      "fpr": 0.0,
+      "n_findings": 16,
+      "precision": 1.0,
+      "calibrated": true
+    },
+    {
+      "key": "band_limited",
+      "name": "Band-limited spectrum",
+      "modality": "audio",
+      "icon": "equalizer",
+      "n_targets": 16,
+      "detected": 16,
+      "recall": 1.0,
+      "n_negatives": 24,
+      "false_positives": 0,
+      "fpr": 0.0,
+      "n_findings": 16,
+      "precision": 1.0,
+      "calibrated": true
+    },
+    {
+      "key": "uniform_prosody",
+      "name": "Uniform prosody",
+      "modality": "audio",
+      "icon": "record_voice_over",
+      "n_targets": 8,
+      "detected": 0,
+      "recall": 0.0,
+      "n_negatives": 24,
+      "false_positives": 10,
+      "fpr": 0.417,
+      "n_findings": 12,
+      "precision": 0.0,
+      "calibrated": true
+    },
+    {
+      "key": "flow_discontinuity",
+      "name": "Optical-flow discontinuity",
+      "modality": "video",
+      "icon": "movie",
+      "n_targets": 8,
+      "detected": 8,
+      "recall": 1.0,
+      "n_negatives": 8,
+      "false_positives": 0,
+      "fpr": 0.0,
+      "n_findings": 10,
+      "precision": 0.8,
+      "calibrated": true
+    },
+    {
+      "key": "duplicate_frames",
+      "name": "Duplicated frame",
+      "modality": "video",
+      "icon": "filter_none",
+      "n_targets": 8,
+      "detected": 7,
+      "recall": 0.875,
+      "n_negatives": 8,
+      "false_positives": 0,
+      "fpr": 0.0,
+      "n_findings": 7,
+      "precision": 1.0,
+      "calibrated": true
+    },
+    {
+      "key": "claim_date_conflict",
+      "name": "Date conflict",
+      "modality": "text",
+      "icon": "notes",
+      "n_targets": 8,
+      "detected": 8,
+      "recall": 1.0,
+      "n_negatives": 16,
+      "false_positives": 0,
+      "fpr": 0.0,
+      "n_findings": 8,
+      "precision": 1.0,
+      "calibrated": true
+    },
+    {
+      "key": "claim_speech_mismatch",
+      "name": "Quote not in speech",
+      "modality": "text",
+      "icon": "subtitles",
+      "n_targets": 8,
+      "detected": 8,
+      "recall": 1.0,
+      "n_negatives": 16,
+      "false_positives": 0,
+      "fpr": 0.0,
+      "n_findings": 8,
+      "precision": 1.0,
+      "calibrated": true
+    }
+  ],
+  "localization": {
+    "image_iou_mean": 0.706,
+    "image_n": 46,
+    "audio_splice_err_median_s": 0.006,
+    "audio_n": 16,
+    "video_edit_err_median_s": 0.04,
+    "video_n": 15
+  },
+  "reliability": [
+    {
+      "bin_lo": 0.0,
+      "bin_hi": 0.1,
+      "mid": 0.05,
+      "count": 2,
+      "observed": 0.5,
+      "predicted": 0.074
+    },
+    {
+      "bin_lo": 0.1,
+      "bin_hi": 0.2,
+      "mid": 0.15,
+      "count": 16,
+      "observed": 0.25,
+      "predicted": 0.173
+    },
+    {
+      "bin_lo": 0.2,
+      "bin_hi": 0.3,
+      "mid": 0.25,
+      "count": 33,
+      "observed": 0.152,
+      "predicted": 0.247
+    },
+    {
+      "bin_lo": 0.3,
+      "bin_hi": 0.4,
+      "mid": 0.35,
+      "count": 38,
+      "observed": 0.342,
+      "predicted": 0.34
+    },
+    {
+      "bin_lo": 0.4,
+      "bin_hi": 0.5,
+      "mid": 0.45,
+      "count": 7,
+      "observed": 0.571,
+      "predicted": 0.425
+    },
+    {
+      "bin_lo": 0.5,
+      "bin_hi": 0.6,
+      "mid": 0.55,
+      "count": 12,
+      "observed": 0.333,
+      "predicted": 0.54
+    },
+    {
+      "bin_lo": 0.6,
+      "bin_hi": 0.7,
+      "mid": 0.65,
+      "count": 5,
+      "observed": 0.8,
+      "predicted": 0.654
+    },
+    {
+      "bin_lo": 0.7,
+      "bin_hi": 0.8,
+      "mid": 0.75,
+      "count": 7,
+      "observed": 1.0,
+      "predicted": 0.778
+    },
+    {
+      "bin_lo": 0.8,
+      "bin_hi": 0.9,
+      "mid": 0.85,
+      "count": 15,
+      "observed": 1.0,
+      "predicted": 0.881
+    },
+    {
+      "bin_lo": 0.9,
+      "bin_hi": 1.0,
+      "mid": 0.95,
+      "count": 7,
+      "observed": 0.857,
+      "predicted": 0.915
+    }
+  ],
+  "false_positives": [
+    {
+      "type": "Camera JPEG with EXIF",
+      "indicator": "JPEG ghost",
+      "fp": 6,
+      "n": 24,
+      "label": "6/24",
+      "cause": "Flat areas give uninformative re-save curves"
+    },
+    {
+      "type": "Camera JPEG with EXIF",
+      "indicator": "Noise map discontinuity",
+      "fp": 4,
+      "n": 24,
+      "label": "4/24",
+      "cause": "Mixed focus and flat areas change visible noise"
+    },
+    {
+      "type": "Camera JPEG with EXIF",
+      "indicator": "Error level inconsistency",
+      "fp": 3,
+      "n": 24,
+      "label": "3/24",
+      "cause": "Sharp edges and text recompress with more error"
+    },
+    {
+      "type": "Clean 44.1 kHz recording",
+      "indicator": "Uniform prosody",
+      "fp": 4,
+      "n": 8,
+      "label": "4/8",
+      "cause": "Monotone delivery"
+    },
+    {
+      "type": "Clean recording (synthetic voice)",
+      "indicator": "Uniform prosody",
+      "fp": 6,
+      "n": 16,
+      "label": "6/16",
+      "cause": "Monotone delivery"
+    },
+    {
+      "type": "Recompressed JPEG, EXIF stripped",
+      "indicator": "JPEG ghost",
+      "fp": 5,
+      "n": 12,
+      "label": "5/12",
+      "cause": "Flat areas give uninformative re-save curves"
+    },
+    {
+      "type": "Recompressed JPEG, EXIF stripped",
+      "indicator": "Noise map discontinuity",
+      "fp": 3,
+      "n": 12,
+      "label": "3/12",
+      "cause": "Mixed focus and flat areas change visible noise"
+    },
+    {
+      "type": "Recompressed JPEG, EXIF stripped",
+      "indicator": "Error level inconsistency",
+      "fp": 1,
+      "n": 12,
+      "label": "1/12",
+      "cause": "Sharp edges and text recompress with more error"
+    }
+  ],
+  "not_validated": [
+    "face_flicker",
+    "lipsync_weak",
+    "frame_ela_inconsistency",
+    "frame_noise_inconsistency",
+    "claim_place_conflict",
+    "claim_number_conflict",
+    "modified_after_capture",
+    "camera_tags_missing"
+  ],
+  "runtime_s": 59.5
+}

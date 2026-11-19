@@ -60,3 +60,12 @@ fit on a rolling-minimum noise-floor trace (median error 5 ms on 8 seeded splice
 We have no own photos or recordings on this machine and analysis must stay offline, so the seeded test set is built
 from the public-domain sample photos bundled with scikit-image (crops), synthetic voiced speech with room noise,
 and camera pans rendered from those photos. `validation/synth.py` generates everything from fixed seeds.
+
+### D-14 · macOS `say` instead of Piper for synthetic speech
+Piper needs its voice models downloaded and was not installed. The validation harness uses the offline macOS
+`say` command for real text-to-speech clips when it exists, and skips the TTS subset otherwise (noted in metrics.json).
+
+### D-15 · Calibration for indicators that were always right (or always wrong)
+Platt scaling needs both classes. When every validation finding of an indicator was a hit (or a miss), its probability
+is the smoothed hit rate and its range comes from a Beta(hits+1, misses+1) posterior, so 16/16 on a small set gives
+0.86–0.95 rather than near-certainty.
