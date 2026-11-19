@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TruthLens report · {{ r.case.id }}</title>
+<style>
+  @page { size: A4; margin: 16mm 16mm 18mm; @bottom-left { content: "TruthLens {{ r.app_version }} · generated on device · report sha256 {{ short(r.sha256) }}"; font: 8pt 'JetBrains Mono', monospace; color: #8A8A85; } @bottom-right { content: "page " counter(page) " / " counter(pages); font: 8pt 'JetBrains Mono', monospace; color: #8A8A85; } }
+  * { box-sizing: border-box; }
+  body { font-family: Manrope, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 9.5pt; line-height: 1.5; margin: 0; }
+  .mono { font-family: 'JetBrains Mono', Menlo, monospace; }
+  .eyebrow { font-size: 7.5pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #5F5F5A; margin-bottom: 6px; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 2px solid #111; margin-bottom: 18px; }
+  .logo { display: flex; align-items: center; gap: 8px; }
+  .mark { width: 24px; height: 24px; border-radius: 6px; background: #FFD23F; display: flex; align-items: center; justify-content: center; }
+  .mark span { width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid #111; display: block; }
+  .meta { text-align: right; font-size: 8pt; color: #5F5F5A; line-height: 1.6; }
+  h1 { font-size: 18pt; margin: 0 0 6px; letter-spacing: -0.02em; line-height: 1.15; }
+  section { margin-bottom: 18px; page-break-inside: auto; }
+  .verdict { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; padding: 14px 16px; border-radius: 10px; background: #111; color: #fff; }
+  .verdict .eyebrow { color: #FFD23F; }
+  .vlabel { font-size: 13pt; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .bar { position: relative; height: 5px; border-radius: 999px; background: #EFEFEB; flex: 1; }
+  .bar i { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: #111; }
+  .verdict .bar { background: #333; } .verdict .bar i { background: #FFD23F; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  th { text-align: left; font-size: 7pt; letter-spacing: .08em; text-transform: uppercase; color: #5F5F5A; background: #F7F7F5; padding: 6px 8px; }
+  td { padding: 6px 8px; border-top: 1px solid #EFEFEB; vertical-align: top; }
+  .finding { display: grid; grid-template-columns: 110px 1fr 140px; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EFEFEB; page-break-inside: avoid; }
+  .thumb { height: 70px; border-radius: 6px; background: repeating-linear-gradient(135deg,#EFEFEB 0 6px,#F7F7F5 6px 12px); display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 7pt; color: #8A8A85; }
+  .thumb img { max-width: 100%; max-height: 100%; }
+  .muted { color: #5F5F5A; }
+  .tag { font-size: 7.5pt; font-weight: 700; padding: 1px 7px; border-radius: 999px; border: 1px solid #E8E8E4; white-space: nowrap; }
+  .cmd { background: #F7F7F5; border: 1px solid #E8E8E4; border-radius: 8px; padding: 10px 12px; font-size: 8pt; word-break: break-all; }
+  ul { margin: 0; padding-left: 16px; } li { margin-bottom: 3px; }
+  footer { margin-top: 20px; padding-top: 10px; border-top: 2px solid #111; display: flex; justify-content: space-between; font-size: 8pt; }
+</style>
+</head>
+<body>
+{% set dots = {'strong': '#D64545', 'indicators': '#E8A33D', 'inconclusive': '#8A8A85', 'none': '#3E9B5F'} %}
+<header>
+  <div class="logo"><div class="mark"><span></span></div><div><div style="font-weight:800;font-size:11pt">TruthLens</div><div class="muted" style="font-size:8pt">Forensic report</div></div></div>
+  <div class="meta mono">{{ r.case.id }} · draft {{ r.draft }}<br>generated {{ r.generated_at[:16].replace('T', ' ') }} UTC<br>investigator {{ r.case.investigator }}</div>
+</header>
+
+<section>
+  <div class="eyebrow">Summary</div>
+  <h1>{{ r.case.title }}</h1>
+  <p style="margin:0;color:#333">{{ r.summary }}</p>
+</section>
+
+<section class="verdict">
+  <div>
+    <div class="eyebrow">Verdict</div>
+    <div class="vlabel"><span class="dot" style="background:{{ dots.get(r.verdict.band, '#8A8A85') }}"></span>{{ r.verdict.label }}</div>
+    {% if r.verdict.lo is not none %}
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px"><div class="bar"><i style="left:{{ (r.verdict.lo*100)|round(1) }}%;width:{{ ((r.verdict.hi-r.verdict.lo)*100)|round(1) }}%"></i></div><span class="mono" style="color:#FFD23F;font-size:8pt">{{ '%.2f'|format(r.verdict.lo) }}–{{ '%.2f'|format(r.verdict.hi) }}</span></div>
+    {% endif %}
+  </div>
+  <p style="margin:0;color:#D8D8D2"><b style="color:#fff">Why:</b> {{ r.verdict.why }}. The range reflects agreement between analyzers, not a probability of editing.</p>
+</section>
+
+<section>
+  <div class="eyebrow">Evidence</div>
+  <table>
+    <tr><th>Item</th><th>File</th><th>Type</th><th>Verdict</th><th>SHA-256</th></tr>
+    {% for e in r.evidence %}
+    <tr><td class="mono">{{ e.label }}</td><td><b>{{ e.name }}</b><br><span class="muted">{{ e.meta }}{% if e.derived_from %} · derived from {{ e.derived_from }}{% endif %}</span></td><td>{{ e.type }}</td>
+      <td>{% if e.verdict %}<span class="dot" style="background:{{ dots.get(e.verdict.band) }}"></span> {{ e.verdict.label }}{% else %}—{% endif %}</td>
+      <td class="mono" style="font-size:7pt;word-break:break-all">{{ e.sha256 }}</td></tr>
+    {% endfor %}
+  </table>
+</section>
+
+<section>
+  <div class="eyebrow">Findings · {{ r.findings|length }}</div>
+  {% for f in r.findings %}
+  <div class="finding">
+    <div class="thumb">{% if thumbs.get(f.finding_id) %}<img src="{{ thumbs[f.finding_id] }}">{% else %}{{ f.modality }}{% endif %}</div>
+    <div>
+      <div><span class="mono" style="font-weight:600">{{ f.finding_id }}</span> · <b>{{ f.name }}</b> <span class="muted">({{ f.evidence_id }})</span></div>
+      <div class="muted">{{ f.loc_label }} · <span class="dot" style="background:{{ dots.get(f.band) }}"></span> {{ f.verdict.label }}</div>
+      <div style="margin-top:3px">{{ f.explanation }}</div>
+      <div class="muted mono" style="font-size:7.5pt;margin-top:3px">Method: {{ f.method }}</div>
+      {% if f.alternatives %}<div class="muted" style="margin-top:3px"><b>Alternatives:</b> {{ f.alternatives|join('; ') }}</div>{% endif %}
+    </div>
+    <div>
+      <div class="bar"><i style="left:{{ (f.conf_low*100)|round(1) }}%;width:{{ ((f.conf_high-f.conf_low)*100)|round(1) }}%;background:{{ '#8A8A85' if f.band == 'inconclusive' else '#111' }}"></i></div>
+      <div class="mono" style="font-size:8pt;display:flex;justify-content:space-between;margin-top:4px"><span>{{ '%.2f'|format(f.conf_low) }}–{{ '%.2f'|format(f.conf_high) }}</span><span class="muted">{{ f.review.status }}</span></div>
+      {% if not f.calibrated %}<div class="muted" style="font-size:7pt">uncalibrated range</div>{% endif %}
+      {% if f.weakened %}<div class="muted" style="font-size:7pt">weight reduced by R-14</div>{% endif %}
+    </div>
+  </div>
+  {% else %}
+  <p class="muted">No analyzer produced a finding above its threshold.</p>
+  {% endfor %}
+</section>
+
+{% if r.claims %}
+<section>
+  <div class="eyebrow">Caption claims</div>
+  <table>
+    <tr><th>Claim</th><th>Kind</th><th>Status</th><th>Checked against</th></tr>
+    {% for c in r.claims %}
+    <tr><td>{{ c.text }}</td><td>{{ c.kind }}</td><td><b>{{ c.status }}</b></td><td class="muted">{{ c.detail or (c.evidence|join(', ')) or '—' }}</td></tr>
+    {% endfor %}
+  </table>
+</section>
+{% endif %}
+
+<section>
+  <div class="eyebrow">Correlation summary</div>
+  {% for rule in r.correlations %}
+  <div style="display:grid;grid-template-columns:44px 1fr auto;gap:10px;padding:6px 0;border-bottom:1px solid #EFEFEB">
+    <span class="mono" style="font-weight:600">{{ rule.id }}</span>
+    <span><b>{{ rule.name }}</b><br><span class="mono muted" style="font-size:8pt">{{ rule.links }}</span></span>
+    <span class="tag">{{ rule.tag }}</span>
+  </div>
+  {% else %}
+  <p class="muted">No cross-modal rule fired.</p>
+  {% endfor %}
+</section>
+
+<section>
+  <div class="eyebrow">Limitations</div>
+  <ul>{% for l in r.limitations %}<li>{{ l }}</li>{% endfor %}</ul>
+</section>
+
+<section>
+  <div class="eyebrow">Recommended human checks</div>
+  <ul>{% for c in r.recommended_checks %}<li>{{ c }}</li>{% endfor %}</ul>
+</section>
+
+<section>
+  <div class="eyebrow">Reviewer decisions</div>
+  <table>
+    <tr><th>Finding</th><th>Decision</th><th>Time</th><th>Note</th></tr>
+    {% for d in r.review_decisions %}
+    <tr><td class="mono">{{ d.finding_id }}</td><td><b>{{ d.decision|capitalize }}</b></td><td class="mono muted">{{ d.time[11:19] if d.time else '—' }}</td><td>{{ d.note or '—' }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="muted" style="margin:6px 0 0">Reviewed by {{ r.case.investigator }}. Open findings are listed but carry no reviewer decision.</p>
+</section>
+
+<section>
+  <div class="eyebrow">Rerun command</div>
+  <div class="cmd mono">{{ r.rerun_command }}</div>
+  <p class="muted" style="margin:6px 0 0">Rerunning on the same originals and model lock reproduces these finding IDs and scores.</p>
+</section>
+
+<footer class="mono"><span>report sha256 {{ r.sha256 }}</span><span class="muted">chain of custody: {{ r.custody.entries }} entries{% if not r.custody.chain_valid %} · CHAIN BROKEN{% endif %}</span></footer>
+</body>
+</html>

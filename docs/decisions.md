@@ -39,3 +39,24 @@ The UI's sign-up / log-in dialog is a local, single-user gate (as in the design)
 ### D-09 · API paths are under `/api`
 Design doc §5.2 lists `/cases`, `/jobs/{id}` and so on. They are served as `/api/cases`, `/api/jobs/{id}`, …
 so that one FastAPI process can also serve the built UI at `/` for `make run`.
+
+### D-10 · MediaPipe Tasks API instead of `mp.solutions`
+MediaPipe 1.2.3 (what pip resolved for Python 3.11/arm64) no longer ships the legacy `solutions.face_mesh`.
+Face tracking uses `mediapipe.tasks` `FaceLandmarker` in IMAGE mode with `face_landmarker.task` (3.6 MB, fetched by `make setup`).
+MediaPipe also pulls in `opencv-contrib-python` next to `opencv-python-headless`; both are pinned and the tests pass with both present.
+
+### D-11 · Fusion has diminishing returns and caps
+§3.8 specifies a weighted log-odds sum. A plain sum let five uncalibrated near-1.0 signals reach a 1.00–1.00 range,
+which is unsupported certainty. Families are now added strongest first with the k-th counting 0.6^k, single
+signals are clipped to [0.02, 0.95], the fused value is capped at 0.97, and a fused range is never narrower than ±0.05.
+
+### D-12 · Image signal refinements after testing on synthetic splices
+ELA thresholds a 3×3-block-smoothed, texture-normalised error map (raw ELA fired on every edge and missed pasted
+regions). JPEG ghost compares each block's re-save curve *shape* with the image-wide shape instead of taking each
+block's arg-min quality (which flagged clean images). Audio splice boundaries are placed by a robust change-point
+fit on a rolling-minimum noise-floor trace (median error 5 ms on 8 seeded splices, vs ~0.5 s before).
+
+### D-13 · Validation sources are synthetic
+We have no own photos or recordings on this machine and analysis must stay offline, so the seeded test set is built
+from the public-domain sample photos bundled with scikit-image (crops), synthetic voiced speech with room noise,
+and camera pans rendered from those photos. `validation/synth.py` generates everything from fixed seeds.

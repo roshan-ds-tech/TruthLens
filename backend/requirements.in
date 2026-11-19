@@ -1,0 +1,26 @@
+# Top-level dependencies. `make setup` installs the pinned versions in requirements.txt.
+fastapi
+uvicorn
+sqlmodel
+python-multipart
+filetype
+numpy
+scipy
+pillow
+opencv-python-headless
+scikit-image
+exifread
+imagehash
+mediapipe
+librosa
+soundfile
+faster-whisper
+sentence-transformers
+dateparser
+spacy
+scikit-learn
+networkx
+jinja2
+weasyprint
+pytest
+httpx
