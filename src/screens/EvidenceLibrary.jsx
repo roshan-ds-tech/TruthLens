@@ -14,7 +14,7 @@ function Thumb({ it }) {
   return <AuthImg path={it.thumb_url} alt="" onError={() => setFailed(true)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />;
 }
 
-const DEST = { image: 'image', audio: 'audio' };
+const DEST = { image: 'image', audio: 'audio', text: 'text' };
 
 export default function EvidenceLibrary({ go, active }) {
   const [f, setF] = useState('all');

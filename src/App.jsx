@@ -11,10 +11,11 @@ import Analysis from './screens/Analysis.jsx';
 import CaseWorkspace from './screens/CaseWorkspace.jsx';
 import ImageViewer from './screens/ImageViewer.jsx';
 import AudioViewer from './screens/AudioViewer.jsx';
+import TextViewer from './screens/TextViewer.jsx';
 import ReportPreview from './screens/ReportPreview.jsx';
 import { api, useApi, getToken, setToken, useServerMode, PRIVACY } from './api/client.js';
 
-const SCREENS = ['dashboard', 'cases', 'library', 'validation', 'settings', 'newcase', 'analysis', 'workspace', 'image', 'audio', 'report'];
+const SCREENS = ['dashboard', 'cases', 'library', 'validation', 'settings', 'newcase', 'analysis', 'workspace', 'image', 'audio', 'text', 'report'];
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: 'space_dashboard' },
@@ -29,6 +30,7 @@ const CASE_NAV = [
   { id: 'analysis', label: 'Analysis run', icon: 'motion_photos_on' },
   { id: 'image', label: 'Image evidence', icon: 'image' },
   { id: 'audio', label: 'Audio evidence', icon: 'graphic_eq' },
+  { id: 'text', label: 'Text evidence', icon: 'notes' },
   { id: 'report', label: 'Report', icon: 'description' },
 ];
 
@@ -225,6 +227,7 @@ export default function App() {
               <div style={shown('workspace')}><CaseWorkspace go={go} active={is('workspace')} compact={tablet} caseId={nav.caseId} /></div>
               <div style={shown('image')}><ImageViewer go={go} active={is('image')} caseId={nav.caseId} evidenceId={nav.evidenceId} /></div>
               <div style={shown('audio')}><AudioViewer go={go} active={is('audio')} caseId={nav.caseId} evidenceId={nav.evidenceId} /></div>
+              <div style={shown('text')}><TextViewer go={go} active={is('text')} caseId={nav.caseId} evidenceId={nav.evidenceId} /></div>
               <div style={shown('report')}><ReportPreview go={go} active={is('report')} caseId={nav.caseId} /></div>
             </main>
           </div>

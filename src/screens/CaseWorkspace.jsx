@@ -270,10 +270,8 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
   const decide = (f, d) => review(f, { decision: f.review.status === d ? 'pending' : d });
   const jump = (f) => {
     if (f.go === 'image' || f.go === 'audio') go(f.go, { evidenceId: f.evidenceDbId });
-    else if (f.modality === 'text' && f.location.type === 'text_span') {
-      const target = f.compare && evidence.find((e) => e.label === (findQ.data.find((x) => x.finding_id === f.id)?.extra?.target_evidence));
-      if (target && target.kind === 'image') go('image', { evidenceId: target.id }); else selectF(f);
-    } else selectF(f);
+    else if (f.modality === 'text') go('text', { caseId, evidenceId: f.evidenceDbId });
+    else selectF(f);
   };
 
   const rerun = () => { setBusy('rerun'); api.post(`/cases/${caseId}/analyze`).then((j) => go('analysis', { caseId, jobId: j.job_id }), alertLine).finally(() => setBusy('')); };
@@ -342,7 +340,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
               const open = () => {
                 if (e.kind === 'video') { setViewId(e.id); setT(0); } else if (e.kind === 'image') go('image', { evidenceId: e.id });
                 else if (e.kind === 'audio') go('audio', { evidenceId: e.id });
-                else { const tf = F.find((f) => f.evidence === e.label); if (tf) setSel(tf.id); }
+                else if (e.kind === 'text') go('text', { caseId, evidenceId: e.id });
               };
               return (
                 <button key={e.id} onClick={open} {...hover({ bc: c.ink }, { flex: '1 1 200px', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, borderRadius: 14, border: `1px solid ${on ? c.ink : c.border}`, background: on ? c.surface : c.bg, fontFamily: 'inherit', color: c.ink, cursor: 'pointer' })}>
