@@ -29,6 +29,11 @@ def _png_uri(img: Image.Image) -> str:
 
 
 def _thumb(f: dict, ev: Evidence) -> Optional[str]:
+    img = thumb_image(f, ev)
+    return _png_uri(img) if img is not None else None
+
+
+def thumb_image(f: dict, ev: Evidence) -> Optional[Image.Image]:
     """Evidence crop for a finding: region box for images/frames, spectrogram slice for audio."""
     loc = f["location"]
     try:
@@ -54,7 +59,12 @@ def _thumb(f: dict, ev: Evidence) -> Optional[str]:
             d = ImageDraw.Draw(crop)
             d.rectangle([x - box[0], y - box[1], x - box[0] + w, y - box[1] + h], outline=(255, 210, 63), width=3)
             crop.thumbnail((240, 150))
-            return _png_uri(crop)
+            return crop
+        if loc.get("type") == "file" and ev.kind == "image":   # metadata findings concern the whole file
+            with Image.open(custody.original_path(ev.case_id, ev.sha256)) as im:
+                whole = ImageOps.exif_transpose(im).convert("RGB")
+                whole.thumbnail((240, 150))
+                return whole
         if loc.get("type") == "frame_range" and ev.kind == "video":
             import cv2
 
@@ -65,7 +75,7 @@ def _thumb(f: dict, ev: Evidence) -> Optional[str]:
             if ok:
                 im = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                 im.thumbnail((240, 150))
-                return _png_uri(im)
+                return im
         if loc.get("type") == "time_range" and ev.kind == "audio":
             spec = config.ARTIFACT_DIR / ev.case_id / ev.label / "spectrogram.png"
             dur = JsonMixin.loads(ev.metadata_json, {}).get("duration") or 1
@@ -78,7 +88,7 @@ def _thumb(f: dict, ev: Evidence) -> Optional[str]:
                     xa, xb = loc["start"] / dur * im.width - a, loc["end"] / dur * im.width - a
                     d.rectangle([xa, 0, xb, im.height - 1], outline=(224, 180, 0), width=2)
                     crop.thumbnail((240, 150))
-                    return _png_uri(crop)
+                    return crop.copy()
     except Exception:
         return None
     return None

@@ -1,6 +1,7 @@
 import { c, YELLOW, MONO, Icon, eyebrow, fmtRange, preventThen, PrimaryButton, SecondaryButton, Muted } from '../ui.jsx';
 import { useState } from 'react';
 import { useApi, fmtBytes, shortHash, download } from '../api/client.js';
+import { AuthImg } from '../api/media.jsx';
 
 // The report pages are print documents: they stay dark-on-white in both themes.
 const DOT = { strong: '#D64545', indicators: '#E8A33D', inconclusive: '#8A8A85', none: '#3E9B5F' };
@@ -103,7 +104,7 @@ export default function ReportPreview({ go, active, caseId }) {
           <div style={section}>
             <span style={label}>Findings · {r.findings.length}</span>
             {!r.findings.length && <span style={{ color: '#5F5F5A' }}>No analyzer produced a finding above its threshold.</span>}
-            {r.findings.slice(0, half).map((f) => <ReportFinding key={f.finding_id} f={f} />)}
+            {r.findings.slice(0, half).map((f) => <ReportFinding key={f.finding_id} f={f} caseId={r.case.id} />)}
           </div>
           <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', ...mono, fontSize: 10, color: '#8A8A85' }}><span>TruthLens {r.app_version} · generated on device</span><span>page 1 / 2</span></div>
         </article>
@@ -113,7 +114,7 @@ export default function ReportPreview({ go, active, caseId }) {
           {r.findings.length > half && (
             <div style={section}>
               <span style={label}>Findings (continued)</span>
-              {r.findings.slice(half).map((f) => <ReportFinding key={f.finding_id} f={f} />)}
+              {r.findings.slice(half).map((f) => <ReportFinding key={f.finding_id} f={f} caseId={r.case.id} />)}
             </div>
           )}
           <div style={section}>
@@ -163,10 +164,14 @@ export default function ReportPreview({ go, active, caseId }) {
   );
 }
 
-function ReportFinding({ f }) {
+function ReportFinding({ f, caseId }) {
+  const [noThumb, setNoThumb] = useState(f.location.type === 'text_span');
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '96px 1fr 150px', gap: 14, alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #EFEFEB' }}>
-      <div style={{ height: 56, borderRadius: 6, background: 'repeating-linear-gradient(135deg,#EFEFEB 0 6px,#F7F7F5 6px 12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', ...mono, fontSize: 9, color: '#8A8A85', textAlign: 'center' }}>{f.evidence_id} · {f.modality}</div>
+      <div style={{ height: 56, borderRadius: 6, background: 'repeating-linear-gradient(135deg,#EFEFEB 0 6px,#F7F7F5 6px 12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', ...mono, fontSize: 9, color: '#8A8A85', textAlign: 'center', overflow: 'hidden', position: 'relative' }}>
+        {noThumb ? `${f.evidence_id} · ${f.modality === 'text' ? 'caption' : f.modality}`
+          : <AuthImg path={`/api/cases/${caseId}/findings/${f.finding_id}/thumb`} alt={`${f.finding_id} evidence`} onError={() => setNoThumb(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span><span style={{ ...mono, fontSize: 11, fontWeight: 600 }}>{f.finding_id}</span> · <b>{f.name}</b></span>
         <span style={{ color: '#5F5F5A' }}>{f.loc_label} · <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: DOT[f.band] }} />{f.verdict.label}</span></span>

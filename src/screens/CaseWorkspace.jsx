@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { c, VERDICTS, YELLOW, MONO, Icon, hover, VerdictPill, RangeBar, eyebrow, fmtRange, preventThen, PrimaryButton, SecondaryButton, Muted } from '../ui.jsx';
 import { api, useApi, useMediaUrl, fmtT, fmtDate, shortHash } from '../api/client.js';
-import { AuthImg } from '../api/media.jsx';
+import { AuthImg, EvidencePreview } from '../api/media.jsx';
 
 const fmt = fmtT;
 
@@ -373,7 +373,8 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
                   style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#151515' }} />
               )}
               {primary?.kind === 'image' && <AuthImg path={primary.media_url} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#151515' }} />}
-              {!primary && <div style={{ position: 'absolute', left: 16, top: 14, fontFamily: MONO, fontSize: 11, color: '#8A8A85' }}>no visual evidence · open audio or text from the list</div>}
+              {!primary && <EvidencePreview ev={evidence.find((e) => e.kind === 'audio') || evidence.find((e) => e.kind === 'text')} dark lines={6} />}
+              {!primary && <div style={{ position: 'absolute', left: 16, top: 14, fontFamily: MONO, fontSize: 11, color: '#8A8A85' }}>no video or image · showing {evidence.some((e) => e.kind === 'audio') ? 'the audio waveform' : 'the caption'}</div>}
               {isVideo && <div style={{ position: 'absolute', right: 16, top: 14, fontFamily: MONO, fontSize: 11, color: '#fff', background: 'rgba(17,17,17,.7)', padding: '3px 8px', borderRadius: 6 }}>frame {Math.round(t * (primary.fps || 25))}</div>}
               {boxes.map((f) => {
                 const L = f.location;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { c, VERDICTS, MONO, Icon, hover, VerdictPill, chipStyle, eyebrow, h1, page, Muted } from '../ui.jsx';
 import { useApi, fmtBytes } from '../api/client.js';
-import { AuthImg } from '../api/media.jsx';
+import { AuthImg, EvidencePreview } from '../api/media.jsx';
 
 const TYPE_ICON = { video: 'movie', image: 'image', audio: 'graphic_eq', text: 'notes' };
 
@@ -9,7 +9,8 @@ const FILTERS = [['all', 'All', 'apps'], ['image', 'Images', 'image'], ['video',
 
 function Thumb({ it }) {
   const [failed, setFailed] = useState(false);
-  if (failed || !['image', 'video'].includes(it.kind)) return <span style={{ fontFamily: MONO, fontSize: 10.5, color: '#8A8A85' }}>{it.kind} preview</span>;
+  if (['audio', 'text'].includes(it.kind)) return <EvidencePreview ev={it} lines={3} />;
+  if (failed) return <span style={{ fontFamily: MONO, fontSize: 10.5, color: '#8A8A85' }}>{it.kind} preview</span>;
   return <AuthImg path={it.thumb_url} alt="" onError={() => setFailed(true)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />;
 }
 

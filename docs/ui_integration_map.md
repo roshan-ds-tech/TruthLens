@@ -145,3 +145,14 @@ All styling and layout are unchanged. Edits replaced in-file constants with API 
 - `AudioViewer.jsx`: real `<audio>` playback; the existing canvas draws the server-rendered spectrogram.
 - `ReportPreview.jsx`: renders `report.json`; Export JSON / Download PDF open the generated files.
 - `Validation.jsx`: the SAMPLE DATA badge now shows the test-set version and size from `metrics.json`.
+
+## Image slots (after "fill the placeholders")
+
+Evidence slots show the evidence itself, never stock imagery:
+
+| Slot | Shows |
+|---|---|
+| Home sample-case preview | Stock photo `public/img/press-briefing.jpg` (Pexels licence, see `public/img/CREDITS.md`); decorative only |
+| Evidence Library card | Image/video: real thumbnail · Audio: waveform from `/evidence/{id}/waveform` · Text: opening lines of the caption |
+| Workspace viewer, case without video or image | Waveform of the case's audio, else the caption text |
+| Report preview finding thumbnails | `GET /cases/{id}/findings/{finding_id}/thumb`: region crop, video frame, spectrogram slice, or the whole image for metadata findings; caption findings show "caption" |

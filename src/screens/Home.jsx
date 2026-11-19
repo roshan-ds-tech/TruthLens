@@ -112,9 +112,11 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             <div style={{ flex: '3 1 420px', minWidth: 0, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 14, padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', background: 'repeating-linear-gradient(135deg,#1A1A1A 0 12px,#202020 12px 24px)' }}>
-                <span style={{ position: 'absolute', left: 14, top: 12, fontFamily: MONO, fontSize: 10.5, color: '#8A8A85' }}>video frame · press briefing</span>
-                <div style={{ position: 'absolute', left: '40%', top: '20%', width: '20%', height: '42%', border: `2px solid ${YELLOW}`, borderRadius: 6 }}>
+              <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden', background: '#1A1A1A' }}>
+                {/* Illustration only (stock photo, Pexels licence); real cases always show the uploaded evidence. */}
+                <img src="/img/press-briefing.jpg" alt="Microphone in an empty briefing room" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(.78)' }} />
+                <span style={{ position: 'absolute', left: 14, top: 12, fontFamily: MONO, fontSize: 10.5, color: '#fff', background: 'rgba(17,17,17,.55)', padding: '2px 7px', borderRadius: 5 }}>sample frame · press briefing</span>
+                <div style={{ position: 'absolute', left: '36%', top: '27%', width: '27%', height: '44%', border: `2px solid ${YELLOW}`, borderRadius: 6 }}>
                   <span style={{ position: 'absolute', left: -2, top: -24, background: YELLOW, color: '#111111', fontFamily: MONO, fontSize: 10.5, fontWeight: 600, padding: '2px 7px', borderRadius: 5, whiteSpace: 'nowrap' }}>F-VID-002 · 00:14.0</span>
                 </div>
               </div>

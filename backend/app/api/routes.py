@@ -270,6 +270,23 @@ def case_findings(case_id: str, s: Session = Depends(get_session), u: User = Dep
     return adapters.case_findings(s, case_id)
 
 
+@router.get("/cases/{case_id}/findings/{finding_id}/thumb")
+def finding_thumb(case_id: str, finding_id: str, s: Session = Depends(get_session), u: User = Depends(current_user)):
+    """The evidence crop a finding points at (region box, video frame or spectrogram slice), as PNG."""
+    from ..report.render import thumb_image
+
+    _case(s, case_id, u)
+    f = next((x for x in adapters.case_findings(s, case_id) if x["finding_id"] == finding_id), None)
+    if f is None:
+        raise HTTPException(404, "Finding not found")
+    img = thumb_image(f, s.get(Evidence, f["evidence_db_id"]))
+    if img is None:
+        raise HTTPException(404, "No visual crop for this finding")
+    buf = io.BytesIO()
+    img.save(buf, "PNG")
+    return Response(buf.getvalue(), media_type="image/png")
+
+
 @router.get("/cases/{case_id}/graph")
 def case_graph(case_id: str, s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
     return graph_for(s, _case(s, case_id, u))
