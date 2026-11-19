@@ -78,7 +78,7 @@ export default function Dashboard({ go, active, investigator }) {
       <section style={{ background: c.hero, color: '#fff', borderRadius: 20, padding: '28px 30px', display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 620 }}>
-            <span style={{ ...eyebrow, color: YELLOW }}>How TruthLens works</span>
+            <span style={{ ...eyebrow, color: YELLOW }}>How Vero works</span>
             <h2 style={{ margin: 0, fontSize: 28, lineHeight: 1.15, fontWeight: 700, letterSpacing: '-0.018em', textWrap: 'balance' }}>Every finding is evidence-linked and reviewable</h2>
           </div>
           <span style={{ fontSize: 13.5, color: '#B8B8B2', maxWidth: 360, lineHeight: 1.5 }}>Analyzers suggest. You decide. Every report marks each finding as accepted, rejected or not yet reviewed.</span>

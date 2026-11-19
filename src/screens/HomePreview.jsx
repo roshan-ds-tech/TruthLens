@@ -1,4 +1,4 @@
-// Home page sample case: plays a short press-briefing clip and replays TruthLens's real analysis of it in time.
+// Home page sample case: plays a short press-briefing clip and replays Vero's real analysis of it in time.
 // The clip and its analysis come from samples/make_home_demo.py (public/media/home-demo.{mp4,json}).
 import { useEffect, useRef, useState } from 'react';
 import { c, VERDICTS, YELLOW, MONO, Icon, fmtRange } from '../ui.jsx';
@@ -170,7 +170,7 @@ export default function HomePreview() {
         <span style={{ fontSize: 11.5, color: c.ink2, lineHeight: 1.45 }}>
           Demo clip made for this page: we cut it at {clock(data?.ground_truth?.video_cut_s ?? 8)} and joined speech from a noisier room at{' '}
           {clock(data?.ground_truth?.audio_splice_s ?? 8.2)}. The footage is genuine stock video; the narration is computer-generated
-          speech, which the voice detector recognises. The cards replay TruthLens's actual analysis of it.
+          speech, which the voice detector recognises. The cards replay Vero's actual analysis of it.
         </span>
       </div>
     </div>

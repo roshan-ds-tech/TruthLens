@@ -18,7 +18,7 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="TruthLens", version=config.APP_VERSION,
+    app = FastAPI(title="Vero", version=config.APP_VERSION,
                   docs_url=None if config.MODE == "hosted" else "/docs", redoc_url=None)
     app.add_middleware(CORSMiddleware, allow_origins=config.ALLOWED_ORIGINS, allow_origin_regex=config.ALLOWED_ORIGIN_REGEX,
                        allow_methods=["GET", "POST", "PATCH", "PUT"], allow_headers=["Authorization", "Content-Type"],

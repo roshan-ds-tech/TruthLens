@@ -102,7 +102,7 @@ def _summary(case: dict, findings: list[dict]) -> str:
     open_ = len(findings) - acc - rej
     desc = case["description"].strip()
     lead = (desc + ("" if desc.endswith((".", "!", "?")) else ".") + " ") if desc else ""
-    where = "on the TruthLens server" if config.MODE == "hosted" else "on this device"
+    where = "on the Vero server" if config.MODE == "hosted" else "on this device"
     return (f"{lead}{len(kinds)} evidence item{'s' if len(kinds) != 1 else ''} ({parts}) {'were' if len(kinds) != 1 else 'was'} analyzed {where}. "
             f"{len(findings)} finding{'s were' if len(findings) != 1 else ' was'} produced; {acc} accepted by the reviewer, "
             f"{rej} rejected and {open_} still open.")
@@ -139,7 +139,7 @@ def build(s: Session, case_row: Case) -> dict[str, Any]:
         "case": {"id": case["id"], "title": case["title"], "investigator": case["investigator"],
                  "description": case["description"], "opened": case["created_at"]},
         "generated_at": utcnow().isoformat(), "draft": draft, "app_version": config.APP_VERSION,
-        "generated_where": "on the TruthLens server" if config.MODE == "hosted" else "on device",
+        "generated_where": "on the Vero server" if config.MODE == "hosted" else "on device",
         "summary": _summary(case, findings),
         "verdict": case["verdict"],
         "deepfake": case.get("deepfake"),
@@ -172,7 +172,9 @@ def build(s: Session, case_row: Case) -> dict[str, Any]:
     thumbs = {f["finding_id"]: _thumb(f, evs[f["evidence_db_id"]]) for f in findings}
     env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=select_autoescape(["html", "j2"]))
     html = env.get_template("report.html.j2").render(r=report, thumbs=thumbs, short=custody.short,
-                                                       fonts=(Path(__file__).parent / "fonts").as_uri())
+                                                       fonts=(Path(__file__).parent / "fonts").as_uri(),
+                                                       logo_uri="data:image/svg+xml;base64," + base64.b64encode(
+                                                           (config.ROOT / "public/vero-logo-kit/vero-logo.svg").read_bytes()).decode("ascii"))
     html_path = out_dir / "report.html"
     html_path.write_text(html, "utf-8")
 

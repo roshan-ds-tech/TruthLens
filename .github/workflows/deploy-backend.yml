@@ -42,8 +42,9 @@ jobs:
       - name: Assemble the Space
         if: env.SKIP != '1'
         run: |
-          mkdir -p space/validation
+          mkdir -p space/validation space/public
           rsync -a --exclude '.venv' --exclude 'models' --exclude '__pycache__' --exclude 'tests' backend space/
+          cp -r public/vero-logo-kit space/public/
           cp -r validation/results space/validation/
           cp validation/synth.py validation/run_validation.py space/validation/
           cp Dockerfile .dockerignore space/

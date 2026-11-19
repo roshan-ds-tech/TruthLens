@@ -21,6 +21,7 @@ RUN TORCH=$(grep -E '^torch==' backend/requirements.txt | cut -d= -f3) \
     && pip install -r backend/requirements.txt
 
 COPY backend backend
+COPY public/vero-logo-kit public/vero-logo-kit
 COPY validation/results validation/results
 COPY validation/synth.py validation/run_validation.py validation/
 

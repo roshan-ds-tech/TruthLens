@@ -202,7 +202,7 @@ export default function NewCase({ go, active, draftId: resumeId, investigator })
       </section>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 14, paddingTop: 4 }}>
-        <span style={{ fontSize: 13, color: c.ink2 }}>{hosted ? 'Runs on the TruthLens server.' : 'Runs on this device.'} Estimated time 40–60 s.</span>
+        <span style={{ fontSize: 13, color: c.ink2 }}>{hosted ? 'Runs on the Vero server.' : 'Runs on this device.'} Estimated time 40–60 s.</span>
         <div style={{ display: 'flex', gap: 10 }}>
           <SecondaryButton onClick={saveDraft} disabled={busy} style={{ height: 42, padding: '0 18px' }}>Save draft</SecondaryButton>
           <PrimaryButton onClick={start} disabled={busy || (!evidence.length && !caption.trim())} style={{ opacity: busy || (!evidence.length && !caption.trim()) ? 0.55 : 1 }}>Start analysis<Icon name="arrow_forward" size={19} /></PrimaryButton>

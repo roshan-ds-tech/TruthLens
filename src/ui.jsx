@@ -1,4 +1,4 @@
-// Shared tokens and primitives used across TruthLens screens.
+// Shared tokens and primitives used across Vero screens.
 
 export const YELLOW = '#FFD23F';
 export const YELLOW_HOVER = '#F5C400';
@@ -85,16 +85,16 @@ export function SecondaryButton({ style, children, ...rest }) {
   return <button {...rest} {...hover({ bg: c.surface }, { ...btnSecondary, ...style })}>{children}</button>;
 }
 
-/** The yellow lens mark. */
-export function Logo({ size = 38 }) {
-  const inner = Math.round(size * 0.53);
-  return (
-    <div style={{ width: size, height: size, flex: 'none', borderRadius: size * 0.26, background: YELLOW, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: inner, height: inner, borderRadius: '50%', border: `${size >= 34 ? 3.5 : 3}px solid #111111`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {size >= 34 && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#111111' }} />}
-      </div>
-    </div>
-  );
+/** Supplied Vero artwork; dark variants retain contrast on dark surfaces. */
+export function Logo({ size = 38, lockup = false, theme }) {
+  const asset = lockup ? 'vero-logo' : 'vero-mark';
+  const width = size * (lockup ? 276.01 / 120 : 103.92 / 120);
+  const img = (dark) => <img src={`/vero-logo-kit/${asset}${dark ? '-on-dark' : ''}.svg`}
+    alt="Vero" width={width} height={size} className={theme ? undefined : `vero-logo-${dark ? 'dark' : 'light'}`}
+    style={{ width, height: size, objectFit: 'contain', flex: 'none' }} />;
+  return <span style={{ display: 'inline-flex', width, height: size, flex: 'none' }}>
+    {theme ? img(theme === 'dark') : <>{img(false)}{img(true)}</>}
+  </span>;
 }
 
 export const preventThen = (fn) => (e) => { e.preventDefault(); fn(); };

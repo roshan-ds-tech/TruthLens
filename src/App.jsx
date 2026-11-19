@@ -121,7 +121,7 @@ export default function App() {
   if (checking) return <div style={rootStyle} />;
   if (!authed) {
     return (
-      <div style={rootStyle}>
+      <div data-theme={theme} style={rootStyle}>
         <Home theme={theme} onToggleTheme={toggleTheme} onEnter={() => { setAuthed(true); setScreen(start !== 'home' && SCREENS.includes(start) ? start : 'dashboard'); setDataVersion((v) => v + 1); }} />
       </div>
     );
@@ -147,18 +147,15 @@ export default function App() {
   );
 
   return (
-    <div style={rootStyle}>
+    <div data-theme={theme} style={rootStyle}>
       <div style={{ minHeight: '100vh', background: tablet ? c.border : c.bg, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: tablet ? 32 : 0 }}>
         <div style={{ width: tablet ? 834 : '100%', maxWidth: '100%', height: tablet ? 1112 : '100vh', display: 'flex', background: c.bg, borderRadius: tablet ? 24 : 0, overflow: 'hidden', boxShadow: tablet ? '0 20px 60px rgba(17,17,17,.12)' : 'none', transform: 'translateZ(0)' }}>
           <aside style={{ width: expanded ? 248 : 72, flex: 'none', background: c.surface, borderRight: `1px solid ${c.border}`, display: 'flex', flexDirection: 'column', padding: '16px 12px', gap: 2, transition: 'width .2s ease' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 5px 22px' }}>
-              <Logo />
-              {expanded && (
-                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-                  <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.018em' }}>TruthLens</span>
-                  <span style={{ fontSize: 11, color: c.ink2, fontWeight: 600 }}>Forensic workstation</span>
-                </div>
-              )}
+              {expanded ? <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <Logo lockup size={38} />
+                <span style={{ fontSize: 11, color: c.ink2, fontWeight: 600 }}>Forensic workstation</span>
+              </div> : <Logo />}
             </div>
             {NAV.map((n) => {
               const on = n.id === activeTop;

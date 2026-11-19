@@ -53,8 +53,7 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', color: c.ink, background: c.bg }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '20px 40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Logo />
-          <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.018em' }}>TruthLens</span>
+          <Logo lockup size={38} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px', borderRadius: 999, border: `1px solid ${c.border}`, fontSize: 12.5, fontWeight: 600 }}>
@@ -137,7 +136,7 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
               {busy ? 'Please wait…' : su ? 'Create account' : 'Log in'}<Icon name="arrow_forward" size={19} />
             </button>
             <span style={{ fontSize: 13, color: c.ink2, textAlign: 'center' }}>
-              {su ? 'Already have an account?' : 'New to TruthLens?'}{' '}
+              {su ? 'Already have an account?' : 'New to Vero?'}{' '}
               <a href="#" onClick={(e) => { e.preventDefault(); setError(''); setMode(su ? 'login' : 'signup'); }} style={{ fontWeight: 700, color: c.ink }}>{su ? 'Log in' : 'Sign up'}</a>
             </span>
           </form>

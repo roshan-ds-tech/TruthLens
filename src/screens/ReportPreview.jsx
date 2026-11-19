@@ -1,4 +1,4 @@
-import { c, YELLOW, MONO, Icon, eyebrow, fmtRange, preventThen, PrimaryButton, SecondaryButton, Muted } from '../ui.jsx';
+import { c, YELLOW, MONO, Icon, Logo, eyebrow, fmtRange, preventThen, PrimaryButton, SecondaryButton, Muted } from '../ui.jsx';
 import { useState } from 'react';
 import { useApi, fmtBytes, shortHash, download } from '../api/client.js';
 import { AuthImg } from '../api/media.jsx';
@@ -20,7 +20,7 @@ export default function ReportPreview({ go, active, caseId }) {
   const rep = useApi(active && caseId ? `/cases/${caseId}/report` : null);
   const r = rep.data;
   const [dlError, setDlError] = useState('');
-  const get = (path, ext) => download(path, `TruthLens_${r.case.id}_report.${ext}`).catch((e) => setDlError(e.message));
+  const get = (path, ext) => download(path, `Vero_${r.case.id}_report.${ext}`).catch((e) => setDlError(e.message));
 
   if (!r) {
     return (
@@ -58,9 +58,8 @@ export default function ReportPreview({ go, active, caseId }) {
         <article style={paper}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 18, borderBottom: '2px solid #111' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: YELLOW, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 15, height: 15, borderRadius: '50%', border: '3px solid #111' }} /></div>
-              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.012em' }}>TruthLens</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <Logo lockup size={30} theme="light" />
                 <span style={{ fontSize: 10.5, color: '#5F5F5A' }}>Forensic report</span>
               </div>
             </div>
@@ -106,7 +105,7 @@ export default function ReportPreview({ go, active, caseId }) {
             {!r.findings.length && <span style={{ color: '#5F5F5A' }}>No analyzer produced a finding above its threshold.</span>}
             {r.findings.slice(0, half).map((f) => <ReportFinding key={f.finding_id} f={f} caseId={r.case.id} />)}
           </div>
-          <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', ...mono, fontSize: 10, color: '#8A8A85' }}><span>TruthLens {r.app_version} · generated {r.generated_where || 'on device'}</span><span>summary · part 1</span></div>
+          <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', ...mono, fontSize: 10, color: '#8A8A85' }}><span>Vero {r.app_version} · generated {r.generated_where || 'on device'}</span><span>summary · part 1</span></div>
         </article>
 
         <article style={paper}>

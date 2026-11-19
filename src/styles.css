@@ -13,3 +13,8 @@ a:hover { color: var(--tl-ink2, #5F5F5A); }
 
 @keyframes tlspin { to { transform: rotate(360deg); } }
 @keyframes tlpulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+/* Logo variants follow the selected app theme, including a collapsed sidebar. */
+.vero-logo-dark { display: none; }
+[data-theme="dark"] .vero-logo-light { display: none; }
+[data-theme="dark"] .vero-logo-dark { display: block; }

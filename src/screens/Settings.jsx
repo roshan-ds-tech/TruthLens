@@ -10,7 +10,7 @@ function privacyRows(hosted) {
   const dot = (color) => <span style={{ width: 7, height: 7, borderRadius: '50%', background: color }} />;
   return [
     ['Network access', <span key="n" style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>{dot('#3E9B5F')}
-      {hosted ? 'Analysis runs on the TruthLens server and never calls outside services.' : 'Off. All analysis runs on this device.'}</span>],
+      {hosted ? 'Analysis runs on the Vero server and never calls outside services.' : 'Off. All analysis runs on this device.'}</span>],
     ['Telemetry', <span key="t" style={{ fontWeight: 600 }}>Off</span>],
     ['Evidence vault', null],
     ['Who can see your cases', <span key="w" style={{ fontWeight: 600 }}>{hosted ? 'Only your account' : 'Everyone using this device'}</span>],

@@ -1,4 +1,4 @@
-// Data layer: the only place the UI talks to the TruthLens backend (served under /api).
+// Data layer: the only place the UI talks to the Vero backend (served under /api).
 // VITE_API_BASE points a hosted build at the backend (e.g. https://user-truthlens.hf.space); empty = same origin.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -170,7 +170,7 @@ export const fmtBytes = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n >= 1
 
 export const shortHash = (h) => (h && h.length > 12 ? `${h.slice(0, 8)}…${h.slice(-4)}` : h || '—');
 
-/** "local" (analysis on this machine) or "hosted" (analysis on the TruthLens server); drives the privacy copy. */
+/** "local" (analysis on this machine) or "hosted" (analysis on the Vero server); drives the privacy copy. */
 export function useServerMode() {
   const h = useApi('/health');
   return h.data?.mode || (API_BASE ? 'hosted' : 'local');
@@ -182,16 +182,16 @@ export const PRIVACY = {
     badge: 'Running locally · ₹0', detail: 'No data leaves this device', short: 'Local · ₹0', home: 'Runs locally · No data leaves this device',
     where: 'on this device', worker: 'one worker on this device · no network', account: 'Sign up · free · account on this device',
     pointTitle: 'Runs on your device', pointText: 'Files are hashed on arrival and originals stay read-only. Nothing is uploaded.',
-    hero: 'TruthLens analyzes your evidence on this device, shows',
+    hero: 'Vero analyzes your evidence on this device, shows',
     analyzeStep: 'Run image, video, audio and text analyzers locally.', settings: 'Settings · this device',
   },
   hosted: {
     badge: 'Hosted analysis server', detail: 'Evidence is stored on the server, visible only to your account', short: 'Hosted',
     home: 'Hosted demo · Your evidence is visible only to your account',
-    where: 'on the TruthLens server', worker: 'one worker on the TruthLens server · no outside services',
+    where: 'on the Vero server', worker: 'one worker on the Vero server · no outside services',
     account: 'Sign up · free · hosted demo account',
-    pointTitle: 'Private to your account', pointText: 'Files are uploaded to the TruthLens server, hashed on arrival and kept read-only. Only your account can see them.',
-    hero: 'TruthLens analyzes the evidence you upload on its own server, shows',
-    analyzeStep: 'Run image, video, audio and text analyzers on the TruthLens server.', settings: 'Settings · your account',
+    pointTitle: 'Private to your account', pointText: 'Files are uploaded to the Vero server, hashed on arrival and kept read-only. Only your account can see them.',
+    hero: 'Vero analyzes the evidence you upload on its own server, shows',
+    analyzeStep: 'Run image, video, audio and text analyzers on the Vero server.', settings: 'Settings · your account',
   },
 };

@@ -416,7 +416,7 @@ def download_report(case_id: str, fmt: Literal["pdf", "json", "html"], s: Sessio
     if not path or not Path(path).exists():
         raise HTTPException(404, f"{fmt.upper()} report not available")
     media = {"pdf": "application/pdf", "json": "application/json", "html": "text/html"}[fmt]
-    return FileResponse(path, media_type=media, filename=f"TruthLens_{case_id}_report.{fmt}" if fmt != "html" else None)
+    return FileResponse(path, media_type=media, filename=f"Vero_{case_id}_report.{fmt}" if fmt != "html" else None)
 
 
 # ------------------------------------------------------------------ dashboard, validation, settings

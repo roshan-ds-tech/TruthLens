@@ -3,7 +3,7 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/((?!assets/|fonts/|api-config\\.json|favicon\\.svg).*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/((?!assets/|fonts/|vero-logo-kit/|api-config\\.json|favicon\\.svg).*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/api-config.json",
