@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_
 # ffmpeg for media, pango for WeasyPrint PDFs, GL/glib for OpenCV, fonts for the report
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ffmpeg libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libfontconfig1 fonts-dejavu-core \
-        libgl1 libglib2.0-0 \
+        libgl1 libglib2.0-0 libegl1 libgles2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Hugging Face Spaces run the container as uid 1000
