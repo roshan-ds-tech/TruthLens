@@ -81,3 +81,9 @@ from object URLs.
 Hosting was requested. The backend runs as a Docker Space (CPU, models baked in, no outbound calls during analysis);
 the UI says plainly that it is a hosted server and that evidence is visible only to the uploading account. Local
 mode keeps the original promise. Free Spaces have no persistent disk, so hosted data is temporary.
+
+### D-18 · Reproducibility across platforms
+CI runs on Ubuntu (ffmpeg 6) while development used macOS (ffmpeg 9). Finding IDs, scores, ranges, verdicts and the
+findings digest are identical on both. The only difference is the SHA-256 of the derived audio track: AAC decoders in
+different ffmpeg versions produce slightly different PCM. `samples/check_demo.py` therefore compares hashes of
+originals only. Reruns on one installation are bit-identical, including derived files.

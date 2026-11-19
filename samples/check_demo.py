@@ -48,7 +48,10 @@ def run() -> dict:
         "case": case.id,
         "findings_digest": out["digest"],
         "verdict": {k: detail["verdict"][k] for k in ("band", "lo", "hi")},
-        "evidence": {e["label"]: {"kind": e["kind"], "sha256": e["sha256"], "band": e["verdict"]["band"]} for e in detail["evidence"]},
+        # Originals must hash identically everywhere. A derived track's bytes depend on the local ffmpeg build
+        # (AAC decoders differ between versions), so only its kind and verdict are compared.
+        "evidence": {e["label"]: {"kind": e["kind"], "band": e["verdict"]["band"],
+                                  **({} if e.get("derived_from") else {"sha256": e["sha256"]})} for e in detail["evidence"]},
         "findings": [{k: f[k] for k in ("finding_id", "evidence_id", "indicator", "loc_label", "conf_low", "conf_high", "band")}
                      for f in findings],
         "rules": sorted({r["id"] for r in rules}),
