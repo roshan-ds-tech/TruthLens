@@ -29,7 +29,7 @@ validate:             ## seeded test set → validation/results/metrics.json + c
 	$(PY) validation/run_validation.py
 
 demo:                 ## build the demo case, analyze it, compare with samples/expected_report.json
-	$(PY) samples/make_demo.py
+	test -f samples/demo_case/clip.mp4 || $(PY) samples/make_demo.py
 	$(PY) samples/check_demo.py
 
 fixtures:             ## regenerate the small test fixtures

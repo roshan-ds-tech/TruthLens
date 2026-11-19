@@ -1,0 +1,44 @@
+# Limitations
+
+TruthLens reports **indicators**, never "fake" or "real". These are the limits we know about.
+
+## What it cannot detect
+
+- **Fully AI-generated media without editing traces.** A synthetic image or video that was generated in one pass
+  and never edited may carry no ELA, noise, ghost, copy-move, flow or splice signal. The verdict will then be
+  *No indicators found* or *Inconclusive*, which is why that verdict never means "authentic".
+- **Cloned voices recorded at full bandwidth.** The band-limit check only catches synthetic speech that was
+  generated at a low sample rate and upsampled. Prosody statistics are a weak signal (see validation: 0 % recall,
+  42 % false positives on our synthetic voices), weighted 0.3 and calibrated to about 0.04.
+- **Splices between recordings with the same background noise.** The noise-floor detector needs the room noise to change.
+- **Who made a change.** The report does not establish authorship or intent.
+
+## Measurement limits
+
+- **The test set is small and self-made.** 204 items (`validation/results/metrics.json`), built from the public-domain
+  sample photos bundled with scikit-image, synthetic voiced speech with room noise, macOS `say` text-to-speech and
+  camera pans rendered from the photos (decision D-13). No public forensic dataset was run. The numbers say how
+  the analyzers behave on these items, not how they generalise.
+- **Pixel-level image signals are weak.** On the test set ELA finds 47 % of splices/retouches (11 % false positives),
+  the noise map 28 % (19 %) and JPEG ghost 75 % (31 %). Calibration lowers their weight accordingly.
+- **Not validated** (no ground truth in our set): face-region flicker and lip-sync (no faces in the synthetic video),
+  frame forensics on video frames, place and number conflicts, "modified after capture" and missing camera tags.
+  Their ranges are flagged *uncalibrated* where they appear.
+- **Platt calibration on a small set.** Indicators that were right every time get a Beta-posterior range
+  (e.g. 0.86–0.95), not certainty (D-15). No single signal exceeds 0.95 and no combination exceeds 0.97 (D-11).
+- **720p input** limits face-region and lip-sync measurements; longer or larger files are trimmed or downscaled
+  with a warning shown on the evidence card and in the report.
+- **Social-platform recompression** can produce error-level patterns similar to editing; rule R-14 lowers the weight of
+  ELA and ghost findings on images that look platform-recompressed.
+
+## Product limits
+
+- **No authentication.** The sign-up / log-in dialog is a local, single-user gate (D-08).
+- **Search box** in the top bar is not wired.
+- **One analysis at a time** (one worker, by design for the 8 GB budget).
+- **The offline gazetteer** has about 45 places; other place names are reported as unverifiable.
+- **Speech recognition** is Whisper *base*; it is unreliable on noise and non-speech (it transcribes our synthetic
+  voice as "Beep."), which can make caption-vs-speech checks unverifiable.
+- **Screenshots** of the UI are not included in the README: the browser extension used for screenshots was not
+  connected during the build. All screens were render-checked against the live API in jsdom instead.
+- The PDF export needs `pango` (installed by Homebrew on macOS). Without it the HTML and JSON reports are still produced.
