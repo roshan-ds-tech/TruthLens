@@ -47,6 +47,7 @@ def run() -> dict:
     return {
         "case": case.id,
         "findings_digest": out["digest"],
+        "digest_fields": out.get("digest_fields"),
         "verdict": {k: detail["verdict"][k] for k in ("band", "lo", "hi")},
         "deepfake": {k: (round(v, 2) if isinstance(v, float) else v) for k, v in (detail.get("deepfake") or {}).items()
                      if k in ("key", "p", "lo", "hi", "driver")},
@@ -79,7 +80,13 @@ def main() -> int:
         print("\nDemo reproduces samples/expected_report.json exactly.")
         return 0
     for key in want:
+        if key == "digest_fields":
+            continue
         if want[key] != got.get(key):
+            if key == "findings_digest":   # say which finding's hashed fields differ
+                for a, b in zip(want.get("digest_fields") or [], got.get("digest_fields") or []):
+                    if a != b:
+                        print(f"  finding differs:\n    expected {a}\n    got      {b}")
             print(f"\nDIFFERENT {key}:\n  expected {json.dumps(want[key])[:400]}\n  got      {json.dumps(got.get(key))[:400]}")
     return 1
 

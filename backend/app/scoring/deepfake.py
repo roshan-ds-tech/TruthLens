@@ -59,14 +59,14 @@ def calibrate(detector: str, raw: float) -> dict:
     raw = min(max(raw, 0.0), 1.0)
     if not entry:
         return {"p": raw, "lo": max(0.0, raw - UNCALIBRATED_HALF), "hi": min(1.0, raw + UNCALIBRATED_HALF), "calibrated": False}
-    p = _sig(entry["A"] * raw + entry["B"])
+    p = min(max(_sig(entry["A"] * raw + entry["B"]), P_MIN), P_MAX)
     boots = sorted(_sig(a * raw + b) for a, b in entry.get("boot", [])) or [p]
     lo, hi = boots[int(0.1 * (len(boots) - 1))], boots[int(0.9 * (len(boots) - 1))]
     lo, hi = min(lo, p - 0.03), max(hi, p + 0.03)
     if detector == "ai_video":
         # calibrated on still images; compressed video frames are less reliable, so the range is wider
         lo, hi = lo - VIDEO_EXTRA, hi + VIDEO_EXTRA
-    return {"p": p, "lo": max(0.0, lo), "hi": min(1.0, hi), "calibrated": True,
+    return {"p": p, "lo": max(P_MIN, lo), "hi": min(P_MAX, hi), "calibrated": True,
             "auc": entry.get("auc"), "n": entry.get("n")}
 
 

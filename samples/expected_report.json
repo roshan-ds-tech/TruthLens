@@ -1,6 +1,114 @@
 {
   "case": "C-0007",
-  "findings_digest": "6ac3f84deef0e2a72db09f218cf3293276c501f3bad92829013ea29e70a8b2f7",
+  "findings_digest": "de73050cca7b4430fd0e2e4668cdec74e8260924d792c7b17fa89069ac0f9af7",
+  "digest_fields": [
+    {
+      "finding_id": "F-VID-001",
+      "evidence": "E-01",
+      "indicator": "flow_discontinuity",
+      "location": {
+        "type": "frame_range",
+        "start": 13.96,
+        "end": 14.0,
+        "frames": [
+          349,
+          350
+        ]
+      },
+      "raw_score": 1.0,
+      "score": 0.9,
+      "lo": 0.7919,
+      "hi": 0.95,
+      "band": "indicators"
+    },
+    {
+      "finding_id": "F-AUD-001",
+      "evidence": "E-02",
+      "indicator": "noise_floor_step",
+      "location": {
+        "type": "time_range",
+        "start": 14.19,
+        "end": 14.69
+      },
+      "raw_score": 0.9934,
+      "score": 0.9444,
+      "lo": 0.86,
+      "hi": 0.95,
+      "band": "indicators"
+    },
+    {
+      "finding_id": "F-AUD-002",
+      "evidence": "E-02",
+      "indicator": "synthetic_voice",
+      "location": {
+        "type": "time_range",
+        "start": 0.0,
+        "end": 25.0
+      },
+      "raw_score": 0.89,
+      "score": 0.9734,
+      "lo": 0.9434,
+      "hi": 0.99,
+      "band": "indicators"
+    },
+    {
+      "finding_id": "F-IMG-001",
+      "evidence": "E-03",
+      "indicator": "editor_software_tag",
+      "location": {
+        "type": "file",
+        "field": "Software"
+      },
+      "raw_score": 0.55,
+      "score": 0.9,
+      "lo": 0.7665,
+      "hi": 0.95,
+      "band": "indicators"
+    },
+    {
+      "finding_id": "F-IMG-002",
+      "evidence": "E-03",
+      "indicator": "modified_after_capture",
+      "location": {
+        "type": "file",
+        "field": "DateTime"
+      },
+      "raw_score": 0.5,
+      "score": 0.5,
+      "lo": 0.38,
+      "hi": 0.62,
+      "band": "inconclusive"
+    },
+    {
+      "finding_id": "F-IMG-003",
+      "evidence": "E-03",
+      "indicator": "thumbnail_mismatch",
+      "location": {
+        "type": "file",
+        "field": "JPEGThumbnail"
+      },
+      "raw_score": 0.8,
+      "score": 0.9,
+      "lo": 0.7683,
+      "hi": 0.95,
+      "band": "indicators"
+    },
+    {
+      "finding_id": "F-TXT-001",
+      "evidence": "E-04",
+      "indicator": "claim_date_conflict",
+      "location": {
+        "type": "text_span",
+        "start": 210,
+        "end": 221
+      },
+      "raw_score": 0.9967,
+      "score": 0.9,
+      "lo": 0.7845,
+      "hi": 0.95,
+      "band": "indicators"
+    }
+  ],
   "verdict": {
     "band": "strong",
     "lo": 0.92,
@@ -63,7 +171,7 @@
       "indicator": "synthetic_voice",
       "loc_label": "Whole track \u00b7 7 \u00d7 4 s windows",
       "conf_low": 0.9434,
-      "conf_high": 1.0,
+      "conf_high": 0.99,
       "band": "indicators"
     },
     {

@@ -96,7 +96,7 @@
    "start": 0.0,
    "end": 16.0,
    "lo": 0.9322,
-   "hi": 0.9922,
+   "hi": 0.99,
    "key": "ind",
    "label": "Indicators of manipulation",
    "explanation": "The voice classifier rates the speech as likely produced by text-to-speech or voice cloning."

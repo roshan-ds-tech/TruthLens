@@ -348,14 +348,18 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
     if job:
         job.status, job.finished_at, job.findings_count = "done", utcnow(), len(scored)
         tr.flush()
-    return {"findings": len(scored), "digest": digest, "verdict": case_band, "graph": graph}
+    return {"findings": len(scored), "digest": digest, "verdict": case_band, "graph": graph,
+            "digest_fields": digest_fields(scored)}
+
+
+def digest_fields(scored: list[dict]) -> list[dict]:
+    return [{k: f[k] for k in ("finding_id", "evidence", "indicator", "location", "raw_score", "score", "lo", "hi", "band")}
+            for f in scored]
 
 
 def findings_digest(scored: list[dict]) -> str:
     """Hash of everything a rerun must reproduce: IDs, locations, scores, ranges, bands."""
-    canon = [{k: f[k] for k in ("finding_id", "evidence", "indicator", "location", "raw_score", "score", "lo", "hi", "band")}
-             for f in scored]
-    return custody.sha256_json(canon)
+    return custody.sha256_json(digest_fields(scored))
 
 
 def _meta_label(ev: Evidence, meta: dict) -> str:

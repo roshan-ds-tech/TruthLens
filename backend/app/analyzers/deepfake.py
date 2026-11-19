@@ -315,7 +315,7 @@ def run_audio(ctx: AnalysisContext) -> list[RawFinding]:
     ctx.extra["ai_detector"] = {"kind": "audio", "raw": raw, "models": chosen("ai_voice", AUDIO_MODELS),
                                 "chunks": [{"t": 4.0 * i, "p": _r2(p)} for i, p in enumerate(scores)]}
     return _finding(ctx, "synthetic_voice", "ai_voice", "Synthetic or cloned voice likelihood", raw,
-                    {"type": "time_range", "start": 0.0, "end": round(len(y) / sr, 2)}, f"Whole track · {len(scores)} × 4 s windows",
+                    {"type": "time_range", "start": 0.0, "end": round(len(y) / sr * 2) / 2}, f"Whole track · {len(scores)} × 4 s windows",
                     f"wav2vec2 anti-spoofing classifier ({', '.join(chosen('ai_voice', AUDIO_MODELS))}) on {len(scores)} "
                     f"four-second windows; median {raw:.2f}",
                     "The voice classifier rates the speech as likely produced by text-to-speech or voice cloning.",
