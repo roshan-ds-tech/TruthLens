@@ -16,7 +16,8 @@ WORKDIR /app
 COPY backend/requirements.txt backend/requirements.txt
 # CPU-only torch first, so the pinned requirements do not pull in CUDA wheels
 RUN TORCH=$(grep -E '^torch==' backend/requirements.txt | cut -d= -f3) \
-    && pip install "torch==${TORCH}" --index-url https://download.pytorch.org/whl/cpu \
+    && TV=$(grep -E '^torchvision==' backend/requirements.txt | cut -d= -f3) \
+    && pip install "torch==${TORCH}" "torchvision==${TV}" --index-url https://download.pytorch.org/whl/cpu \
     && pip install -r backend/requirements.txt
 
 COPY backend backend

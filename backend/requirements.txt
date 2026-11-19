@@ -110,8 +110,8 @@ tifffile==2026.3.3
 tinycss2==1.5.1
 tinyhtml5==2.1.0
 tokenizers==0.23.3
-torch==2.15.0
-torchvision==0.29.2
+torch==2.14.1
+torchvision==0.29.1
 tqdm==4.70.1
 transformers==5.23.0
 truststore==0.10.5
