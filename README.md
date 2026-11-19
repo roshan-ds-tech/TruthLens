@@ -1,4 +1,11 @@
-# TruthLens
+# Vero
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/vero-logo-kit/vero-logo-on-dark.svg">
+  <img src="public/vero-logo-kit/vero-logo.svg" alt="Vero" height="72">
+</picture>
+
+Formerly TruthLens; the repository, CLI commands, and deployment URLs retain their existing names.
 
 **Offline, CPU-only forensic triage for image, video, audio and text evidence.** An investigator opens a case, adds
 the media and the caption that came with it, and gets a reviewable report. Each finding points to a region, frame or

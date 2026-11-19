@@ -1,5 +1,5 @@
 ---
-title: TruthLens API
+title: Vero API
 emoji: 🔍
 colorFrom: yellow
 colorTo: gray
