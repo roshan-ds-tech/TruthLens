@@ -13,3 +13,4 @@ validation/results/*.png
 .env
 .env.local
 .vercel
+source_docs_recovered/
