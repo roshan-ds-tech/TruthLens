@@ -1,0 +1,11 @@
+node_modules
+dist
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+backend/.venv/
+backend/models/
+data/
+validation/data/
+validation/results/*.png
