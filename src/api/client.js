@@ -2,8 +2,37 @@
 // VITE_API_BASE points a hosted build at the backend (e.g. https://user-truthlens.hf.space); empty = same origin.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export const API_BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
+export let API_BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '');
 const TOKEN_KEY = 'tl-token';
+
+// Quick Tunnel addresses change after a demo restart. An open tab can recover the
+// latest public address from its own deployment without reloading the app.
+let addressRefresh;
+async function refreshApiAddress() {
+  if (!import.meta.env.PROD) return;
+  if (!addressRefresh) addressRefresh = (async () => {
+    const response = await fetch('/api-config.json', { cache: 'no-store' });
+    if (!response.ok) return;
+    const config = await response.json();
+    if (typeof config.apiBase !== 'string') return;
+    const base = config.apiBase.replace(/\/$/, '');
+    if (base && new URL(base).protocol !== 'https:') return;
+    API_BASE = base;
+  })().catch(() => {}).finally(() => { addressRefresh = null; });
+  await addressRefresh;
+}
+
+async function serviceFetch(path, opts = {}, retrySafe = true) {
+  const previousBase = API_BASE;
+  try {
+    return await fetch(`${previousBase}${path}`, opts);
+  } catch (error) {
+    await refreshApiAddress();
+    // Do not repeat writes: the server may have saved them before the connection failed.
+    if (!retrySafe || API_BASE === previousBase) throw error;
+    return fetch(`${API_BASE}${path}`, opts);
+  }
+}
 
 export function getToken() {
   try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
@@ -22,9 +51,9 @@ async function request(method, path, body, isForm = false) {
   }
   let res;
   try {
-    res = await fetch(`${API_BASE}/api${path}`, opts);
+    res = await serviceFetch(`/api${path}`, opts, method === 'GET' || path === '/auth/login');
   } catch {
-    throw Object.assign(new Error('Could not reach the analysis service. Check your connection and try again.'), { status: 0 });
+    throw Object.assign(new Error('Could not reach the analysis service. Refresh this page and try again. The demo Mac must be awake and online.'), { status: 0 });
   }
   const text = await res.text();
   const data = text ? (() => { try { return JSON.parse(text); } catch { return text; } })() : null;
@@ -49,7 +78,7 @@ export function useMediaUrl(path) {
     let alive = true, made = null;
     setError(null);
     const token = getToken();
-    fetch(`${API_BASE}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    serviceFetch(path, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
       .then((r) => (r.ok ? r.blob() : Promise.reject(Object.assign(new Error(`${r.status}`), { status: r.status }))))
       .then((b) => { if (alive) { made = URL.createObjectURL(b); setUrl(made); } })
       .catch((e) => { if (alive) { setUrl(null); setError(e); } });
@@ -61,7 +90,7 @@ export function useMediaUrl(path) {
 /** Download a protected file (report PDF / JSON) through fetch, so the auth header is sent. */
 export async function download(path, filename) {
   const token = getToken();
-  const r = await fetch(`${API_BASE}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  const r = await serviceFetch(path, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
   if (!r.ok) throw new Error(`Download failed (${r.status})`);
   const href = URL.createObjectURL(await r.blob());
   const a = Object.assign(document.createElement('a'), { href, download: filename });
