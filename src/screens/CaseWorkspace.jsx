@@ -210,7 +210,10 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
   const rules = graphQ.data?.rules || [];
   const nodes = graphQ.data?.nodes || [];
   useEffect(() => { if (rules.length && !rules.some((r) => r.id === rule)) setRule(rules[0].id); }, [rules, rule]);
-  useEffect(() => { setSel(null); setViewId(null); setT(0); }, [caseId]);
+  // Finding IDs repeat across cases (every case has an F-VID-001), so all per-finding UI state is per case.
+  useEffect(() => {
+    setSel(null); setViewId(null); setT(0); setAlt({}); setDrafts({}); setNoteOpen(null); setLimOpen(false); setRule(null); setErrLine('');
+  }, [caseId]);
 
   // Lay out by the component's own width (not the window), since the sidebar can collapse.
   const measure = useCallback(() => {

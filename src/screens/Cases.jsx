@@ -15,11 +15,15 @@ const FILTERS = [['all', 'All'], ['review', 'Needs review', c.ink], ['strong', '
 
 const COLS = '80px minmax(240px,1fr) 110px 170px 80px 130px 100px 24px';
 
-export default function Cases({ go, active }) {
+export default function Cases({ go, active, query = '', onClearQuery }) {
   const [f, setF] = useState('all');
+  const q = query.trim();
   const list = useApi(active ? '/cases' : null);
+  const found = useApi(active && q.length >= 2 ? `/search?q=${encodeURIComponent(q)}` : null);
+  const searching = q.length >= 2;
   const ALL = list.data || [];
-  const rows = ALL.filter(TESTS[f]);
+  const matchWhy = Object.fromEntries((found.data?.cases || []).map((c) => [c.id, c.match]));
+  const rows = (searching ? found.data?.cases || [] : ALL).filter(TESTS[f]);
   const open = ALL.filter((r) => !r.closed).length;
 
   return (
@@ -27,6 +31,12 @@ export default function Cases({ go, active }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={eyebrow}>Cases · {open} active · {ALL.length - open} closed</div>
         <h1 style={h1}>Cases</h1>
+        {searching && (
+          <Muted>
+            {found.loading && !found.data ? 'Searching…' : `${rows.length} result${rows.length === 1 ? '' : 's'} for “${q}”`}{' '}
+            <a href="#" onClick={(e) => { e.preventDefault(); onClearQuery?.(); }} style={{ fontWeight: 700 }}>Clear search</a>
+          </Muted>
+        )}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {FILTERS.map(([k, label, dot]) => (
@@ -45,11 +55,11 @@ export default function Cases({ go, active }) {
           {list.error && <div style={{ padding: '14px 20px' }}><Muted>Could not load cases: {list.error.message}</Muted></div>}
           {list.data && !rows.length && <div style={{ padding: '14px 20px' }}><Muted>{ALL.length ? 'No cases match this filter.' : 'No cases yet. Use New case to add evidence.'}</Muted></div>}
           {rows.map((r) => (
-            <button key={r.id} onClick={() => go(r.status === 'draft' ? 'newcase' : 'workspace', { caseId: r.id })} {...hover({ bg: c.surface }, { width: '100%', display: 'grid', gridTemplateColumns: COLS, gap: 16, alignItems: 'center', padding: '14px 20px', border: 'none', borderBottom: `1px solid ${c.line}`, background: c.bg, fontFamily: 'inherit', color: c.ink, textAlign: 'left', cursor: 'pointer' })}>
+            <button key={r.id} onClick={() => go(r.status === 'draft' ? 'newcase' : 'workspace', { caseId: r.id, draftId: r.status === 'draft' ? r.id : null })} {...hover({ bg: c.surface }, { width: '100%', display: 'grid', gridTemplateColumns: COLS, gap: 16, alignItems: 'center', padding: '14px 20px', border: 'none', borderBottom: `1px solid ${c.line}`, background: c.bg, fontFamily: 'inherit', color: c.ink, textAlign: 'left', cursor: 'pointer' })}>
               <span style={{ fontFamily: MONO, fontSize: 12 }}>{r.id}</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
                 <span style={{ fontSize: 14.5, fontWeight: 700 }}>{r.title}</span>
-                <span style={{ fontSize: 12.5, color: c.ink2 }}>Why: {r.why}</span>
+                <span style={{ fontSize: 12.5, color: c.ink2 }}>{matchWhy[r.id] ? `Matched ${matchWhy[r.id]} · ` : ''}Why: {r.why}</span>
               </div>
               <TypeIcons types={r.types} />
               <VerdictPill dot={VERDICTS[r.verdict.key][1]} label={r.verdict.label} style={{ justifySelf: 'start' }} />

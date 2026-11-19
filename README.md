@@ -98,6 +98,5 @@ docs/               methodology, limitations, requirements map, decisions, UI in
 ## Limitations
 
 Fully AI-generated media without editing traces may not be detected; pixel-level image signals are weak and the
-validation set is small and synthetic; accounts have no password reset; the free hosted demo does not keep data;
-search is not wired. Details:
+validation set is small and synthetic; accounts have no password reset. Details:
 [`docs/limitations.md`](docs/limitations.md). Design deviations and why: [`docs/decisions.md`](docs/decisions.md).

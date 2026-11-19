@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>TruthLens report · {{ r.case.id }}</title>
 <style>
-  @page { size: A4; margin: 16mm 16mm 18mm; @bottom-left { content: "TruthLens {{ r.app_version }} · generated on device · report sha256 {{ short(r.sha256) }}"; font: 8pt 'JetBrains Mono', monospace; color: #8A8A85; } @bottom-right { content: "page " counter(page) " / " counter(pages); font: 8pt 'JetBrains Mono', monospace; color: #8A8A85; } }
+  @page { size: A4; margin: 16mm 16mm 18mm; @bottom-left { content: "TruthLens {{ r.app_version }} · generated {{ r.get('generated_where', 'on device') }} · report sha256 {{ short(r.sha256) }}"; font: 8pt 'JetBrains Mono', monospace; color: #8A8A85; } @bottom-right { content: "page " counter(page) " / " counter(pages); font: 8pt 'JetBrains Mono', monospace; color: #8A8A85; } }
   * { box-sizing: border-box; }
   body { font-family: Manrope, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 9.5pt; line-height: 1.5; margin: 0; }
   .mono { font-family: 'JetBrains Mono', Menlo, monospace; }

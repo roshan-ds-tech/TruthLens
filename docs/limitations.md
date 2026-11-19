@@ -31,12 +31,20 @@ TruthLens reports **indicators**, never "fake" or "real". These are the limits w
 - **Social-platform recompression** can produce error-level patterns similar to editing; rule R-14 lowers the weight of
   ELA and ghost findings on images that look platform-recompressed.
 
+## Observed in visual QA (19 Nov 2026)
+
+- A pasted-region JPEG got *No indicators found* although weak JPEG-ghost traces were recorded: a concrete false
+  negative. The verdict is never an authenticity decision.
+- Reports can be exported while findings are still unreviewed; each finding's review status is printed in the report.
+- Whisper can hallucinate repeated words with high confidence on non-speech audio.
+
 ## Product limits
 
 - **Accounts are basic.** Sign-up / log-in with email and password (D-16): no email verification, password reset or
   multi-factor sign-in. Sign-up can be closed with `TRUTHLENS_ALLOW_SIGNUP=0`.
 - **The hosted demo is not offline** and its storage resets when the free Hugging Face Space restarts (D-17).
-- **Search box** in the top bar is not wired.
+- **Search** matches case IDs, titles, descriptions, investigators, evidence file names, SHA-256 prefixes (6+ characters)
+  and exact finding IDs; it is not full-text search of transcripts or captions.
 - **One analysis at a time** (one worker, by design for the 8 GB budget).
 - **The offline gazetteer** has about 45 places; other place names are reported as unverifiable.
 - **Speech recognition** is Whisper *base*; it is unreliable on noise and non-speech (it transcribes our synthetic

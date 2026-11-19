@@ -1,6 +1,7 @@
 """Ingest: detect type, hash, seal the original read-only, extract metadata, log custody (§3.2)."""
 from __future__ import annotations
 
+import logging
 import shutil
 import subprocess
 import tempfile
@@ -13,6 +14,8 @@ from .. import config, custody
 from ..models import Case, Evidence, JsonMixin, utcnow
 from . import metadata as md
 from .detect_type import DetectedType, UnsupportedType, detect
+
+log = logging.getLogger("truthlens.ingest")
 
 
 class IngestError(ValueError):
@@ -86,7 +89,10 @@ def _extract_metadata(kind: str, path: Path) -> dict:
         text = path.read_text("utf-8")
         return {"chars": len(text)}
     except md.MetadataError as exc:
-        raise IngestError(f"Could not read the file: {exc}", 422) from exc
+        # The decoder's message names the temporary upload path; keep it in the server log only.
+        log.warning("unreadable %s upload: %s", kind, exc)
+        noun = {"image": "image", "video": "video", "audio": "audio file"}.get(kind, "file")
+        raise IngestError(f"Could not read this {noun}: it looks corrupt, truncated or in an unsupported encoding.", 422) from exc
 
 
 def ingest_file(s: Session, case: Case, src: Path, filename: str, actor: str,

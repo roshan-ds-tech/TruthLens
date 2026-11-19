@@ -95,3 +95,21 @@ def test_hosted_mode_hides_unowned_cases(client, monkeypatch):
     monkeypatch.setattr(config, "MODE", "hosted")
     assert all(c["id"] != "C-0900" for c in client.get("/api/cases").json())
     assert client.get("/api/cases/C-0900").status_code == 404
+
+
+def test_search_is_scoped_and_matches_evidence(client):
+    cid = client.post("/api/cases", json={"title": "Flood photo"}).json()["id"]
+    ev = upload(client, cid, "image_clean.jpg").json()
+    assert [c["id"] for c in client.get("/api/search", params={"q": "flood"}).json()["cases"]] == [cid]
+    assert client.get("/api/search", params={"q": "image_clean"}).json()["cases"][0]["match"].startswith("evidence")
+    assert client.get("/api/search", params={"q": ev["sha256"][:8]}).json()["cases"][0]["id"] == cid
+    other = _anon(client)
+    tok = other.post("/api/auth/signup", json={"name": "O", "email": "o2@example.test", "password": "other pass 2"}).json()["token"]
+    assert other.get("/api/search", params={"q": "flood"}, headers={"Authorization": f"Bearer {tok}"}).json()["cases"] == []
+
+
+def test_stats_count_only_analysed_evidence(client):
+    cid = client.post("/api/cases", json={"title": "Draft"}).json()["id"]
+    upload(client, cid, "image_clean.jpg")
+    st = client.get("/api/stats").json()
+    assert st["evidence_count"] == 0 and st["evidence_stored"] == 1

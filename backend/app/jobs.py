@@ -30,7 +30,7 @@ def _work(job_id: int, actor: str) -> None:
             traceback.print_exc()
             s.rollback()
             job = s.get(Job, job_id)
-            job.status, job.finished_at, job.error = "failed", utcnow(), f"{exc.__class__.__name__}: {exc}"
+            job.status, job.finished_at, job.error = "failed", utcnow(), f"{exc.__class__.__name__}: {pipeline._scrub(str(exc))}"
             lines = JsonMixin.loads(job.log_json, [])
             lines.append({"t": utcnow().strftime("%H:%M:%S.000"), "src": "run", "msg": f"failed · {job.error}"})
             job.log_json = JsonMixin.dumps(lines)

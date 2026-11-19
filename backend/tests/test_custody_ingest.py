@@ -61,7 +61,9 @@ def test_upload_rules(client):
     assert ev["kind"] == "image" and len(ev["sha256"]) == 64 and ev["meta_label"].startswith("Image · 384×384")
     assert upload(client, cid, "image_exif_edited.jpg").json()["id"] == ev["id"], "same file twice → same evidence"
     assert upload(client, cid, "unsupported.bin").status_code == 415
-    assert upload(client, cid, "corrupt.jpg").status_code == 422
+    bad = upload(client, cid, "corrupt.jpg")
+    assert bad.status_code == 422
+    assert "/" not in bad.json()["detail"] and "tmp" not in bad.json()["detail"], "no server paths in user-facing errors"
     assert client.post(f"/api/cases/{cid}/evidence", data={"text": "   "}).status_code == 400
     t = client.post(f"/api/cases/{cid}/evidence", data={"text": "Caption 12 Nov 2026"}).json()
     assert t["kind"] == "text"

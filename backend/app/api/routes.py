@@ -125,6 +125,31 @@ async def upload_evidence(case_id: str, file: Optional[UploadFile] = File(None),
     return adapters.evidence_summary(ev)
 
 
+@router.get("/search")
+def search(q: str = "", s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
+    """Cases matching a case ID, title, description, investigator, evidence file name, SHA-256 prefix or finding ID."""
+    q = q.strip().lower()
+    if len(q) < 2:
+        return {"query": q, "cases": []}
+    cases = [c for c in s.exec(select(Case)).all() if can_see(c, u)]
+    hits: dict[str, str] = {}
+    for c in cases:
+        for label, value in (("case", c.id), ("title", c.title), ("description", c.description), ("investigator", c.investigator)):
+            if q in (value or "").lower():
+                hits.setdefault(c.id, label)
+    ids = {c.id for c in cases}
+    for e in s.exec(select(Evidence)).all():
+        if e.case_id in ids and (q in e.filename.lower() or (len(q) >= 6 and e.sha256.startswith(q.replace("…", "")))):
+            hits.setdefault(e.case_id, f"evidence {e.label}")
+    for f in s.exec(select(FindingRow)).all():
+        if f.case_id in ids and q == f.finding_id.lower():
+            hits.setdefault(f.case_id, f"finding {f.finding_id}")
+    by_id = {c.id: c for c in cases}
+    rows = [adapters.case_summary(s, by_id[cid]) | {"match": why} for cid, why in hits.items()]
+    rows.sort(key=lambda r: r["updated_at"], reverse=True)
+    return {"query": q, "cases": rows}
+
+
 @router.get("/evidence")
 def library(s: Session = Depends(get_session), u: User = Depends(current_user)) -> dict:
     visible = {c.id for c in s.exec(select(Case)).all() if can_see(c, u)}
@@ -376,6 +401,8 @@ def get_report(case_id: str, s: Session = Depends(get_session), u: User = Depend
     _case(s, case_id, u)
     r = _latest_report(s, case_id)
     data = json.loads(Path(r.path_json).read_text())
+    pages = Path(r.path_json).with_name("report.pages")
+    data["pdf_pages"] = int(pages.read_text()) if r.path_pdf and pages.exists() else None
     data["files"] = {"pdf": f"/api/cases/{case_id}/report.pdf" if r.path_pdf else None,
                      "json": f"/api/cases/{case_id}/report.json", "html": f"/api/cases/{case_id}/report.html"}
     return data
@@ -408,7 +435,9 @@ def stats(s: Session = Depends(get_session), u: User = Depends(current_user)) ->
     kinds = sorted({k for k, cid in s.exec(select(Evidence.kind, Evidence.case_id)).all() if cid in ids})
     return {"active_cases": len(active), "closed_cases": len(cases) - len(active),
             "opened_this_week": sum(1 for c in cases if c.created_at.replace(tzinfo=None) >= week),
-            "evidence_count": sum(1 for e in s.exec(select(Evidence.case_id)).all() if e in ids), "evidence_kinds": kinds,
+            "evidence_count": sum(1 for cid, st in s.exec(select(Evidence.case_id, Evidence.status)).all()
+                                  if cid in ids and st == "analyzed"),
+            "evidence_stored": sum(1 for cid in s.exec(select(Evidence.case_id)).all() if cid in ids), "evidence_kinds": kinds,
             "pending_review": sum(pending_by_case.values()), "top_pending_case": {"id": top[0], "count": top[1]},
             "avg_analysis_seconds": round(sum(timed) / len(timed)) if timed else None}
 

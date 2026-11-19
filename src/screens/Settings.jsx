@@ -1,5 +1,5 @@
 import { c, MONO, Icon, eyebrow, h1, page, Muted } from '../ui.jsx';
-import { api, useApi, fmtBytes, shortHash } from '../api/client.js';
+import { api, useApi, fmtBytes, shortHash, useServerMode, PRIVACY } from '../api/client.js';
 
 const ICONS = { exif: 'data_object', ela: 'image', noise: 'grain', jpeg_ghost: 'layers', copy_move: 'content_copy',
   av_metadata: 'info', frames: 'burst_mode', frame_dupes: 'filter_none', optical_flow: 'movie', face_flicker: 'face',
@@ -20,6 +20,8 @@ function privacyRows(hosted) {
 
 export default function Settings({ active, onSaved }) {
   const st = useApi(active ? '/settings' : null);
+  const serverMode = useServerMode();
+  const mode = st.data?.mode || serverMode;   // never show local wording while hosted settings load
   const toggle = (key, enabled) => {
     st.setData((d) => ({ ...d, analyzers: d.analyzers.map((a) => (a.key === key ? { ...a, enabled } : a)) }));
     api.put('/settings', { analyzers: { [key]: enabled } }).then((d) => { st.setData(d); onSaved?.(); }, () => st.reload());
@@ -29,7 +31,7 @@ export default function Settings({ active, onSaved }) {
   return (
     <div style={{ ...page, maxWidth: 960 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={eyebrow}>Settings · this device</div>
+        <div style={eyebrow}>{PRIVACY[mode].settings}</div>
         <h1 style={h1}>Settings</h1>
       </div>
       <section style={{ border: `1px solid ${c.border}`, borderRadius: 16, overflow: 'hidden' }}>
@@ -45,7 +47,7 @@ export default function Settings({ active, onSaved }) {
               <Icon name={icon} style={{ color: c.ink2 }} />
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <span style={{ fontSize: 14, fontWeight: 700 }}>{name}</span>
-                <span style={{ fontSize: 12.5, color: c.ink2 }}>{desc}{available ? '' : ' · not installed on this device'}</span>
+                <span style={{ fontSize: 12.5, color: c.ink2 }}>{desc}{available ? '' : ' · not installed on the analysis server'}</span>
               </div>
               <span style={{ fontFamily: MONO, fontSize: 11.5, color: c.ink2 }}>{ver}</span>
               <button
@@ -63,7 +65,7 @@ export default function Settings({ active, onSaved }) {
       </section>
       <section style={{ border: `1px solid ${c.border}`, borderRadius: 16, padding: '18px 20px', display: 'grid', gridTemplateColumns: '200px 1fr', gap: '12px 20px', fontSize: 14 }}>
         <span style={{ gridColumn: '1 / -1', fontSize: 16, fontWeight: 800 }}>Privacy and storage</span>
-        {privacyRows(st.data?.mode === 'hosted').flatMap(([k, v]) => [<span key={k} style={{ color: c.ink2 }}>{k}</span>, v || vault])}
+        {!st.data ? [<span key="l" style={{ color: c.ink2 }}>Loading…</span>] : privacyRows(mode === 'hosted').flatMap(([k, v]) => [<span key={k} style={{ color: c.ink2 }}>{k}</span>, v || vault])}
       </section>
     </div>
   );

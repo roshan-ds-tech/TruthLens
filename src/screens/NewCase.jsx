@@ -9,29 +9,31 @@ const ICON = { video: 'movie', image: 'image', audio: 'graphic_eq', text: 'notes
 const field = { border: `1px solid ${c.border}`, borderRadius: 12, fontFamily: 'inherit', fontSize: 14, color: c.ink, outline: 'none', background: c.bg };
 const label = { fontSize: 12.5, fontWeight: 700 };
 
-export default function NewCase({ go, active, caseId, investigator }) {
+export default function NewCase({ go, active, draftId: resumeId, investigator }) {
   const [draftId, setDraftId] = useState(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [caption, setCaption] = useState('');
   const [captionSent, setCaptionSent] = useState('');
-  const [files, setFiles] = useState([]);       // uploaded evidence (API objects) and in-flight placeholders
+  const [files, setFiles] = useState([]);       // accepted evidence (API objects, text included) and in-flight placeholders
   const [messages, setMessages] = useState([]);  // rejected files, save confirmations, errors
   const [busy, setBusy] = useState(false);
   const [drag, setDrag] = useState(false);
   const input = useRef(null);
   const hosted = useServerMode() === 'hosted';
 
-  // Resume a draft case; any other case opens an empty form.
+  // Opening a saved draft restores it; "New case" (no draft) starts an empty form.
   useEffect(() => {
     if (!active) return;
-    if (!caseId) { reset(); return; }
-    api.get(`/cases/${caseId}`).then((cs) => {
-      if (cs.status !== 'draft') { if (draftId !== null) reset(); return; }
-      setDraftId(cs.id); setTitle(cs.title); setDescription(cs.description);
-      setFiles(cs.evidence.filter((e) => e.kind !== 'text' && !e.derived_from));
-    }, () => reset());
-  }, [active, caseId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!resumeId) { if (draftId) reset(); return; }
+    if (resumeId === draftId) return;            // already editing this draft (e.g. it was just created here)
+    api.get(`/cases/${resumeId}`).then((cs) => {
+      if (cs.status !== 'draft') { reset(); return; }
+      setDraftId(cs.id); setTitle(cs.title); setDescription(cs.description); setMessages([]);
+      setCaption(''); setCaptionSent('');
+      setFiles(cs.evidence.filter((e) => !e.derived_from));
+    }, (e) => { reset(); setMessages([`Could not open draft ${resumeId}: ${e.message}`]); });
+  }, [active, resumeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function reset() {
     setDraftId(null); setTitle(''); setDescription(''); setCaption(''); setCaptionSent(''); setFiles([]); setMessages([]);
@@ -44,7 +46,7 @@ export default function NewCase({ go, active, caseId, investigator }) {
     }
     const cs = await api.post('/cases', { title: title.trim() || 'Untitled case', description, investigator });
     setDraftId(cs.id);
-    go('newcase', { caseId: cs.id });
+    go('newcase', { caseId: cs.id, draftId: cs.id });
     return cs.id;
   }
 
@@ -75,8 +77,9 @@ export default function NewCase({ go, active, caseId, investigator }) {
   async function saveCaption(id) {
     const text = caption.trim();
     if (text && text !== captionSent) {
-      await api.addText(id, text, 'Pasted caption or claim');
+      const ev = await api.addText(id, text, 'Pasted caption or claim');
       setCaptionSent(text);
+      setFiles((fs) => [...fs.filter((x) => x.id !== ev.id), ev]);
     }
   }
 
@@ -98,13 +101,13 @@ export default function NewCase({ go, active, caseId, investigator }) {
       await saveCaption(id);
       const job = await api.post(`/cases/${id}/analyze`);
       reset();
-      go('analysis', { caseId: id, jobId: job.job_id });
+      go('analysis', { caseId: id, jobId: job.job_id, draftId: null });
     } catch (e) {
       setMessages((m) => [...m, e.message]);
     } finally { setBusy(false); }
   }
 
-  const evidence = files.filter((f) => f.kind !== 'text');
+  const evidence = files;   // every accepted item counts, uploaded .txt files and saved captions included
   return (
     <div style={{ ...page, maxWidth: 1100 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

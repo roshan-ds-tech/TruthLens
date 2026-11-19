@@ -57,6 +57,13 @@ class Tracker:
         self.flush()
 
 
+def _scrub(text: str) -> str:
+    """Error text for the UI: absolute file paths replaced, so server layout is not exposed."""
+    import re
+
+    return re.sub(r"(?:/[^\s/:'\"]+){2,}", "<file>", text)
+
+
 def _ordered(evs: list[Evidence]) -> list[Evidence]:
     return sorted(evs, key=lambda e: (KIND_ORDER[e.kind], e.order_idx))
 
@@ -180,7 +187,7 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
                 tr.set_step(item, si, "done")
             except Exception as exc:  # noqa: BLE001 - isolate every analyzer
                 tr.set_step(item, si, "failed")
-                msg = f"{exc.__class__.__name__}: {str(exc)[:160]}"
+                msg = f"{exc.__class__.__name__}: {_scrub(str(exc))[:160]}"
                 tr.log(ev.kind, f"{step.name} failed on {ev.label} · {msg}")
                 limitations.append(f"{step.name} failed on {ev.label} ({msg}); its signal is missing from the verdict.")
                 if step.key not in registry.DATA_STEPS:

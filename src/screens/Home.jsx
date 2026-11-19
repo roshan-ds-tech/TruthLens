@@ -17,7 +17,7 @@ const SAMPLES = [
 ];
 
 const POINTS = [
-  { icon: 'lock', title: 'Runs on your device', text: 'Files are hashed on arrival and originals stay read-only. Nothing is uploaded.' },
+  { icon: 'lock', title: null, text: null },   // wording depends on local vs hosted mode (PRIVACY)
   { icon: 'my_location', title: 'Every finding is linked', text: 'Each finding points to its exact region, timestamp or transcript span.' },
   { icon: 'rate_review', title: 'You review, then report', text: 'Accept or reject each finding, then export a reproducible report.' },
 ];
@@ -91,7 +91,7 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
             <span style={{ background: `linear-gradient(transparent 62%,${YELLOW} 62%,${YELLOW} 92%,transparent 92%)` }}>manipulation</span>.
           </h1>
           <p style={{ margin: 0, fontSize: 17, lineHeight: 1.55, color: c.ink2, maxWidth: 580, textWrap: 'pretty' }}>
-            TruthLens analyzes your evidence on this device, shows every finding with its exact location and confidence range, and lets you review each one before producing a report.
+            {privacy.hero} every finding with its exact location and confidence range, and lets you review each one before producing a report.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 10, paddingTop: 6 }}>
             <button onClick={() => setMode('signup')} {...hover({ bg: YELLOW_HOVER }, { display: 'inline-flex', alignItems: 'center', gap: 8, height: 48, padding: '0 24px', borderRadius: 999, background: YELLOW, border: 'none', fontFamily: 'inherit', fontSize: 15, fontWeight: 700, color: '#111111', cursor: 'pointer' })}>
@@ -150,7 +150,7 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
         </section>
 
         <div style={{ width: '100%', maxWidth: 1040, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 28 }}>
-          {POINTS.map((p) => (
+          {POINTS.map((p) => ({ ...p, title: p.title || privacy.pointTitle, text: p.text || privacy.pointText })).map((p) => (
             <div key={p.title} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ width: 40, height: 40, borderRadius: 12, background: c.surface, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name={p.icon} size={21} /></span>
               <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.01em' }}>{p.title}</span>
@@ -170,7 +170,7 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: c.ink2 }}>{su ? 'Sign up · free · local account' : 'Log in'}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: c.ink2 }}>{su ? privacy.account : 'Log in'}</span>
                 <span id="tl-auth-title" style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em' }}>{su ? 'Create your account' : 'Welcome back'}</span>
               </div>
               <button type="button" onClick={close} aria-label="Close" style={{ width: 34, height: 34, borderRadius: '50%', border: `1px solid ${c.border}`, background: c.bg, color: c.ink, cursor: 'pointer' }}><Icon name="close" size={19} /></button>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { c, VERDICTS, MONO, Icon, hover, VerdictPill, chipStyle, eyebrow, h1, page, Muted } from '../ui.jsx';
-import { useApi, fmtBytes } from '../api/client.js';
+import { useApi, fmtBytes, useServerMode, PRIVACY } from '../api/client.js';
 import { AuthImg, EvidencePreview } from '../api/media.jsx';
 
 const TYPE_ICON = { video: 'movie', image: 'image', audio: 'graphic_eq', text: 'notes' };
@@ -19,13 +19,14 @@ const DEST = { image: 'image', audio: 'audio' };
 export default function EvidenceLibrary({ go, active }) {
   const [f, setF] = useState('all');
   const lib = useApi(active ? '/evidence' : null);
+  const privacy = PRIVACY[useServerMode()];
   const all = lib.data?.items || [];
   const items = all.filter((i) => f === 'all' || i.kind === f);
 
   return (
     <div style={page}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={eyebrow}>Evidence library · {lib.data ? `${lib.data.count} items · ${fmtBytes(lib.data.total_bytes)} on this device` : 'loading'}</div>
+        <div style={eyebrow}>Evidence library · {lib.data ? `${lib.data.count} items · ${fmtBytes(lib.data.total_bytes)} ${privacy.where}` : 'loading'}</div>
         <h1 style={h1}>Evidence Library</h1>
         <p style={{ margin: 0, fontSize: 14.5, color: c.ink2 }}>Every original is stored read-only and identified by its SHA-256 hash.</p>
       </div>

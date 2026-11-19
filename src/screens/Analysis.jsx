@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { c, MONO, Icon, eyebrow, h1, page, PrimaryButton, Muted } from '../ui.jsx';
-import { useApi } from '../api/client.js';
+import { useApi, useServerMode, PRIVACY } from '../api/client.js';
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
@@ -19,6 +19,7 @@ function StepChip({ label, status }) {
 
 export default function Analysis({ go, active, caseId, jobId }) {
   const logRef = useRef(null);
+  const privacy = PRIVACY[useServerMode()];
   const path = !active ? null : jobId ? `/jobs/${jobId}` : caseId ? `/cases/${caseId}/jobs/latest` : null;
   const job = useApi(path, { poll: 1000 });
   const j = job.data;
@@ -48,7 +49,7 @@ export default function Analysis({ go, active, caseId, jobId }) {
           <div style={eyebrow}>Analysis · <span style={{ fontFamily: MONO }}>{j?.case_id || caseId || '—'}</span>{j ? ` · Job ${j.id}` : ''}</div>
           <h1 style={h1}>{headline}</h1>
           <p style={{ margin: 0, fontSize: 14.5, color: c.ink2 }}>
-            {j ? <>Elapsed <span style={{ fontFamily: MONO, color: c.ink }}>{elapsed}</span> · one worker on this device · no network{failed ? ` · ${j.error}` : ''}</>
+            {j ? <>Elapsed <span style={{ fontFamily: MONO, color: c.ink }}>{elapsed}</span> · {privacy.worker}{failed ? ` · ${j.error}` : ''}</>
               : job.error ? 'No analysis has run for this case yet. Start one from New case or Re-run analysis.' : 'Loading…'}
           </p>
         </div>

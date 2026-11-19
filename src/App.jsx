@@ -61,8 +61,17 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [width, setWidth] = useState(() => window.innerWidth);
   // Open case, selected evidence item and analysis job; set by go(screen, { caseId, evidenceId, jobId }).
-  const [nav, setNav] = useState({ caseId: null, evidenceId: null, jobId: null });
+  const [nav, setNav] = useState({ caseId: null, evidenceId: null, jobId: null, draftId: null });
   const [dataVersion, setDataVersion] = useState(0);
+  const [query, setQuery] = useState('');           // top-bar search, shown as results on the Cases screen
+  const searchRef = useRef(null);
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); searchRef.current?.focus(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const privacy = PRIVACY[useServerMode()];
   const settings = useApi(authed ? '/settings' : null, { reloadKey: dataVersion });
   const investigator = settings.data?.investigator || '';
@@ -174,7 +183,7 @@ export default function App() {
             <header style={{ height: 64, flex: 'none', borderBottom: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px 0 24px', background: c.bg }}>
               <div style={{ flex: 1, minWidth: 200, maxWidth: 440, height: 40, borderRadius: 999, background: c.surface, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', gap: 8, padding: '0 8px 0 14px' }}>
                 <Icon name="search" size={19} style={{ color: c.ink2 }} />
-                <input placeholder="Search cases, evidence, hashes, finding IDs" style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 13.5, color: c.ink }} />
+                <input ref={searchRef} type="search" aria-label="Search cases" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') go('cases'); if (e.key === 'Escape') setQuery(''); }} placeholder="Search cases, evidence, hashes, finding IDs" style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontFamily: 'inherit', fontSize: 13.5, color: c.ink }} />
                 <span style={{ fontFamily: MONO, fontSize: 11, color: c.ink2, border: `1px solid ${c.border}`, background: c.bg, borderRadius: 6, padding: '2px 6px' }}>⌘K</span>
               </div>
               <div style={{ flex: 1 }} />
@@ -188,7 +197,7 @@ export default function App() {
                 <Icon name={theme === 'dark' ? 'light_mode' : 'dark_mode'} />
               </button>
               <button
-                onClick={() => go('newcase')}
+                onClick={() => go('newcase', { draftId: null })}
                 {...hover({ bg: ownPrimary ? c.surface : YELLOW_HOVER }, { display: 'inline-flex', alignItems: 'center', gap: 6, height: 40, padding: '0 18px', borderRadius: 999, background: ownPrimary ? c.bg : YELLOW, border: `1px solid ${ownPrimary ? c.border : YELLOW}`, color: ownPrimary ? c.ink : '#111111', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' })}
               >
                 <Icon name="add" size={19} />New case
@@ -207,11 +216,11 @@ export default function App() {
             {/* All screens stay mounted (hidden with display:none) so their local state survives navigation. */}
             <main ref={mainRef} style={{ flex: 1, minHeight: 0, overflow: 'auto', background: c.bg }}>
               <div style={shown('dashboard')}><Dashboard go={go} active={is('dashboard')} investigator={investigator} /></div>
-              <div style={shown('cases')}><Cases go={go} active={is('cases')} /></div>
+              <div style={shown('cases')}><Cases go={go} active={is('cases')} query={query} onClearQuery={() => setQuery('')} /></div>
               <div style={shown('library')}><EvidenceLibrary go={go} active={is('library')} /></div>
               <div style={shown('validation')}><Validation active={is('validation')} /></div>
               <div style={shown('settings')}><Settings active={is('settings')} onSaved={() => setDataVersion((v) => v + 1)} /></div>
-              <div style={shown('newcase')}><NewCase go={go} active={is('newcase')} investigator={investigator} /></div>
+              <div style={shown('newcase')}><NewCase go={go} active={is('newcase')} investigator={investigator} draftId={nav.draftId} /></div>
               <div style={shown('analysis')}><Analysis go={go} active={is('analysis')} caseId={nav.caseId} jobId={nav.jobId} /></div>
               <div style={shown('workspace')}><CaseWorkspace go={go} active={is('workspace')} compact={tablet} caseId={nav.caseId} /></div>
               <div style={shown('image')}><ImageViewer go={go} active={is('image')} caseId={nav.caseId} evidenceId={nav.evidenceId} /></div>

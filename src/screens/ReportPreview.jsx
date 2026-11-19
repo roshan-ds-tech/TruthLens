@@ -43,7 +43,7 @@ export default function ReportPreview({ go, active, caseId }) {
       <div style={{ padding: '28px 40px 20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, background: c.bg, borderBottom: `1px solid ${c.border}` }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <a href="#" onClick={preventThen(() => go('workspace', { caseId: r.case.id }))} style={{ fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'flex-start', textDecoration: 'none' }}><Icon name="arrow_back" size={18} />{r.case.id} workspace</a>
-          <div style={eyebrow}>Report · <span style={mono}>{r.case.id}</span> · Draft {r.draft} · A4</div>
+          <div style={eyebrow}>Report · <span style={mono}>{r.case.id}</span> · Draft {r.draft} · on-screen summary{r.pdf_pages ? ` · PDF: ${r.pdf_pages} A4 page${r.pdf_pages === 1 ? '' : 's'}` : ''}</div>
           <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.035em' }}>Forensic report preview</h1>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -106,7 +106,7 @@ export default function ReportPreview({ go, active, caseId }) {
             {!r.findings.length && <span style={{ color: '#5F5F5A' }}>No analyzer produced a finding above its threshold.</span>}
             {r.findings.slice(0, half).map((f) => <ReportFinding key={f.finding_id} f={f} caseId={r.case.id} />)}
           </div>
-          <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', ...mono, fontSize: 10, color: '#8A8A85' }}><span>TruthLens {r.app_version} · generated on device</span><span>page 1 / 2</span></div>
+          <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', ...mono, fontSize: 10, color: '#8A8A85' }}><span>TruthLens {r.app_version} · generated {r.generated_where || 'on device'}</span><span>summary · part 1</span></div>
         </article>
 
         <article style={paper}>
@@ -156,7 +156,7 @@ export default function ReportPreview({ go, active, caseId }) {
             <span style={{ color: '#5F5F5A' }}>Rerunning on the same originals and model lock reproduces these finding IDs and scores.</span>
           </div>
           <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '2px solid #111', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8, ...mono, fontSize: 10.5 }}>
-            <span>report sha256 {shortHash(r.sha256)}</span><span style={{ color: '#8A8A85' }}>chain of custody: {r.custody.entries} entries{r.custody.chain_valid ? '' : ' · BROKEN'} · page 2 / 2</span>
+            <span>report sha256 {shortHash(r.sha256)}</span><span style={{ color: '#8A8A85' }}>chain of custody: {r.custody.entries} entries{r.custody.chain_valid ? '' : ' · BROKEN'} · summary · part 2</span>
           </div>
         </article>
       </div>

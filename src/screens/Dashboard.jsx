@@ -1,9 +1,9 @@
 import { c, VERDICTS, YELLOW, MONO, Icon, hover, VerdictPill, eyebrow, h1, page, preventThen, Muted } from '../ui.jsx';
-import { useApi, relTime } from '../api/client.js';
+import { useApi, relTime, useServerMode, PRIVACY } from '../api/client.js';
 
 const STEPS = [
   ['Ingest', 'Hash every file and keep the original read-only.'],
-  ['Analyze', 'Run image, video, audio and text analyzers locally.'],
+  ['Analyze', null],
   ['Correlate', 'Check where findings agree or conflict across media.'],
   ['Review', 'Accept, reject or annotate each finding.'],
   ['Report', 'Export a reproducible report with hashes.'],
@@ -28,6 +28,7 @@ function greeting() {
 
 export default function Dashboard({ go, active, investigator }) {
   const stats = useApi(active ? '/stats' : null);
+  const privacy = PRIVACY[useServerMode()];
   const cases = useApi(active ? '/cases' : null);
   const metrics = useApi(active ? '/validation/metrics' : null);
   const st = stats.data;
@@ -37,9 +38,11 @@ export default function Dashboard({ go, active, investigator }) {
     ['Active cases', 'folder_open'], ['Evidence analyzed', 'inventory_2'], ['Findings awaiting review', 'rate_review'], ['Avg. analysis time', 'timer'],
   ].map(([label, icon]) => ({ label, icon, value: '—', unit: '', foot: stats.error ? 'Unavailable' : 'Loading…' })) : [
     { label: 'Active cases', value: String(st.active_cases), unit: '', icon: 'folder_open', foot: `${st.opened_this_week} opened this week` },
-    { label: 'Evidence analyzed', value: String(st.evidence_count), unit: '', icon: 'inventory_2', foot: st.evidence_kinds.length ? st.evidence_kinds.map((k) => k[0].toUpperCase() + k.slice(1)).join(', ') : 'No evidence yet' },
+    { label: 'Evidence analyzed', value: String(st.evidence_count), unit: '', icon: 'inventory_2',
+      foot: st.evidence_stored > st.evidence_count ? `${st.evidence_stored - st.evidence_count} more uploaded, not analyzed yet`
+        : st.evidence_kinds.length ? st.evidence_kinds.map((k) => k[0].toUpperCase() + k.slice(1)).join(', ') : 'No evidence yet' },
     { label: 'Findings awaiting review', value: String(st.pending_review), unit: '', icon: 'rate_review', foot: st.top_pending_case.count ? `${st.top_pending_case.count} in ${st.top_pending_case.id}` : 'Nothing pending' },
-    { label: 'Avg. analysis time', value: st.avg_analysis_seconds == null ? '—' : String(st.avg_analysis_seconds), unit: st.avg_analysis_seconds == null ? '' : 's', icon: 'timer', foot: 'On this device, per case' },
+    { label: 'Avg. analysis time', value: st.avg_analysis_seconds == null ? '—' : String(st.avg_analysis_seconds), unit: st.avg_analysis_seconds == null ? '' : 's', icon: 'timer', foot: `${privacy.where[0].toUpperCase()}${privacy.where.slice(1)}, per case` },
   ];
   const CASES = (cases.data || []).slice(0, 5);
   const VAL = (metrics.data?.indicators || []).filter((v) => v.precision != null && v.n_findings >= 6)
@@ -77,7 +80,7 @@ export default function Dashboard({ go, active, investigator }) {
             <span style={{ ...eyebrow, color: YELLOW }}>How TruthLens works</span>
             <h2 style={{ margin: 0, fontSize: 28, lineHeight: 1.15, fontWeight: 800, letterSpacing: '-0.03em', textWrap: 'balance' }}>Every finding is evidence-linked and reviewable</h2>
           </div>
-          <span style={{ fontSize: 13.5, color: '#B8B8B2', maxWidth: 360, lineHeight: 1.5 }}>Analyzers suggest. You decide. Nothing goes into a report until a reviewer has seen it.</span>
+          <span style={{ fontSize: 13.5, color: '#B8B8B2', maxWidth: 360, lineHeight: 1.5 }}>Analyzers suggest. You decide. Every report marks each finding as accepted, rejected or not yet reviewed.</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10 }}>
           {STEPS.map(([name, desc], i) => (
@@ -87,7 +90,7 @@ export default function Dashboard({ go, active, investigator }) {
                 <Icon name={i < 4 ? 'arrow_forward' : 'check'} size={18} style={{ color: '#8A8A85' }} />
               </div>
               <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.01em' }}>{name}</span>
-              <span style={{ fontSize: 12.5, color: '#B8B8B2', lineHeight: 1.45 }}>{desc}</span>
+              <span style={{ fontSize: 12.5, color: '#B8B8B2', lineHeight: 1.45 }}>{desc || privacy.analyzeStep}</span>
             </div>
           ))}
         </div>

@@ -102,7 +102,8 @@ def _summary(case: dict, findings: list[dict]) -> str:
     open_ = len(findings) - acc - rej
     desc = case["description"].strip()
     lead = (desc + ("" if desc.endswith((".", "!", "?")) else ".") + " ") if desc else ""
-    return (f"{lead}{len(kinds)} evidence item{'s' if len(kinds) != 1 else ''} ({parts}) were analyzed on this device. "
+    where = "on the TruthLens server" if config.MODE == "hosted" else "on this device"
+    return (f"{lead}{len(kinds)} evidence item{'s were' if len(kinds) != 1 else ' was'} ({parts}) analyzed {where}. "
             f"{len(findings)} finding{'s were' if len(findings) != 1 else ' was'} produced; {acc} accepted by the reviewer, "
             f"{rej} rejected and {open_} still open.")
 
@@ -138,6 +139,7 @@ def build(s: Session, case_row: Case) -> dict[str, Any]:
         "case": {"id": case["id"], "title": case["title"], "investigator": case["investigator"],
                  "description": case["description"], "opened": case["created_at"]},
         "generated_at": utcnow().isoformat(), "draft": draft, "app_version": config.APP_VERSION,
+        "generated_where": "on the TruthLens server" if config.MODE == "hosted" else "on device",
         "summary": _summary(case, findings),
         "verdict": case["verdict"],
         "evidence": [{"label": e["label"], "name": e["display_name"], "type": e["kind"].capitalize(), "size": e["size"],
@@ -177,7 +179,9 @@ def build(s: Session, case_row: Case) -> dict[str, Any]:
     try:
         from weasyprint import HTML
 
-        HTML(string=html, base_url=str(out_dir)).write_pdf(str(pdf_path))
+        doc = HTML(string=html, base_url=str(out_dir)).render()
+        doc.write_pdf(str(pdf_path))
+        (out_dir / "report.pages").write_text(str(len(doc.pages)))   # beside the hashed JSON, not inside it
     except Exception as exc:  # WeasyPrint needs pango; the HTML and JSON are still complete without it
         pdf_path, pdf_error = None, f"{exc.__class__.__name__}: {str(exc)[:160]}"
     pdf_sha = custody.sha256_file(pdf_path) if pdf_path else None

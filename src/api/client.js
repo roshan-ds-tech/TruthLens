@@ -147,8 +147,22 @@ export function useServerMode() {
   return h.data?.mode || (API_BASE ? 'hosted' : 'local');
 }
 
+// Every place the UI says where analysis happens or where evidence goes reads from here.
 export const PRIVACY = {
-  local: { badge: 'Running locally · ₹0', detail: 'No data leaves this device', short: 'Local · ₹0', home: 'Runs locally · No data leaves this device' },
-  hosted: { badge: 'Hosted analysis server', detail: 'Evidence is stored on the server, visible only to your account', short: 'Hosted',
-    home: 'Hosted demo · Your evidence is visible only to your account' },
+  local: {
+    badge: 'Running locally · ₹0', detail: 'No data leaves this device', short: 'Local · ₹0', home: 'Runs locally · No data leaves this device',
+    where: 'on this device', worker: 'one worker on this device · no network', account: 'Sign up · free · account on this device',
+    pointTitle: 'Runs on your device', pointText: 'Files are hashed on arrival and originals stay read-only. Nothing is uploaded.',
+    hero: 'TruthLens analyzes your evidence on this device, shows',
+    analyzeStep: 'Run image, video, audio and text analyzers locally.', settings: 'Settings · this device',
+  },
+  hosted: {
+    badge: 'Hosted analysis server', detail: 'Evidence is stored on the server, visible only to your account', short: 'Hosted',
+    home: 'Hosted demo · Your evidence is visible only to your account',
+    where: 'on the TruthLens server', worker: 'one worker on the TruthLens server · no outside services',
+    account: 'Sign up · free · hosted demo account',
+    pointTitle: 'Private to your account', pointText: 'Files are uploaded to the TruthLens server, hashed on arrival and kept read-only. Only your account can see them.',
+    hero: 'TruthLens analyzes the evidence you upload on its own server, shows',
+    analyzeStep: 'Run image, video, audio and text analyzers on the TruthLens server.', settings: 'Settings · your account',
+  },
 };
