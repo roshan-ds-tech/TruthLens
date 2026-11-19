@@ -98,6 +98,9 @@ def run(ctx: AnalysisContext) -> list[RawFinding]:
         j = i
         while j + 1 < len(mask) and (mask[j + 1] or (j + 2 < len(mask) and mask[j + 2])):
             j += 1
+        if j == i:   # a single 8 fps sample: someone turning their head, not a sustained face-only change
+            i = j + 1
+            continue
         seg = slice(i, j + 1)
         peak = float(score[seg].max())
         box = rows[i]["box"]

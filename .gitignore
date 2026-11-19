@@ -14,3 +14,4 @@ validation/results/*.png
 .env.local
 .vercel
 source_docs_recovered/
+samples/.stock-cache/

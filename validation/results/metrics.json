@@ -2,7 +2,7 @@
   "version": "v1.0",
   "seed": 7,
   "quick": false,
-  "generated_at": "2026-11-19T09:31:45+00:00",
+  "generated_at": "2026-11-19T19:17:52+00:00",
   "label": "Small self-made test set. Not a general accuracy claim.",
   "n_items": 204,
   "sets": {
@@ -171,8 +171,8 @@
       "n_negatives": 8,
       "false_positives": 0,
       "fpr": 0.0,
-      "n_findings": 10,
-      "precision": 0.8,
+      "n_findings": 8,
+      "precision": 1.0,
       "calibrated": true
     },
     {
@@ -258,8 +258,8 @@
       "bin_lo": 0.3,
       "bin_hi": 0.4,
       "mid": 0.35,
-      "count": 38,
-      "observed": 0.342,
+      "count": 37,
+      "observed": 0.351,
       "predicted": 0.34
     },
     {
@@ -282,9 +282,9 @@
       "bin_lo": 0.6,
       "bin_hi": 0.7,
       "mid": 0.65,
-      "count": 5,
-      "observed": 0.8,
-      "predicted": 0.654
+      "count": 4,
+      "observed": 1.0,
+      "predicted": 0.648
     },
     {
       "bin_lo": 0.7,
@@ -298,17 +298,17 @@
       "bin_lo": 0.8,
       "bin_hi": 0.9,
       "mid": 0.85,
-      "count": 15,
+      "count": 9,
       "observed": 1.0,
-      "predicted": 0.881
+      "predicted": 0.872
     },
     {
       "bin_lo": 0.9,
       "bin_hi": 1.0,
       "mid": 0.95,
-      "count": 7,
-      "observed": 0.857,
-      "predicted": 0.915
+      "count": 5,
+      "observed": 0.8,
+      "predicted": 0.911
     }
   ],
   "false_positives": [
@@ -387,5 +387,5 @@
     "modified_after_capture",
     "camera_tags_missing"
   ],
-  "runtime_s": 58.5
+  "runtime_s": 59.0
 }

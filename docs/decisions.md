@@ -93,3 +93,10 @@ The design used Manrope (geometric, rounded) at weight 800 with tight tracking (
 and casual. The UI and the PDF report now use Inter for text and IBM Plex Mono for hashes, timestamps and IDs;
 headings are weight 700 with tracking between −0.012em and −0.025em. Both fonts (SIL OFL) are bundled in
 `public/fonts/` and `backend/app/report/fonts/`, so the UI and the PDF render identically offline.
+
+### D-20 · Optical-flow jumps tested on real footage
+The Home demo clip uses real stock footage. It showed that ordinary shot changes between similar-coloured shots and
+natural movement (people, a hand-held camera) were reported as motion breaks. A jump now counts only if (1) the frames
+still match once a pure camera shift is undone (phase correlation; a new shot does not), and (2) it is one isolated
+frame at least 3× the surrounding motion (flow or pixel difference). Validation is unchanged at recall 1.00 with no
+false positives, and `test_shot_change_is_not_a_motion_break` guards it.

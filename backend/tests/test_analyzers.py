@@ -167,3 +167,22 @@ def test_similarity_backend_works():
 
     sims = similarities("declare a three day holiday", ["the government will declare a three day holiday", "rain in the city"])
     assert sims[0] > sims[1]
+
+
+def test_shot_change_is_not_a_motion_break(tmp_path):
+    """Two different shots edited together is ordinary editing; only a jump inside one shot is a finding."""
+    import synth
+    from app import registry
+
+    photos = dict(synth.photos())
+    a = synth.pan_frames(photos["coffee"], 3.0, 25, (320, 240), seed=1)
+    b = synth.pan_frames(photos["rocket"], 3.0, 25, (320, 240), seed=2)
+    p = tmp_path / "two_shots.mp4"
+    synth.write_video(p, a + synth.jump_edit(b, 30, 12), 25)
+    ctx = make_ctx(p, "video", tmp_path)
+    found = []
+    for key in ("frames", "frame_dupes", "optical_flow"):
+        found += registry.ALL[key].run(ctx)
+    flows = [f for f in found if f.indicator == "flow_discontinuity"]
+    assert len(flows) == 1 and abs(flows[0].location["start"] - (3.0 + 29 / 25)) < 0.1, [f.loc_label for f in flows]
+    assert any(abs(c - 3.0) < 0.1 for c in ctx.extra["cuts"]), "the shot change is recorded as a cut"

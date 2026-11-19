@@ -4,7 +4,7 @@ Writes public/media/home-demo.mp4 and public/media/home-demo.json. The JSON hold
 for this clip (findings, rule, verdict, transcript words, waveform, suspicion curve); the Home page only replays
 it in time with the video. Needs macOS `say` to regenerate; the outputs are committed.
 
-Ground truth: 10 frames are cut at 8.0 s, and the speech after 8.2 s was recorded in a different (noisier) room.
+Ground truth: 20 frames are cut at 8.0 s inside one shot (the shot changes at 3, 6 and 12.8 s are ordinary edits), and the speech after 8.2 s was recorded in a different (noisier) room.
 """
 from __future__ import annotations
 
@@ -18,7 +18,6 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
@@ -29,7 +28,7 @@ import synth  # noqa: E402
 OUT = ROOT / "public" / "media"
 SR, FPS = 16000, 25
 W, H = 960, 540
-CUT_FRAME, CUT_LEN = 200, 10          # 10 frames removed at 8.0 s
+CUT_FRAME, CUT_LEN = 200, 20          # 20 frames (0.8 s) removed at 8.0 s
 SPLICE_S, TOTAL_S = 8.2, 16.0
 PART_A = "Good evening, everyone. Thank you for joining at short notice. The state has seen heavy rain this week."
 PART_B = "The government has decided to declare a three day holiday from tomorrow. Schools and offices will remain closed."
@@ -51,22 +50,47 @@ def tts(text: str, seconds: float) -> np.ndarray:
     return np.pad(y, (0, max(0, n - len(y))))[:n]
 
 
-def frames() -> list[np.ndarray]:
-    """A slow push-in with a little drift across the briefing-room photo: one continuous shot."""
-    with Image.open(ROOT / "public" / "img" / "press-briefing.jpg") as im:
-        src = np.asarray(im.convert("RGB"))
-    h, w = src.shape[:2]
-    n = int(TOTAL_S * FPS) + CUT_LEN
+# Free stock footage (Mixkit Stock Video Free License): (clip id, first second used, seconds used).
+# No shot shows the speaker's face, so the off-screen narration is not put in anyone's mouth.
+SHOTS = [(4632, 1.0, 3.0),    # microphone on a stage
+         (23035, 2.0, 3.0),   # delegates facing a speaker seen from behind
+         (24214, 1.0, 6.8),   # delegates in headsets listening: the deliberate cut is inside this shot
+         (20810, 0.5, 3.2)]   # a journalist's hands taking notes
+CACHE = ROOT / "samples" / ".stock-cache"
+
+
+def shot_frames(clip_id: int, start: float, seconds: float, extra: int = 0) -> list[np.ndarray]:
+    """Frames of one stock clip, resampled to FPS and cropped to W×H."""
+    CACHE.mkdir(parents=True, exist_ok=True)
+    path = CACHE / f"{clip_id}.mp4"
+    if not path.exists():
+        import urllib.request
+
+        urllib.request.urlretrieve(f"https://assets.mixkit.co/videos/{clip_id}/{clip_id}-720.mp4", path)
+    cap = cv2.VideoCapture(str(path))
     out = []
+    n = int(round(seconds * FPS)) + extra
     for i in range(n):
-        u = i / (n - 1)
-        scale = 1.0 + 0.16 * u
-        cw, ch = w / scale, h / scale
-        cx = w / 2 + 40 * np.sin(u * np.pi) - 20 * u
-        cy = h / 2 + 12 * np.cos(u * 2 * np.pi)
-        m = np.float32([[W / cw, 0, -(cx - cw / 2) * W / cw], [0, H / ch, -(cy - ch / 2) * H / ch]])
-        out.append(cv2.warpAffine(src, m, (W, H), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT))
-    return synth.jump_edit(out, CUT_FRAME, CUT_LEN)
+        cap.set(cv2.CAP_PROP_POS_MSEC, (start + i / FPS) * 1000)
+        ok, frame = cap.read()
+        if not ok:
+            break
+        out.append(cv2.cvtColor(cv2.resize(frame, (W, H), interpolation=cv2.INTER_AREA), cv2.COLOR_BGR2RGB))
+    cap.release()
+    return out
+
+
+def frames() -> list[np.ndarray]:
+    """Four shots edited together; inside the third shot CUT_LEN frames are removed at CUT_FRAME."""
+    out: list[np.ndarray] = []
+    for clip_id, start, seconds in SHOTS:
+        before = len(out)
+        inside = before <= CUT_FRAME < before + seconds * FPS
+        shot = shot_frames(clip_id, start, seconds, CUT_LEN if inside else 0)
+        if inside:
+            shot = synth.jump_edit(shot, CUT_FRAME - before, CUT_LEN)
+        out.extend(shot)
+    return out[: int(TOTAL_S * FPS)]
 
 
 def analyse(clip: Path) -> dict:

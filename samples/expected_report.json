@@ -1,6 +1,6 @@
 {
   "case": "C-0007",
-  "findings_digest": "9005f97c300b2005bc2bab7315178cc48b709d8e0829087c908f908626a3ee5b",
+  "findings_digest": "bc0b5dfe4ef4216050e3813bab0cec91a66e45c1cdc5fcf92a201992d4a5d730",
   "verdict": {
     "band": "strong",
     "lo": 0.92,
@@ -33,7 +33,7 @@
       "evidence_id": "E-01",
       "indicator": "flow_discontinuity",
       "loc_label": "00:14.0 \u00b7 frames 349\u2013350",
-      "conf_low": 0.8739,
+      "conf_low": 0.7919,
       "conf_high": 0.95,
       "band": "indicators"
     },
@@ -78,7 +78,7 @@
       "evidence_id": "E-04",
       "indicator": "claim_date_conflict",
       "loc_label": "Caption \u2194 EXIF DateTimeOriginal of E-03",
-      "conf_low": 0.7554,
+      "conf_low": 0.7845,
       "conf_high": 0.95,
       "band": "indicators"
     }
