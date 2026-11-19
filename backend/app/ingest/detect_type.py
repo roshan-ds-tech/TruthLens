@@ -14,8 +14,8 @@ class UnsupportedType(ValueError):
 IMAGE_MIMES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/tiff": "tif", "image/bmp": "bmp"}
 VIDEO_MIMES = {"video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm", "video/x-matroska": "mkv",
                "video/x-msvideo": "avi", "video/x-m4v": "m4v"}
-AUDIO_MIMES = {"audio/x-wav": "wav", "audio/wav": "wav", "audio/mpeg": "mp3", "audio/ogg": "ogg", "audio/x-flac": "flac",
-               "audio/flac": "flac", "audio/mp4": "m4a", "audio/aac": "aac", "audio/opus": "opus", "audio/webm": "webm"}
+AUDIO_MIMES = {"audio/x-aiff": "aiff", "audio/aiff": "aiff", "audio/x-wav": "wav", "audio/wav": "wav", "audio/mpeg": "mp3",
+               "audio/ogg": "ogg", "audio/x-flac": "flac", "audio/flac": "flac", "audio/mp4": "m4a", "audio/aac": "aac", "audio/opus": "opus", "audio/webm": "webm"}
 
 
 @dataclass(frozen=True)

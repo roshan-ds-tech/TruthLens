@@ -59,6 +59,13 @@ def cmd_analyze(args) -> int:
             text = Path(args.caption).read_text("utf-8") if Path(args.caption).is_file() else args.caption
             ev = ingest_text(s, case, text, case.investigator)
             print(f"{ev.label}  text   sha256 {ev.sha256}  caption")
+        from sqlmodel import select
+
+        from app.models import Evidence
+
+        if not s.exec(select(Evidence).where(Evidence.case_id == case.id)).first():
+            print(f"\nNo evidence was accepted, so {case.id} was not analyzed.", file=sys.stderr)
+            return 1
         print(f"\nAnalyzing {case.id}…")
         pipeline.run_case(s, case.id, None, case.investigator)
         s.refresh(case)
