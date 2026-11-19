@@ -1,11 +1,5 @@
-import { c, VERDICTS, YELLOW, MONO, Icon, hover, VerdictPill, eyebrow, h1, page, preventThen } from '../ui.jsx';
-
-const STATS = [
-  { label: 'Active cases', value: '6', unit: '', icon: 'folder_open', foot: '2 opened this week' },
-  { label: 'Evidence analyzed', value: '48', unit: '', icon: 'inventory_2', foot: 'Image, video, audio and text' },
-  { label: 'Findings awaiting review', value: '11', unit: '', icon: 'rate_review', foot: '4 in C-0007' },
-  { label: 'Avg. analysis time', value: '42', unit: 's', icon: 'timer', foot: 'On this device, per case' },
-];
+import { c, VERDICTS, YELLOW, MONO, Icon, hover, VerdictPill, eyebrow, h1, page, preventThen, Muted } from '../ui.jsx';
+import { useApi, relTime } from '../api/client.js';
 
 const STEPS = [
   ['Ingest', 'Hash every file and keep the original read-only.'],
@@ -14,16 +8,6 @@ const STEPS = [
   ['Review', 'Accept, reject or annotate each finding.'],
   ['Report', 'Export a reproducible report with hashes.'],
 ];
-
-const CASES = [
-  { id: 'C-0007', title: 'Viral clip: minister announces holiday', why: 'audio splice at 00:14.2 lines up with a motion break', types: ['movie', 'image', 'notes'], v: 'strong', updated: '12 min ago' },
-  { id: 'C-0006', title: 'Flood photo from Chennai post', why: 'error-level pattern around the waterline', types: ['image', 'notes'], v: 'ind', updated: '2 h ago' },
-  { id: 'C-0005', title: "Voice note from 'bank manager'", why: 'too little clean audio to decide', types: ['graphic_eq'], v: 'inc', updated: 'Yesterday' },
-  { id: 'C-0004', title: 'Campus event poster', why: 'metadata and pixels are consistent', types: ['image'], v: 'none', updated: '17 Nov' },
-  { id: 'C-0003', title: 'Product review video', why: '3 findings not yet reviewed', types: ['movie', 'graphic_eq'], v: 'review', updated: '16 Nov' },
-];
-
-const VAL = [['Noise-floor step', 0.83], ['Optical-flow discontinuity', 0.79], ['Error level inconsistency', 0.68], ['Lip-sync correlation', 0.57]];
 
 export function TypeIcons({ types }) {
   return (
@@ -37,13 +21,34 @@ export function TypeIcons({ types }) {
 
 const card = { background: c.bg, border: `1px solid ${c.border}`, borderRadius: 16, boxShadow: '0 1px 2px rgba(17,17,17,.04)' };
 
-export default function Dashboard({ go }) {
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+
+export default function Dashboard({ go, active, investigator }) {
+  const stats = useApi(active ? '/stats' : null);
+  const cases = useApi(active ? '/cases' : null);
+  const metrics = useApi(active ? '/validation/metrics' : null);
+  const st = stats.data;
+  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
+  const STATS = st ? [
+    { label: 'Active cases', value: String(st.active_cases), unit: '', icon: 'folder_open', foot: `${st.opened_this_week} opened this week` },
+    { label: 'Evidence analyzed', value: String(st.evidence_count), unit: '', icon: 'inventory_2', foot: st.evidence_kinds.length ? st.evidence_kinds.map((k) => k[0].toUpperCase() + k.slice(1)).join(', ') : 'No evidence yet' },
+    { label: 'Findings awaiting review', value: String(st.pending_review), unit: '', icon: 'rate_review', foot: st.top_pending_case.count ? `${st.top_pending_case.count} in ${st.top_pending_case.id}` : 'Nothing pending' },
+    { label: 'Avg. analysis time', value: st.avg_analysis_seconds == null ? '—' : String(st.avg_analysis_seconds), unit: st.avg_analysis_seconds == null ? '' : 's', icon: 'timer', foot: 'On this device, per case' },
+  ] : [];
+  const CASES = (cases.data || []).slice(0, 5);
+  const VAL = (metrics.data?.indicators || []).filter((v) => v.precision != null && v.n_findings >= 6)
+    .sort((x, y) => y.n_findings - x.n_findings).slice(0, 4);
   return (
     <div style={{ ...page, gap: 28 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={eyebrow}>Overview · Thursday 19 Nov</div>
-        <h1 style={h1}>Good evening, Priya.</h1>
-        <p style={{ margin: 0, fontSize: 15, color: c.ink2 }}>You have 11 findings waiting for review across 6 active cases.</p>
+        <div style={eyebrow}>Overview · {today}</div>
+        <h1 style={h1}>{greeting()}{investigator ? `, ${investigator.split(' ')[0]}` : ''}.</h1>
+        <p style={{ margin: 0, fontSize: 15, color: c.ink2 }}>
+          {st ? `You have ${st.pending_review} finding${st.pending_review === 1 ? '' : 's'} waiting for review across ${st.active_cases} active case${st.active_cases === 1 ? '' : 's'}.` : stats.error ? `Could not reach the analysis service: ${stats.error.message}` : 'Loading…'}
+        </p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 14 }}>
@@ -90,27 +95,29 @@ export default function Dashboard({ go }) {
             <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>Recent cases</span>
             <a href="#" onClick={preventThen(() => go('cases'))} style={{ fontSize: 13, fontWeight: 700 }}>All cases</a>
           </div>
+          {cases.data && !CASES.length && <div style={{ padding: '6px 20px 18px' }}><Muted>No cases yet. Use New case to add evidence.</Muted></div>}
           {CASES.map((cs) => (
-            <button key={cs.id} onClick={() => go('workspace')} {...hover({ bg: c.surface }, { width: '100%', display: 'grid', gridTemplateColumns: '72px minmax(0,1fr) auto auto 90px', alignItems: 'center', gap: 16, padding: '14px 20px', border: 'none', borderTop: `1px solid ${c.line}`, background: c.bg, fontFamily: 'inherit', color: c.ink, textAlign: 'left', cursor: 'pointer' })}>
+            <button key={cs.id} onClick={() => go('workspace', { caseId: cs.id })} {...hover({ bg: c.surface }, { width: '100%', display: 'grid', gridTemplateColumns: '72px minmax(0,1fr) auto auto 90px', alignItems: 'center', gap: 16, padding: '14px 20px', border: 'none', borderTop: `1px solid ${c.line}`, background: c.bg, fontFamily: 'inherit', color: c.ink, textAlign: 'left', cursor: 'pointer' })}>
               <span style={{ fontFamily: MONO, fontSize: 12, color: c.ink2 }}>{cs.id}</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
                 <span style={{ fontSize: 14.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cs.title}</span>
                 <span style={{ fontSize: 12.5, color: c.ink2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Why: {cs.why}</span>
               </div>
               <TypeIcons types={cs.types} />
-              <VerdictPill dot={VERDICTS[cs.v][1]} label={VERDICTS[cs.v][0]} />
-              <span style={{ fontSize: 12, color: c.ink2, textAlign: 'right', whiteSpace: 'nowrap' }}>{cs.updated}</span>
+              <VerdictPill dot={VERDICTS[cs.verdict.key][1]} label={cs.verdict.label} />
+              <span style={{ fontSize: 12, color: c.ink2, textAlign: 'right', whiteSpace: 'nowrap' }}>{relTime(cs.updated_at)}</span>
             </button>
           ))}
         </section>
 
         <section style={{ ...card, flex: '1 1 300px', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={eyebrow}>Validation snapshot · sample data</span>
-            <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>Seeded test set · 160 items</span>
+            <span style={eyebrow}>Validation snapshot · {metrics.data ? `test set ${metrics.data.version}` : 'not run'}</span>
+            <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>{metrics.data ? `Seeded test set · ${metrics.data.n_items} items` : 'No validation results yet'}</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {VAL.map(([name, p]) => (
+            {metrics.error && <Muted>Run <span style={{ fontFamily: MONO }}>make validate</span> to measure the analyzers on the seeded test set.</Muted>}
+            {VAL.map(({ name, precision: p }) => (
               <div key={name} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                   <span style={{ fontWeight: 600 }}>{name}</span>

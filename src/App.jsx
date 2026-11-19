@@ -12,6 +12,7 @@ import CaseWorkspace from './screens/CaseWorkspace.jsx';
 import ImageViewer from './screens/ImageViewer.jsx';
 import AudioViewer from './screens/AudioViewer.jsx';
 import ReportPreview from './screens/ReportPreview.jsx';
+import { api, useApi } from './api/client.js';
 
 const SCREENS = ['dashboard', 'cases', 'library', 'validation', 'settings', 'newcase', 'analysis', 'workspace', 'image', 'audio', 'report'];
 
@@ -48,6 +49,17 @@ export default function App() {
   const [screen, setScreen] = useState(start === 'home' || !SCREENS.includes(start) ? 'dashboard' : start);
   const [collapsed, setCollapsed] = useState(false);
   const [width, setWidth] = useState(() => window.innerWidth);
+  // Open case, selected evidence item and analysis job; set by go(screen, { caseId, evidenceId, jobId }).
+  const [nav, setNav] = useState({ caseId: null, evidenceId: null, jobId: null });
+  const [dataVersion, setDataVersion] = useState(0);
+  const settings = useApi(authed ? '/settings' : null, { reloadKey: dataVersion });
+  const investigator = settings.data?.investigator || '';
+  const initials = investigator.split(/\s+/).filter(Boolean).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+
+  useEffect(() => {
+    if (!authed || nav.caseId) return;
+    api.get('/cases').then((cases) => { if (cases.length) setNav((n) => (n.caseId ? n : { ...n, caseId: cases[0].id })); }, () => {});
+  }, [authed, nav.caseId]);
   const mainRef = useRef(null);
 
   useEffect(() => {
@@ -62,7 +74,12 @@ export default function App() {
   const expanded = !(tablet || collapsed);
   const wideBar = expanded && width >= 1240;
 
-  const go = (s) => { setScreen(s); if (mainRef.current) mainRef.current.scrollTop = 0; };
+  const go = (s, opts = {}) => {
+    if (Object.keys(opts).length) setNav((n) => ({ ...n, ...opts }));
+    if (opts.caseId || opts.jobId || opts.refresh) setDataVersion((v) => v + 1);
+    setScreen(s);
+    if (mainRef.current) mainRef.current.scrollTop = 0;
+  };
   const toggleTheme = () => setTheme((t) => {
     const next = t === 'dark' ? 'light' : 'dark';
     try { localStorage.setItem('tl-theme', next); } catch { /* storage unavailable */ }
@@ -124,7 +141,7 @@ export default function App() {
             <div style={{ height: 1, background: c.border, margin: '16px 6px' }} />
             {expanded && (
               <div style={{ padding: '0 12px 8px', fontSize: 10.5, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: c.ink2 }}>
-                Open case · <span style={{ fontFamily: MONO, letterSpacing: 0 }}>C-0007</span>
+                Open case · <span style={{ fontFamily: MONO, letterSpacing: 0 }}>{nav.caseId || '—'}</span>
               </div>
             )}
             {CASE_NAV.map((n) => {
@@ -160,11 +177,11 @@ export default function App() {
                 <Icon name="add" size={19} />New case
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 6 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: c.hero, color: YELLOW, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 }}>PS</div>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: c.hero, color: YELLOW, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 }}>{initials || '·'}</div>
                 {wideBar && (
                   <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
                     <span style={{ fontSize: 11, color: c.ink2, fontWeight: 600 }}>Investigator</span>
-                    <span style={{ fontSize: 13.5, fontWeight: 700 }}>Priya S.</span>
+                    <span style={{ fontSize: 13.5, fontWeight: 700 }}>{investigator}</span>
                   </div>
                 )}
               </div>
@@ -172,17 +189,17 @@ export default function App() {
 
             {/* All screens stay mounted (hidden with display:none) so their local state survives navigation. */}
             <main ref={mainRef} style={{ flex: 1, minHeight: 0, overflow: 'auto', background: c.bg }}>
-              <div style={shown('dashboard')}><Dashboard go={go} /></div>
-              <div style={shown('cases')}><Cases go={go} /></div>
-              <div style={shown('library')}><EvidenceLibrary go={go} /></div>
-              <div style={shown('validation')}><Validation /></div>
-              <div style={shown('settings')}><Settings /></div>
-              <div style={shown('newcase')}><NewCase go={go} /></div>
-              <div style={shown('analysis')}><Analysis go={go} active={is('analysis')} /></div>
-              <div style={shown('workspace')}><CaseWorkspace go={go} active={is('workspace')} compact={tablet} /></div>
-              <div style={shown('image')}><ImageViewer go={go} /></div>
-              <div style={shown('audio')}><AudioViewer go={go} active={is('audio')} /></div>
-              <div style={shown('report')}><ReportPreview go={go} /></div>
+              <div style={shown('dashboard')}><Dashboard go={go} active={is('dashboard')} investigator={investigator} /></div>
+              <div style={shown('cases')}><Cases go={go} active={is('cases')} /></div>
+              <div style={shown('library')}><EvidenceLibrary go={go} active={is('library')} /></div>
+              <div style={shown('validation')}><Validation active={is('validation')} /></div>
+              <div style={shown('settings')}><Settings active={is('settings')} onSaved={() => setDataVersion((v) => v + 1)} /></div>
+              <div style={shown('newcase')}><NewCase go={go} active={is('newcase')} investigator={investigator} /></div>
+              <div style={shown('analysis')}><Analysis go={go} active={is('analysis')} caseId={nav.caseId} jobId={nav.jobId} /></div>
+              <div style={shown('workspace')}><CaseWorkspace go={go} active={is('workspace')} compact={tablet} caseId={nav.caseId} /></div>
+              <div style={shown('image')}><ImageViewer go={go} active={is('image')} caseId={nav.caseId} evidenceId={nav.evidenceId} /></div>
+              <div style={shown('audio')}><AudioViewer go={go} active={is('audio')} caseId={nav.caseId} evidenceId={nav.evidenceId} /></div>
+              <div style={shown('report')}><ReportPreview go={go} active={is('report')} caseId={nav.caseId} /></div>
             </main>
           </div>
         </div>
