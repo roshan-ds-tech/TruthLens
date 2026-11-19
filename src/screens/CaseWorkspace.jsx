@@ -52,7 +52,7 @@ function FindingCard({ f, selected, decision, altOpen, note, noteOpen, draft, de
   const accepted = decision === 'accepted', rejected = decision === 'rejected';
   return (
     <article onClick={onSelect} style={{ background: c.bg, border: `1px solid ${selected ? c.ink : c.border}`, boxShadow: selected ? '0 0 0 3px rgba(255,210,63,.55)' : '0 1px 2px rgba(17,17,17,.04)', borderRadius: 14, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10, cursor: 'pointer' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
         <span style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 600 }}>{f.id}</span>
         <Icon name={f.icon} size={17} title={f.mod} style={{ color: c.ink2 }} />
         <span style={{ flex: 1 }} />
@@ -217,7 +217,10 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
 
   // Lay out by the component's own width (not the window), since the sidebar can collapse.
   const measure = useCallback(() => {
-    const w = rootRef.current?.offsetWidth;
+    const root = rootRef.current;
+    if (!root) return;
+    const style = getComputedStyle(root);
+    const w = root.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
     if (!w) return;
     setMode(w < 760 ? 'stack' : w < 1100 ? 'mid' : 'wide');
   }, []);
@@ -279,23 +282,24 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
   const stacked = compact || mode === 'stack';
   const gridCols = stacked ? 'minmax(0,1fr)' : mode === 'mid' ? '220px minmax(0,1fr)' : '248px minmax(0,1fr) 384px';
   const gridAreas = stacked ? "'list' 'viewer' 'findings' 'corr'" : mode === 'mid' ? "'list viewer' 'findings findings' 'corr corr'" : "'list viewer findings' 'corr corr findings'";
+  const workspacePadding = compact ? '24px 24px 48px' : '32px clamp(16px, 3vw, 40px) 56px';
   const trackLabel = { position: 'absolute', left: -76, fontSize: 11.5, fontWeight: 600, color: c.ink2 };
   const v = cs?.verdict;
   const combined = graphQ.data?.combined;
 
   if (!caseId || (!cs && (caseQ.error || !caseQ.loading))) {
     return (
-      <div ref={rootRef} style={{ padding: compact ? '24px 24px 48px' : '32px 40px 56px', display: 'flex', flexDirection: 'column', gap: 10, color: c.ink }}>
+      <div ref={rootRef} style={{ padding: workspacePadding, display: 'flex', flexDirection: 'column', gap: 10, color: c.ink }}>
         <div style={eyebrow}>Case workspace</div>
         <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 700, letterSpacing: '-0.022em' }}>No case open</h1>
         <Muted>{caseQ.error ? `Could not load the case: ${caseQ.error.message}` : 'Open a case from Cases, or start one with New case.'}</Muted>
       </div>
     );
   }
-  if (!cs) return <div ref={rootRef} style={{ padding: '32px 40px' }}><Muted>Loading case…</Muted></div>;
+  if (!cs) return <div ref={rootRef} style={{ padding: workspacePadding }}><Muted>Loading case…</Muted></div>;
 
   return (
-    <div ref={rootRef} style={{ padding: compact ? '24px 24px 48px' : '32px 40px 56px', display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0, color: c.ink }}>
+    <div ref={rootRef} style={{ padding: workspacePadding, display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0, color: c.ink }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0, flex: '1 1 520px' }}>
           <div style={eyebrow}>Case · <span style={{ fontFamily: MONO, letterSpacing: '.02em' }}>{cs.id}</span> · Opened {fmtDate(cs.created_at)}</div>
@@ -325,9 +329,9 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gridTemplateAreas: gridAreas, gap: 20, alignItems: 'start' }}>
-        <section style={{ gridArea: 'list', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '0 2px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: gridCols, gridTemplateAreas: gridAreas, gap: 20, alignItems: 'start', minWidth: 0 }}>
+        <section style={{ gridArea: 'list', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 20, padding: '0 2px' }}>
             <span style={eyebrow}>Evidence · {evidence.length}</span>
             <span style={{ fontSize: 12, color: c.ink2 }}>originals read-only</span>
           </div>
@@ -341,7 +345,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
                 else { const tf = F.find((f) => f.evidence === e.label); if (tf) setSel(tf.id); }
               };
               return (
-                <button key={e.id} onClick={open} {...hover({ bc: c.ink }, { flex: '1 1 200px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, borderRadius: 14, border: `1px solid ${on ? c.ink : c.border}`, background: on ? c.surface : c.bg, fontFamily: 'inherit', color: c.ink, cursor: 'pointer' })}>
+                <button key={e.id} onClick={open} {...hover({ bc: c.ink }, { flex: '1 1 200px', minWidth: 0, maxWidth: '100%', boxSizing: 'border-box', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 8, padding: 12, borderRadius: 14, border: `1px solid ${on ? c.ink : c.border}`, background: on ? c.surface : c.bg, fontFamily: 'inherit', color: c.ink, cursor: 'pointer' })}>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center', minWidth: 0, width: '100%' }}>
                     <span style={{ width: 34, height: 34, flex: 'none', borderRadius: 9, background: on ? YELLOW : c.surface, color: on ? '#111111' : c.ink, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name={e.icon} size={19} /></span>
                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -349,7 +353,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
                       <span style={{ fontSize: 12, color: c.ink2 }}>{e.label} · {e.meta_label}</span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, width: '100%' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '6px 8px', width: '100%', minWidth: 0 }}>
                     <VerdictPill dot={VERDICTS[ev.key][1]} label={ev.label} h={22} fs={11.5} pad={9} dotSize={6} style={{ background: c.bg }} />
                     <span style={{ fontFamily: MONO, fontSize: 10.5, color: c.ink2 }}>{e.sha_short}</span>
                   </div>
@@ -359,11 +363,13 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
           </div>
         </section>
 
-        <section style={{ gridArea: 'viewer', background: c.bg, border: `1px solid ${c.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
+        <section style={{ gridArea: 'viewer', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <span style={{ ...eyebrow, display: 'flex', alignItems: 'center', minHeight: 20, padding: '0 2px' }}>Evidence viewer</span>
+          <div style={{ minWidth: 0, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 8, padding: '14px 18px', borderBottom: `1px solid ${c.border}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 10px', minWidth: 0, maxWidth: '100%' }}>
               <Icon name={primary?.icon || 'movie'} />
-              <span style={{ fontSize: 14, fontWeight: 700 }}>{primary ? primary.display_name : 'No video or image in this case'}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, minWidth: 0, overflowWrap: 'anywhere' }}>{primary ? primary.display_name : 'No video or image in this case'}</span>
               <span style={{ fontSize: 12.5, color: c.ink2 }}>{primary ? primary.meta_label.split(' · ').slice(1).join(' · ') : ''}</span>
             </div>
             <span style={{ fontFamily: MONO, fontSize: 11.5, color: c.ink2 }}>{primary ? `sha256 ${primary.sha_short}` : ''}</span>
@@ -404,7 +410,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
 
             {isVideo && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={eyebrow}>Timeline · suspicion</span>
                   <span style={{ fontSize: 12, color: c.ink2 }}>Click any track to seek{band ? <> · flagged <span style={{ fontFamily: MONO, color: c.ink }}>{fmt(band.a)}–{fmt(band.b)}</span></> : ' · nothing flagged on this clip'}</span>
                 </div>
@@ -437,15 +443,16 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
               </div>
             )}
           </div>
+          </div>
         </section>
 
-        <section style={{ gridArea: 'findings', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px' }}>
+        <section style={{ gridArea: 'findings', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: 20, padding: '0 2px' }}>
             <span style={eyebrow}>Findings · {F.length} <span style={{ color: '#8A8A85' }}>· {openCount} awaiting review</span></span>
           </div>
           {cs.status !== 'analyzed' && <Muted>{cs.status === 'draft' ? 'Not analyzed yet. Use Re-run analysis to start.' : cs.status === 'failed' ? 'The last analysis failed; see the run log.' : 'Analysis in progress…'}</Muted>}
           {cs.status === 'analyzed' && !F.length && <Muted>No analyzer flagged anything above its threshold. See Limitations for what was not checked.</Muted>}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(300px,100%),1fr))', gap: 10 }}>
             {F.map((f) => (
               <FindingCard
                 key={f.id}
@@ -470,14 +477,14 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
           </div>
         </section>
 
-        <section style={{ gridArea: 'corr', background: c.bg, border: `1px solid ${c.border}`, borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
+        <section style={{ gridArea: 'corr', minWidth: 0, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={eyebrow}>Cross-modal correlations · {rules.length} rule{rules.length === 1 ? '' : 's'} fired</span>
               <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.012em' }}>How findings support or weaken each other</span>
             </div>
             {combined && combined.lo != null && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 240 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, maxWidth: '100%', flex: '0 1 240px' }}>
                 <span style={{ fontSize: 12, color: c.ink2, whiteSpace: 'nowrap' }}>Combined</span>
                 <RangeBar lo={combined.lo} hi={combined.hi} h={8} color={c.ink} />
                 <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600 }}>{fmtRange(combined.lo, combined.hi)}</span>
@@ -487,7 +494,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
           {!rules.length && <Muted>No cross-modal rule fired. Rules need findings from at least two sources that share a time, place or claim.</Muted>}
           {!!rules.length && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-              <div style={{ flex: '1 1 300px', background: c.surface, borderRadius: 12, padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ flex: '1 1 300px', minWidth: 0, background: c.surface, borderRadius: 12, padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ aspectRatio: '420/230' }}><CorrelationGraph selected={rule} rules={rules} nodes={nodes} /></div>
                 <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 11.5, color: c.ink2, padding: '0 6px 4px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 18, height: 2, background: c.ink }} />supports</span>
@@ -495,14 +502,14 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 9, height: 9, borderRadius: '50%', background: YELLOW, border: `1.5px solid ${c.ink}` }} />selected rule</span>
                 </div>
               </div>
-              <div style={{ flex: '2 1 340px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ flex: '2 1 340px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {rules.map((r) => {
                   const on = rule === r.id;
                   const conflict = r.relation === 'weakens';
                   return (
-                    <button key={r.id + (r.weak ? 'w' : '')} onClick={() => setRule(r.id)} {...hover({ bc: c.ink }, { textAlign: 'left', display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 14px', borderRadius: 12, border: `1px solid ${on ? c.ink : c.border}`, background: on ? c.hl : c.bg, fontFamily: 'inherit', color: c.ink, cursor: 'pointer' })}>
+                    <button key={r.id + (r.weak ? 'w' : '')} onClick={() => setRule(r.id)} {...hover({ bc: c.ink }, { textAlign: 'left', display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start', padding: '12px 14px', borderRadius: 12, border: `1px solid ${on ? c.ink : c.border}`, background: on ? c.hl : c.bg, fontFamily: 'inherit', color: c.ink, cursor: 'pointer' })}>
                       <span style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 600, paddingTop: 2, flex: 'none' }}>{r.id}</span>
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+                      <div style={{ flex: '1 1 120px', display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
                         <span style={{ fontSize: 13.5, fontWeight: 700, textWrap: 'pretty' }}>{r.name}</span>
                         <span style={{ fontSize: 12, color: c.ink2, fontFamily: MONO }}>{r.links}</span>
                         <span style={{ fontSize: 12.5, color: c.ink2, textWrap: 'pretty' }}>{r.detail}</span>
