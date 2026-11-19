@@ -87,3 +87,9 @@ CI runs on Ubuntu (ffmpeg 6) while development used macOS (ffmpeg 9). Finding ID
 findings digest are identical on both. The only difference is the SHA-256 of the derived audio track: AAC decoders in
 different ffmpeg versions produce slightly different PCM. `samples/check_demo.py` therefore compares hashes of
 originals only. Reruns on one installation are bit-identical, including derived files.
+
+### D-19 · Typography: Inter and IBM Plex Mono
+The design used Manrope (geometric, rounded) at weight 800 with tight tracking (down to −0.045em), which read as heavy
+and casual. The UI and the PDF report now use Inter for text and IBM Plex Mono for hashes, timestamps and IDs;
+headings are weight 700 with tracking between −0.012em and −0.025em. Both fonts (SIL OFL) are bundled in
+`public/fonts/` and `backend/app/report/fonts/`, so the UI and the PDF render identically offline.

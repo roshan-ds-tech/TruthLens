@@ -32,7 +32,7 @@ export const THEMES = {
   dark: { '--tl-bg': '#0F0F0E', '--tl-surface': '#1A1A18', '--tl-surface2': '#21211F', '--tl-border': '#2E2E2B', '--tl-border2': '#3D3D39', '--tl-line': '#262624', '--tl-ink': '#F2F2EE', '--tl-ink2': '#A3A39C', '--tl-hero': '#1C1C1A', '--tl-hl': '#2A2512', '--tl-hlb': '#4D4219', '--tl-hover': '#242422' },
 };
 
-export const MONO = "'JetBrains Mono',monospace";
+export const MONO = "'IBM Plex Mono', ui-monospace, Menlo, monospace";
 
 /** Material Symbols glyph. */
 export function Icon({ name, size = 20, style, ...rest }) {
@@ -67,7 +67,7 @@ export function RangeBar({ lo, hi, color, h = 6, midline = false, track = c.line
 }
 
 export const eyebrow = { fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: c.ink2 };
-export const h1 = { margin: 0, fontSize: 36, lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.035em' };
+export const h1 = { margin: 0, fontSize: 36, lineHeight: 1.1, fontWeight: 700, letterSpacing: '-0.022em' };
 export const page = { padding: '32px 40px 56px', display: 'flex', flexDirection: 'column', gap: 24, color: c.ink };
 
 /** Filter chip that inverts when active. */

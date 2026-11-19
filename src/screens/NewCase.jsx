@@ -124,7 +124,7 @@ export default function NewCase({ go, active, draftId: resumeId, investigator })
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={label}>Investigator</span>
           <div style={{ height: 42, border: `1px solid ${c.border}`, borderRadius: 12, padding: '0 8px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
-            <span style={{ width: 28, height: 28, borderRadius: '50%', background: c.hero, color: YELLOW, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{investigator.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}</span>
+            <span style={{ width: 28, height: 28, borderRadius: '50%', background: c.hero, color: YELLOW, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{investigator.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}</span>
             {investigator}
             <span style={{ flex: 1 }} />
             <Icon name="expand_more" style={{ color: c.ink2 }} />
@@ -146,7 +146,7 @@ export default function NewCase({ go, active, draftId: resumeId, investigator })
         onDrop={(e) => { e.preventDefault(); setDrag(false); addFiles(e.dataTransfer.files); }}
         style={{ border: `1.5px dashed ${drag ? c.ink : c.border2}`, borderRadius: 16, background: c.surface, padding: '36px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
         <span style={{ width: 52, height: 52, borderRadius: 14, background: c.bg, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="upload" size={26} /></span>
-        <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>
+        <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.012em' }}>
           Drop evidence here, or <span onClick={() => input.current?.click()} style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationColor: YELLOW, textDecorationThickness: 2, textUnderlineOffset: 3 }}>browse files</span>
         </span>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
@@ -190,7 +190,7 @@ export default function NewCase({ go, active, draftId: resumeId, investigator })
 
       <section style={{ border: `1px solid ${c.border}`, borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 15, fontWeight: 800 }}>Paste caption or claim</span>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>Paste caption or claim</span>
           <span style={{ fontSize: 12.5, color: c.ink2 }}>Checked against dates, names and places in the other evidence</span>
         </div>
         <textarea

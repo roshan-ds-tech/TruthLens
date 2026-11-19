@@ -36,7 +36,7 @@ export default function Settings({ active, onSaved }) {
       </div>
       <section style={{ border: `1px solid ${c.border}`, borderRadius: 16, overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', background: c.surface, borderBottom: `1px solid ${c.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 16, fontWeight: 800 }}>Analyzers</span>
+          <span style={{ fontSize: 16, fontWeight: 700 }}>Analyzers</span>
           <span style={{ fontFamily: MONO, fontSize: 11.5, color: c.ink2 }}>models.lock {shortHash(st.data?.models_lock)}</span>
         </div>
         {st.error && <div style={{ padding: '14px 20px' }}><Muted>Could not load settings: {st.error.message}</Muted></div>}
@@ -64,7 +64,7 @@ export default function Settings({ active, onSaved }) {
         })}
       </section>
       <section style={{ border: `1px solid ${c.border}`, borderRadius: 16, padding: '18px 20px', display: 'grid', gridTemplateColumns: '200px 1fr', gap: '12px 20px', fontSize: 14 }}>
-        <span style={{ gridColumn: '1 / -1', fontSize: 16, fontWeight: 800 }}>Privacy and storage</span>
+        <span style={{ gridColumn: '1 / -1', fontSize: 16, fontWeight: 700 }}>Privacy and storage</span>
         {!st.data ? [<span key="l" style={{ color: c.ink2 }}>Loading…</span>] : privacyRows(mode === 'hosted').flatMap(([k, v]) => [<span key={k} style={{ color: c.ink2 }}>{k}</span>, v || vault])}
       </section>
     </div>

@@ -50,7 +50,7 @@ export default function AudioViewer({ go, active, caseId, evidenceId }) {
     return (
       <div style={{ padding: '32px 40px 56px', display: 'flex', flexDirection: 'column', gap: 10, color: c.ink }}>
         <a href="#" onClick={preventThen(() => go('workspace'))} style={{ fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'flex-start', textDecoration: 'none' }}><Icon name="arrow_back" size={18} />Case workspace</a>
-        <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.035em' }}>Audio evidence</h1>
+        <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 700, letterSpacing: '-0.022em' }}>Audio evidence</h1>
         <Muted>{evQ.loading || caseQ.loading ? 'Loading…' : evQ.error ? `Could not load the audio: ${evQ.error.message}` : 'This case has no audio evidence.'}</Muted>
       </div>
     );
@@ -87,7 +87,7 @@ export default function AudioViewer({ go, active, caseId, evidenceId }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <a href="#" onClick={preventThen(() => go('workspace', { caseId: ev.case_id }))} style={{ fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'flex-start', textDecoration: 'none' }}><Icon name="arrow_back" size={18} />{ev.case_id} workspace</a>
         <div style={eyebrow}>Evidence · <span style={mono}>{ev.case_id}</span> · {ev.label} · Audio{ev.derived_from ? ` track of ${ev.derived_from}` : ''} · sha256 <span style={mono}>{ev.sha_short}</span></div>
-        <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.035em' }}>{ev.display_name}</h1>
+        <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 700, letterSpacing: '-0.022em' }}>{ev.display_name}</h1>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 14px' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 30, padding: '0 13px', borderRadius: 999, background: c.surface, border: `1px solid ${c.border}`, fontSize: 13, fontWeight: 700 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: VERDICTS[v.key][1] }} />{v.label} {v.lo != null && <span style={{ ...mono, fontWeight: 500, color: c.ink2 }}>{fmtRange(v.lo, v.hi)}</span>}
@@ -157,7 +157,7 @@ export default function AudioViewer({ go, active, caseId, evidenceId }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
         <section style={{ flex: '2 1 560px', minWidth: 0, border: `1px solid ${c.border}`, borderRadius: 16, overflow: 'hidden' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: `1px solid ${c.border}`, background: c.surface }}>
-            <span style={{ fontSize: 14, fontWeight: 800 }}>Transcript · word timestamps</span>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>Transcript · word timestamps</span>
             <span style={{ ...mono, fontSize: 11.5, color: c.ink2 }}>{wf?.transcript ? `${wf.transcript.model} · ${wf.transcript.n_words} words · conf ${wf.transcript.mean_conf.toFixed(2)}` : 'no transcript'}</span>
           </div>
           <div ref={trRef} style={{ position: 'relative', height: 300, overflow: 'auto', padding: '8px 16px 16px', scrollBehavior: 'smooth' }}>

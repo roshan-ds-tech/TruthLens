@@ -65,7 +65,7 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '20px 40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Logo />
-          <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.03em' }}>TruthLens</span>
+          <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.018em' }}>TruthLens</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px', borderRadius: 999, border: `1px solid ${c.border}`, fontSize: 12.5, fontWeight: 600 }}>
@@ -86,7 +86,7 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
               </span>
             ))}
           </div>
-          <h1 style={{ margin: 0, fontSize: 58, lineHeight: 1.04, fontWeight: 800, letterSpacing: '-0.045em', textWrap: 'balance' }}>
+          <h1 style={{ margin: 0, fontSize: 58, lineHeight: 1.04, fontWeight: 700, letterSpacing: '-0.025em', textWrap: 'balance' }}>
             Check photos, videos, audio and text for signs of{' '}
             <span style={{ background: `linear-gradient(transparent 62%,${YELLOW} 62%,${YELLOW} 92%,transparent 92%)` }}>manipulation</span>.
           </h1>
@@ -153,7 +153,7 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
           {POINTS.map((p) => ({ ...p, title: p.title || privacy.pointTitle, text: p.text || privacy.pointText })).map((p) => (
             <div key={p.title} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ width: 40, height: 40, borderRadius: 12, background: c.surface, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name={p.icon} size={21} /></span>
-              <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.01em' }}>{p.title}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>{p.title}</span>
               <span style={{ fontSize: 14, lineHeight: 1.5, color: c.ink2 }}>{p.text}</span>
             </div>
           ))}
@@ -171,7 +171,7 @@ export default function Home({ theme, onEnter, onToggleTheme }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: c.ink2 }}>{su ? privacy.account : 'Log in'}</span>
-                <span id="tl-auth-title" style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em' }}>{su ? 'Create your account' : 'Welcome back'}</span>
+                <span id="tl-auth-title" style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.018em' }}>{su ? 'Create your account' : 'Welcome back'}</span>
               </div>
               <button type="button" onClick={close} aria-label="Close" style={{ width: 34, height: 34, borderRadius: '50%', border: `1px solid ${c.border}`, background: c.bg, color: c.ink, cursor: 'pointer' }}><Icon name="close" size={19} /></button>
             </div>

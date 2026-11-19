@@ -34,8 +34,8 @@ function CorrelationGraph({ selected, rules, nodes }) {
         return (
           <g key={n.id}>
             <circle cx={n.x} cy={n.y} r={prf || ev ? 16 : 22} style={{ fill: active.has(n.id) ? YELLOW : c.bg }} stroke={prf || ev ? '#8A8A85' : 'currentColor'} strokeWidth={1.5} strokeDasharray={prf || ev ? '3 3' : undefined} />
-            <text x={n.x} y={n.y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fontFamily="Manrope, sans-serif" style={{ fill: active.has(n.id) ? '#111111' : c.ink }}>{n.abbr}</text>
-            <text x={n.x} y={n.y + (prf || ev ? 32 : 38)} textAnchor="middle" fontSize={10} fontFamily="JetBrains Mono, monospace" style={{ fill: c.ink2 }}>{n.label}</text>
+            <text x={n.x} y={n.y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fontFamily="Inter, sans-serif" style={{ fill: active.has(n.id) ? '#111111' : c.ink }}>{n.abbr}</text>
+            <text x={n.x} y={n.y + (prf || ev ? 32 : 38)} textAnchor="middle" fontSize={10} fontFamily="IBM Plex Mono, monospace" style={{ fill: c.ink2 }}>{n.label}</text>
           </g>
         );
       })}
@@ -120,7 +120,7 @@ function CustodyDrawer({ caseId, onClose }) {
         <div style={{ padding: '22px 24px 18px', borderBottom: `1px solid ${c.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={eyebrow}>Chain of custody · <span style={{ fontFamily: MONO }}>{caseId}</span></span>
-            <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em' }}>{rows.length} recorded actions</span>
+            <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.018em' }}>{rows.length} recorded actions</span>
             <span style={{ fontSize: 13, color: c.ink2 }}>Append-only log. Each entry records the input and output hash of the step{cust.data ? (cust.data.chain_valid ? ' · hash chain verified' : ' · HASH CHAIN BROKEN') : ''}.</span>
           </div>
           <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', border: `1px solid ${c.border}`, background: c.bg, color: c.ink, cursor: 'pointer', flex: 'none' }}><Icon name="close" /></button>
@@ -287,7 +287,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
     return (
       <div ref={rootRef} style={{ padding: compact ? '24px 24px 48px' : '32px 40px 56px', display: 'flex', flexDirection: 'column', gap: 10, color: c.ink }}>
         <div style={eyebrow}>Case workspace</div>
-        <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.035em' }}>No case open</h1>
+        <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 700, letterSpacing: '-0.022em' }}>No case open</h1>
         <Muted>{caseQ.error ? `Could not load the case: ${caseQ.error.message}` : 'Open a case from Cases, or start one with New case.'}</Muted>
       </div>
     );
@@ -299,7 +299,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0, flex: '1 1 520px' }}>
           <div style={eyebrow}>Case · <span style={{ fontFamily: MONO, letterSpacing: '.02em' }}>{cs.id}</span> · Opened {fmtDate(cs.created_at)}</div>
-          <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.035em', textWrap: 'balance' }}>{cs.title}</h1>
+          <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 700, letterSpacing: '-0.022em', textWrap: 'balance' }}>{cs.title}</h1>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 14px' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 32, padding: '0 14px', borderRadius: 999, background: c.hero, color: '#fff', fontSize: 13.5, fontWeight: 700 }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: VERDICTS[v.key][1] === c.ink ? '#fff' : VERDICTS[v.key][1] }} />{v.label} {v.lo != null && <span style={{ fontFamily: MONO, fontWeight: 500, color: YELLOW }}>{fmtRange(v.lo, v.hi)}</span>}
@@ -474,7 +474,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={eyebrow}>Cross-modal correlations · {rules.length} rule{rules.length === 1 ? '' : 's'} fired</span>
-              <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>How findings support or weaken each other</span>
+              <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.012em' }}>How findings support or weaken each other</span>
             </div>
             {combined && combined.lo != null && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 240 }}>

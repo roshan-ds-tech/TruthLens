@@ -18,7 +18,7 @@ class ErrorBoundary extends Component {
   render() {
     if (!this.state.error) return this.props.children;
     return (
-      <div style={{ padding: 40, fontFamily: 'Manrope, system-ui, sans-serif', color: '#111' }}>
+      <div style={{ padding: 40, fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif", color: '#111' }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#5F5F5A' }}>TruthLens</div>
         <h1 style={{ fontSize: 28, margin: '8px 0' }}>Something went wrong on this screen.</h1>
         <p style={{ color: '#5F5F5A', margin: '0 0 16px' }}>Your cases and evidence are safe on the server. Reload to continue.</p>

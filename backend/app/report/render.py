@@ -103,7 +103,7 @@ def _summary(case: dict, findings: list[dict]) -> str:
     desc = case["description"].strip()
     lead = (desc + ("" if desc.endswith((".", "!", "?")) else ".") + " ") if desc else ""
     where = "on the TruthLens server" if config.MODE == "hosted" else "on this device"
-    return (f"{lead}{len(kinds)} evidence item{'s were' if len(kinds) != 1 else ' was'} ({parts}) analyzed {where}. "
+    return (f"{lead}{len(kinds)} evidence item{'s' if len(kinds) != 1 else ''} ({parts}) {'were' if len(kinds) != 1 else 'was'} analyzed {where}. "
             f"{len(findings)} finding{'s were' if len(findings) != 1 else ' was'} produced; {acc} accepted by the reviewer, "
             f"{rej} rejected and {open_} still open.")
 
@@ -170,7 +170,8 @@ def build(s: Session, case_row: Case) -> dict[str, Any]:
 
     thumbs = {f["finding_id"]: _thumb(f, evs[f["evidence_db_id"]]) for f in findings}
     env = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=select_autoescape(["html", "j2"]))
-    html = env.get_template("report.html.j2").render(r=report, thumbs=thumbs, short=custody.short)
+    html = env.get_template("report.html.j2").render(r=report, thumbs=thumbs, short=custody.short,
+                                                       fonts=(Path(__file__).parent / "fonts").as_uri())
     html_path = out_dir / "report.html"
     html_path.write_text(html, "utf-8")
 

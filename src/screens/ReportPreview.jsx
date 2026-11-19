@@ -27,7 +27,7 @@ export default function ReportPreview({ go, active, caseId }) {
       <div style={{ color: c.ink, background: c.surface, minHeight: '100%' }}>
         <div style={{ padding: '28px 40px 20px', display: 'flex', flexDirection: 'column', gap: 10, background: c.bg, borderBottom: `1px solid ${c.border}` }}>
           <a href="#" onClick={preventThen(() => go('workspace'))} style={{ fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'flex-start', textDecoration: 'none' }}><Icon name="arrow_back" size={18} />{caseId || 'Case'} workspace</a>
-          <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.035em' }}>Forensic report preview</h1>
+          <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 700, letterSpacing: '-0.022em' }}>Forensic report preview</h1>
           <Muted>{rep.loading ? 'Loading…' : 'No report yet for this case. Use Export report in the case workspace to build one.'}</Muted>
         </div>
       </div>
@@ -44,7 +44,7 @@ export default function ReportPreview({ go, active, caseId }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <a href="#" onClick={preventThen(() => go('workspace', { caseId: r.case.id }))} style={{ fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4, alignSelf: 'flex-start', textDecoration: 'none' }}><Icon name="arrow_back" size={18} />{r.case.id} workspace</a>
           <div style={eyebrow}>Report · <span style={mono}>{r.case.id}</span> · Draft {r.draft} · on-screen summary{r.pdf_pages ? ` · PDF: ${r.pdf_pages} A4 page${r.pdf_pages === 1 ? '' : 's'}` : ''}</div>
-          <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 800, letterSpacing: '-0.035em' }}>Forensic report preview</h1>
+          <h1 style={{ margin: 0, fontSize: 34, lineHeight: 1.1, fontWeight: 700, letterSpacing: '-0.022em' }}>Forensic report preview</h1>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <SecondaryButton onClick={() => get(r.files.json, 'json')}><Icon name="data_object" size={19} />Export JSON</SecondaryButton>
@@ -60,7 +60,7 @@ export default function ReportPreview({ go, active, caseId }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 30, height: 30, borderRadius: 8, background: YELLOW, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 15, height: 15, borderRadius: '50%', border: '3px solid #111' }} /></div>
               <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em' }}>TruthLens</span>
+                <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.012em' }}>TruthLens</span>
                 <span style={{ fontSize: 10.5, color: '#5F5F5A' }}>Forensic report</span>
               </div>
             </div>
@@ -69,14 +69,14 @@ export default function ReportPreview({ go, active, caseId }) {
 
           <div style={section}>
             <span style={label}>Summary</span>
-            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.15 }}>{r.case.title}</h2>
+            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.018em', lineHeight: 1.15 }}>{r.case.title}</h2>
             <p style={{ margin: 0, color: '#333', textWrap: 'pretty' }}>{r.summary}</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 20, padding: '18px 20px', borderRadius: 12, background: '#111', color: '#fff' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ ...label, color: YELLOW }}>Verdict</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 800 }}><span style={{ width: 9, height: 9, borderRadius: '50%', background: DOT[v.band] || '#8A8A85' }} />{v.label}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 700 }}><span style={{ width: 9, height: 9, borderRadius: '50%', background: DOT[v.band] || '#8A8A85' }} />{v.label}</span>
               {v.lo != null && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ position: 'relative', flex: 1, height: 6, borderRadius: 999, background: '#333' }}>

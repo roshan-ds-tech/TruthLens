@@ -24,8 +24,8 @@ function chart(rel) {
 const fmt = (v) => (v == null ? '—' : v.toFixed(2));
 
 const FP_COLS = '1.3fr 1fr 64px 1.3fr';
-const axisText = { fontSize: 10, fontFamily: 'JetBrains Mono', fill: '#8A8A85' };
-const labelText = { fontSize: 11, fontFamily: 'Manrope', fill: '#5F5F5A', textAnchor: 'middle' };
+const axisText = { fontSize: 10, fontFamily: 'IBM Plex Mono', fill: '#8A8A85' };
+const labelText = { fontSize: 11, fontFamily: 'Inter', fill: '#5F5F5A', textAnchor: 'middle' };
 
 export default function Validation({ active }) {
   const m = useApi(active ? '/validation/metrics' : null);
@@ -68,7 +68,7 @@ export default function Validation({ active }) {
               {[['Precision', fmt(t.precision)], ['Recall', fmt(t.recall)]].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', flexDirection: 'column' }}>
                   <span style={{ fontSize: 11.5, color: c.ink2 }}>{k}</span>
-                  <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em' }}>{v}</span>
+                  <span style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.018em' }}>{v}</span>
                 </div>
               ))}
             </div>
@@ -80,7 +80,7 @@ export default function Validation({ active }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'stretch' }}>
         <section style={{ flex: '1 1 440px', minWidth: 0, border: `1px solid ${c.border}`, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em' }}>Reliability</span>
+            <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.012em' }}>Reliability</span>
             <span style={{ fontSize: 12.5, color: c.ink2 }}>Predicted confidence vs observed hit rate · all indicators</span>
           </div>
           <svg viewBox="0 0 420 300" style={{ width: '100%', height: 'auto', display: 'block' }}>
@@ -109,7 +109,7 @@ export default function Validation({ active }) {
 
         <section style={{ flex: '1 1 440px', minWidth: 0, border: `1px solid ${c.border}`, borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '18px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em' }}>False positives</span>
+            <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.012em' }}>False positives</span>
             <span style={{ fontSize: 12.5, color: c.ink2 }}>Untouched samples that were flagged</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: FP_COLS, gap: 12, padding: '10px 20px', background: c.surface, borderTop: `1px solid ${c.border}`, borderBottom: `1px solid ${c.border}`, fontSize: 10.5, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: c.ink2 }}>

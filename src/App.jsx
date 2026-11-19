@@ -151,7 +151,7 @@ export default function App() {
               <Logo />
               {expanded && (
                 <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-                  <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em' }}>TruthLens</span>
+                  <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.018em' }}>TruthLens</span>
                   <span style={{ fontSize: 11, color: c.ink2, fontWeight: 600 }}>Forensic workstation</span>
                 </div>
               )}
@@ -203,7 +203,7 @@ export default function App() {
                 <Icon name="add" size={19} />New case
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 6 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: c.hero, color: YELLOW, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 }}>{initials || '·'}</div>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: c.hero, color: YELLOW, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700 }}>{initials || '·'}</div>
                 {wideBar && (
                   <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
                     <span style={{ fontSize: 11, color: c.ink2, fontWeight: 600 }}>Investigator</span>
