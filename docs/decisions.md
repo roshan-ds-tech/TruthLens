@@ -147,3 +147,13 @@ runs only when speech is confirmed (≥ 2 s, ≥ 25 % active signal, ≥ 3 disti
 token over half the transcript); otherwise it abstains without a percentage. Stored v3 audio percentages are withdrawn
 for display (re-run needed); archived reports are not rewritten. The pasted-region miss remains a documented
 detection miss: no generalizable fix was validated in the time available.
+
+### D-24 · Experimental video percentage when frames agree; fixed overlays are not edits (ai-only-v5)
+A Gemini-generated video scored 1.00 on all 12 sampled frames (and 0.92–1.00 on 8 face crops), but showed "not
+measurable" because every video percentage had been withheld. It now gets an **experimental** estimate when at least
+6 sampled frames are available and at least 80 % of them agree. The estimate uses the still-image calibration with a
+range widened by ±0.15, is labelled as not validated on labelled videos, and is withheld (with the frame count) when
+frames disagree. The same video was marked "Edited" because frame forensics flagged one 64×64 lower-right region in
+every inspected frame: a fixed overlay (the generator's watermark), not a pasted edit. Regions flagged at the same
+place in 3 or more frames spanning at least half the clip are now weakened (score × 0.5) with that alternative named;
+single-frame regions are unchanged.

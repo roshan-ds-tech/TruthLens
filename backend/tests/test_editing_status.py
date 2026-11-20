@@ -98,3 +98,28 @@ def test_stale_pre_gate_audio_result_is_withdrawn_for_display():
     shown = adapters.with_editing(old, editing.item_status([], True), "audio")
     assert shown["p"] is None and shown["requires_rerun"] and shown["label"] == "Synthetic-speech check inconclusive"
     assert old["p"] == 0.97   # stored result untouched
+
+
+def test_video_estimate_only_when_frames_agree(monkeypatch):
+    monkeypatch.setattr(df, "_table", lambda: {})
+    agree = df.assess_item({"kind": "video", "raw": 0.97, "frames": [{"p": 0.97}] * 12}, None, "video")
+    assert agree["p"] is not None and agree["ai"]["experimental"] and agree["ai"]["frames_ai"] == 12
+    split = df.assess_item({"kind": "video", "raw": 0.2, "frames": [{"p": 0.9}] * 4 + [{"p": 0.05}] * 8}, None, "video")
+    assert split["p"] is None and "disagree" in split["why"]
+    few = df.assess_item({"kind": "video", "raw": 0.9, "frames": [{"p": 0.9}] * 3}, None, "video")
+    assert few["p"] is None
+
+
+def test_fixed_overlay_across_the_clip_is_weakened_not_called_an_edit():
+    from app.analyzers.base import RawFinding
+    from app.analyzers.video import _mark_persistent_overlays
+
+    def f(t, frame, x=1200):
+        return RawFinding(indicator="frame_noise", family="frame_forensics", name="n", raw_score=0.9,
+                          location={"type": "frame_range", "start": t, "end": t, "x": x, "y": 650, "w": 64, "h": 64},
+                          loc_label="lower right", method="m", explanation="e", extra={"frame": frame})
+    overlay = [f(0.5, 12), f(5.0, 120), f(9.5, 228)]
+    single = [f(4.0, 96, x=300)]
+    _mark_persistent_overlays(overlay + single, 10.0)
+    assert all(g.extra.get("persistent_overlay") and g.raw_score < 0.9 for g in overlay)
+    assert not single[0].extra.get("persistent_overlay") and single[0].raw_score == 0.9

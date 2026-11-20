@@ -43,7 +43,7 @@ def deepfake(v: Optional[dict]) -> Optional[dict]:
     if d.get("version") == "ai-only-v2" and (d.get("ai") or {}).get("short_text"):
         return {"key": "uncertain", "label": "Uncertain", "p": None, "lo": None, "hi": None,
                 "why": "The text is too short for a reliable AI-writing probability.", "calibrated": False}
-    if d.get("version") not in {ASSESSMENT_VERSION, "ai-only-v3", "ai-only-v2"}:
+    if d.get("version") not in {ASSESSMENT_VERSION, "ai-only-v4", "ai-only-v3", "ai-only-v2"}:
         return {"key": "uncertain", "label": "Uncertain", "p": None, "lo": None, "hi": None,
                 "why": "This analysis uses an older scoring method. Re-run analysis for a separate AI-generation assessment.",
                 "calibrated": False, "requires_rerun": True}

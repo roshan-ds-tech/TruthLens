@@ -12,11 +12,12 @@ from typing import Optional
 
 from .. import config
 
-ASSESSMENT_VERSION = "ai-only-v4"
+ASSESSMENT_VERSION = "ai-only-v5"
 DEEPFAKE_MIN, DEEPFAKE_MIN_LO = 0.65, 0.50
 AUTHENTIC_MAX, AUTHENTIC_MAX_HI = 0.35, 0.50
 UNCALIBRATED_HALF = 0.20
 P_MIN, P_MAX = 0.01, 0.99
+VIDEO_EXTRA = 0.15
 LABELS = {"deepfake": "Strong AI-generation signal", "authentic": "Low AI-generation signal", "uncertain": "AI-generation check inconclusive"}
 
 
@@ -61,6 +62,30 @@ def calibrate(detector: str, raw: float) -> dict:
 
 
 
+VIDEO_MIN_FRAMES, VIDEO_MIN_AGREEMENT = 6, 0.8
+
+
+def video_estimate(detector: dict) -> dict:
+    """Experimental video estimate from sampled frames.
+
+    Given only when the frames clearly agree (at least 80 % of at least 6 frames on the same side of 0.5): one odd
+    frame from compression or a scene change cannot decide the clip. Uses the still-image calibration with a range
+    widened by 0.15 because the detector has not been validated on labelled videos. Otherwise: no percentage."""
+    frames = [float(f["p"]) for f in detector.get("frames") or []]
+    n, high = len(frames), sum(p >= 0.5 for p in frames)
+    agree = max(high, n - high) / n if n else 0.0
+    if n < VIDEO_MIN_FRAMES or agree < VIDEO_MIN_AGREEMENT:
+        return {"p": float(detector["raw"]), "lo": 0.0, "hi": 1.0, "calibrated": False, "diagnostic_only": True,
+                "calibration_scope": "unvalidated-video", "frames_ai": high, "frames_n": n,
+                "calibration_note": f"The sampled frames disagree ({high} of {n} look AI-generated), so no reliable "
+                                    "video percentage can be given. Compression and scene changes can affect single frames."}
+    base = calibrate("ai_image", float(detector["raw"]))
+    return {**base, "lo": max(P_MIN, base["lo"] - VIDEO_EXTRA), "hi": min(P_MAX, base["hi"] + VIDEO_EXTRA),
+            "experimental": True, "calibration_scope": "video-frames-experimental", "frames_ai": high, "frames_n": n,
+            "calibration_note": f"Experimental video estimate: {high} of {n} sampled frames look AI-generated. Based on "
+                                "the still-image detector's calibration with a wider range; not yet validated on labelled videos."}
+
+
 def label(p: float, lo: float, hi: float) -> str:
     if p >= DEEPFAKE_MIN and lo >= DEEPFAKE_MIN_LO:
         return "deepfake"
@@ -77,7 +102,9 @@ def assess_item(detector: Optional[dict], manip: Optional[dict], kind: str, text
                 "label": "uncertain", "text": LABELS["uncertain"], "ai": None, "manipulation": None,
                 "calibrated": False, "not_applicable": True, "gate": detector.get("gate"),
                 "why": f"Synthetic-speech check not applied: {detector.get('reason')}."}
-    if detector and detector.get("raw") is not None:
+    if detector and detector.get("raw") is not None and kind == "video":
+        ai = video_estimate(detector)
+    elif detector and detector.get("raw") is not None:
         name = {"image": "ai_image", "video": "ai_video", "audio": "ai_voice", "text": "ai_text"}[kind]
         ai = calibrate(name, detector["raw"])
         if kind == "text" and text_words is not None and text_words < 40:
@@ -92,11 +119,11 @@ def assess_item(detector: Optional[dict], manip: Optional[dict], kind: str, text
                 "label": "uncertain", "text": LABELS["uncertain"],
                 "why": "no AI-generation detector ran; editing indicators cannot establish AI generation",
                 "ai": None, "manipulation": m, "calibrated": False}
-    if kind == "video" or ai.get("short_text"):
+    if (kind == "video" and ai.get("diagnostic_only")) or ai.get("short_text"):
         return {"version": ASSESSMENT_VERSION, "p": None, "lo": None, "hi": None,
                 "label": "uncertain", "text": LABELS["uncertain"], "ai": ai,
                 "manipulation": m, "calibrated": False, "diagnostic_only": True,
-                "why": ("No validated video probability is available. Sampled-frame scores can be affected by compression and scene content."
+                "why": (ai.get("calibration_note") or "No reliable video estimate is available."
                         if kind == "video" else "Too little text for a reliable AI-writing assessment; at least 40 words are needed.")}
     clip = lambda x: min(max(x, P_MIN), P_MAX)
     p, lo, hi = (clip(ai[k]) for k in ("p", "lo", "hi"))

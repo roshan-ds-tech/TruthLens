@@ -67,9 +67,43 @@ def frame_forensics(ctx: AnalysisContext) -> list[RawFinding]:
             f.raw_score *= 0.8   # video frames are re-encoded H.264, which weakens still-image signals
             f.extra["frame"] = i
             findings.append(f)
+    _mark_persistent_overlays(findings, float(t[-1] - t[0]) if len(t) > 1 else 0.0)
     ctx.extra["inspected_frames"] = [{"frame": i, "t": float(t[i])} for i in sorted(picks)]
     ctx.log("video", f"image pipeline on frames {', '.join(str(i) for i in sorted(picks))}: {len(findings)} finding(s)")
     return findings
+
+
+def _box(f: RawFinding):
+    L = f.location
+    if all(k in L for k in ("x", "y", "w", "h")):
+        return float(L["x"]), float(L["y"]), float(L["w"]), float(L["h"])
+    return None
+
+
+def _iou(a, b) -> float:
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+    ix = max(0.0, min(ax + aw, bx + bw) - max(ax, bx))
+    iy = max(0.0, min(ay + ah, by + bh) - max(ay, by))
+    inter = ix * iy
+    return inter / (aw * ah + bw * bh - inter) if inter else 0.0
+
+
+def _mark_persistent_overlays(findings: list[RawFinding], duration: float) -> None:
+    """A region flagged at the same place in 3+ inspected frames spread over at least half the clip is a fixed overlay
+    (logo, watermark, subtitle bar, on-screen graphic), not a splice: a pasted edit does not sit still for the whole
+    clip. Such findings are weakened, never removed, and say why."""
+    for f in findings:
+        box = _box(f)
+        if box is None:
+            continue
+        same = [g for g in findings if (gb := _box(g)) is not None and _iou(box, gb) >= 0.5]
+        frames_hit = sorted({g.extra.get("frame") for g in same})
+        times = [g.location.get("start", 0.0) for g in same]
+        if len(frames_hit) >= 3 and duration > 0 and (max(times) - min(times)) >= 0.5 * duration:
+            f.raw_score *= 0.5
+            f.extra["persistent_overlay"] = True
+            f.alternatives = ["A fixed overlay present through the clip (logo, watermark, subtitle or on-screen graphic)"] + list(f.alternatives)
 
 
 def suspicion_curve(ctx: AnalysisContext, findings: list[RawFinding]) -> list[float]:
