@@ -5,8 +5,10 @@ export const DF_COLORS = { deepfake: '#D64545', authentic: '#4A7FB0', uncertain:
 export const ED_COLORS = { edited: '#D64545', possible: '#E8A33D', metadata: '#B58A2E', none: '#3E9B5F', unavailable: MUTED };
 const pct = (x) => `${Math.round(x * 100)}%`;
 const hasEstimate = (d) => d?.p != null && d.calibrated !== false && d.key !== 'uncertain';
-const short = { edited: 'Edited', possible: 'Possible editing', metadata: 'Metadata changed', none: 'No editing indicators', unavailable: 'Editing unavailable' };
-const aiShort = (d) => (d.key === 'deepfake' ? 'AI signal strong' : d.key === 'authentic' ? 'AI signal low' : 'AI check inconclusive');
+// Plain answers to the two questions people ask: "Is it edited?" and "How likely is it a deepfake?"
+const short = { edited: 'Edited: Yes', possible: 'Edited: Possibly', metadata: 'Edited: Metadata only', none: 'Edited: No indicators', unavailable: 'Edited: Not checked' };
+const editedAnswer = { edited: 'Yes — edited', possible: 'Possibly edited', metadata: 'Metadata only', none: 'No editing found', unavailable: 'Not checked' };
+const aiShort = (d) => (hasEstimate(d) ? 'Deepfake' : 'Deepfake: n/a');
 
 const dot = (color, size = 6) => <span style={{ width: size, height: size, flex: 'none', borderRadius: '50%', background: color }} />;
 
@@ -43,10 +45,11 @@ export function DeepfakeCard({ d, title = 'Assessment', subject, onDriver }) {
         : <span style={{ fontFamily: MONO, fontSize: 11, color: c.ink2 }}>AI signal from {d.driver}</span>)}
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-      {ed && <Row title="Editing assessment" color={ED_COLORS[ed.key]} status={ed.label}
-        detail={(ed.types?.length && ed.key !== 'none' ? `Detected: ${ed.types.join(', ')}. ` : '') + (ed.items?.length ? `${ed.note}` : ed.note)} />}
-      <Row title={aiTitle} color={DF_COLORS[d.key]} status={d.label}
-        detail={estimated ? `Estimate ${pct(d.p)} (range ${pct(d.lo)}–${pct(d.hi)}). ${d.why}` : d.why} />
+      {ed && <Row title="Edited?" color={ED_COLORS[ed.key]} status={editedAnswer[ed.key]}
+        detail={`${ed.label}. ` + (ed.types?.length && ed.key !== 'none' ? `Detected: ${ed.types.join(', ')}. ` : '') + ed.note} />}
+      <Row title={`Deepfake probability · ${aiTitle.replace(' assessment', '').toLowerCase()}`} color={DF_COLORS[d.key]}
+        status={estimated ? <><span style={{ fontFamily: MONO }}>{pct(d.p)}</span><span style={{ fontSize: 13, fontWeight: 500, color: c.ink2 }}>range {pct(d.lo)}–{pct(d.hi)}</span></> : 'Not measurable'}
+        detail={`${d.label}. ${d.why}`} />
     </div>
     <details style={{ borderTop: `1px solid ${c.border}`, paddingTop: 9, fontSize: 12, color: c.ink2, lineHeight: 1.6 }}>
       <summary style={{ cursor: 'pointer', color: c.ink, fontWeight: 600 }}>What these results mean</summary>
