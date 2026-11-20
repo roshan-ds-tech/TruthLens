@@ -14,7 +14,7 @@ const TESTS = {
 
 const FILTERS = [['all', 'All'], ['review', 'Needs review', c.ink], ['strong', 'Strong indicators', '#D64545'], ['inc', 'Inconclusive', '#8A8A85'], ['closed', 'Closed']];
 
-const COLS = '80px minmax(240px,1fr) 110px 170px 80px 130px 100px 24px';
+const COLS = '80px minmax(220px,1fr) 110px minmax(210px,250px) 80px 130px 100px 24px';
 
 export default function Cases({ go, active, query = '', onClearQuery }) {
   const [f, setF] = useState('all');
@@ -49,7 +49,7 @@ export default function Cases({ go, active, query = '', onClearQuery }) {
         ))}
       </div>
       <div style={{ border: `1px solid ${c.border}`, borderRadius: 16, overflow: 'auto', boxShadow: '0 1px 2px rgba(17,17,17,.04)' }}>
-        <div style={{ minWidth: 980 }}>
+        <div style={{ minWidth: 1120 }}>
           <div style={{ display: 'grid', gridTemplateColumns: COLS, gap: 16, padding: '12px 20px', background: c.surface, borderBottom: `1px solid ${c.border}`, fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: c.ink2 }}>
             <span>ID</span><span>Title</span><span>Evidence</span><span>Verdict</span><span>Findings</span><span>Investigator</span><span>Updated</span><span />
           </div>
@@ -63,9 +63,9 @@ export default function Cases({ go, active, query = '', onClearQuery }) {
                 <span style={{ fontSize: 12.5, color: c.ink2 }}>{matchWhy[r.id] ? `Matched ${matchWhy[r.id]} · ` : ''}Why: {r.why}</span>
               </div>
               <TypeIcons types={r.types} />
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, justifySelf: 'start' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
                 <VerdictPill dot={VERDICTS[r.verdict.key][1]} label={r.verdict.label} />
-                <DeepfakePill d={r.deepfake} h={24} fs={12} style={{ padding: '0 10px' }} />
+                <DeepfakePill d={r.deepfake} h={24} fs={12} style={{ padding: '3px 10px', height: 'auto', minHeight: 24, whiteSpace: 'normal', flexWrap: 'wrap', rowGap: 2, maxWidth: '100%', boxSizing: 'border-box' }} />
               </div>
               <span style={{ fontFamily: MONO, fontSize: 13 }}>{r.status === 'analyzed' ? r.findings_count : '—'}</span>
               <span style={{ fontSize: 13 }}>{r.investigator}</span>

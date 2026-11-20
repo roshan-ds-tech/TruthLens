@@ -114,9 +114,9 @@ export default function Dashboard({ go, active, investigator }) {
                 <span style={{ fontSize: 12.5, color: c.ink2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Why: {cs.why}</span>
               </div>
               <TypeIcons types={cs.types} />
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
                 <VerdictPill dot={VERDICTS[cs.verdict.key][1]} label={cs.verdict.label} />
-                <DeepfakePill d={cs.deepfake} h={24} fs={12} style={{ padding: '0 10px' }} />
+                <DeepfakePill d={cs.deepfake} h={24} fs={12} style={{ padding: '3px 10px', height: 'auto', minHeight: 24, whiteSpace: 'normal', flexWrap: 'wrap', rowGap: 2, maxWidth: '100%', boxSizing: 'border-box' }} />
               </div>
               <span style={{ fontSize: 12, color: c.ink2, textAlign: 'right', whiteSpace: 'nowrap' }}>{relTime(cs.updated_at)}</span>
             </button>
