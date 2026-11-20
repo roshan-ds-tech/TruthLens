@@ -361,9 +361,9 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '6px 8px', width: '100%', minWidth: 0 }}>
-                    <VerdictPill dot={VERDICTS[ev.key][1]} label={ev.label} h={22} fs={11.5} pad={9} dotSize={6} style={{ background: c.bg }} />
-                    <span style={{ fontFamily: MONO, fontSize: 10.5, color: c.ink2 }}>{e.sha_short}</span>
-                    {e.deepfake && <DeepfakePill d={e.deepfake} h={22} fs={11.5} style={{ padding: '0 9px', background: c.bg }} />}
+                    <VerdictPill dot={VERDICTS[ev.key][1]} label={ev.label} h={22} fs={11.5} pad={9} dotSize={6} style={{ background: c.bg, maxWidth: '100%', height: 'auto', minHeight: 22, whiteSpace: 'normal', paddingTop: 3, paddingBottom: 3, boxSizing: 'border-box' }} />
+                    <span style={{ fontFamily: MONO, fontSize: 10.5, color: c.ink2, overflowWrap: 'anywhere' }}>{e.sha_short}</span>
+                    {e.deepfake && <DeepfakePill d={e.deepfake} wrap h={22} fs={11.5} style={{ padding: '0 9px', background: c.bg }} />}
                   </div>
                 </button>
               );

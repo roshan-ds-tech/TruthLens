@@ -13,12 +13,13 @@ const aiShort = (d) => (hasEstimate(d) ? (d.key === 'uncertain' ? 'Deepfake (inc
 const dot = (color, size = 6) => <span style={{ width: size, height: size, flex: 'none', borderRadius: '50%', background: color }} />;
 
 /** Compact pill: editing status first, AI-generation signal second. */
-export function DeepfakePill({ d, h = 30, fs = 13, dark = false, style }) {
+export function DeepfakePill({ d, h = 30, fs = 13, dark = false, wrap = false, style }) {
   if (!d) return null;
   const ed = d.editing;
-  return <span title={[ed?.label, d.label, d.why].filter(Boolean).join(' · ')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: h, padding: '0 11px', borderRadius: 6, background: dark ? c.hero : c.surface, color: dark ? '#fff' : c.ink, border: `1px solid ${c.border}`, fontSize: fs, fontWeight: 600, whiteSpace: 'nowrap', ...style }}>
-    {ed && <>{dot(ED_COLORS[ed.key])}{short[ed.key]}<span style={{ opacity: 0.4 }}>·</span></>}
-    {dot(DF_COLORS[d.key])}{aiShort(d)}{hasEstimate(d) && <span style={{ fontFamily: MONO, fontSize: fs - 1 }}>{pct(d.p)}</span>}
+  const group = { display: 'inline-flex', alignItems: 'center', gap: 7, minWidth: 0, ...(wrap ? { maxWidth: '100%', overflowWrap: 'anywhere' } : {}) };
+  return <span title={[ed?.label, d.label, d.why].filter(Boolean).join(' · ')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: h, padding: '0 11px', borderRadius: 6, background: dark ? c.hero : c.surface, color: dark ? '#fff' : c.ink, border: `1px solid ${c.border}`, fontSize: fs, fontWeight: 600, whiteSpace: 'nowrap', ...style, ...(wrap ? { flexWrap: 'wrap', height: 'auto', minHeight: h, maxWidth: '100%', boxSizing: 'border-box', whiteSpace: 'normal', paddingTop: 4, paddingBottom: 4, rowGap: 5 } : {}) }}>
+    {ed && <><span style={group}>{dot(ED_COLORS[ed.key])}<span style={{ minWidth: 0 }}>{short[ed.key]}</span></span>{!wrap && <span style={{ opacity: 0.4 }}>·</span>}</>}
+    <span style={group}>{dot(DF_COLORS[d.key])}<span style={{ minWidth: 0 }}>{aiShort(d)}{hasEstimate(d) && <> <span style={{ fontFamily: MONO, fontSize: fs - 1 }}>{pct(d.p)}</span></>}</span></span>
   </span>;
 }
 
