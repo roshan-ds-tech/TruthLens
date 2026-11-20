@@ -75,8 +75,11 @@ def run(ctx: AnalysisContext) -> list[RawFinding]:
     order = np.argsort(-fr["flow_z"], kind="stable")
     picked: list[int] = []
     for i in order:
-        if fr["flow_z"][i] < config.FLOW_Z or i < 1:
+        if fr["flow_z"][i] < config.FLOW_Z:
             break
+        # A boundary has no baseline on both sides. Decoder startup motion is not a splice.
+        if i < 4 or i >= len(gray) - 3:
+            continue
         if any(abs(t[i] - t[j]) < 1.0 for j in picked):
             continue
         picked.append(int(i))

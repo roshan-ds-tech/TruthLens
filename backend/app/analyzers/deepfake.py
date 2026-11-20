@@ -262,11 +262,11 @@ def run_video(ctx: AnalysisContext) -> list[RawFinding]:
                                 "frames": [{"t": t, "p": _r2(p)} for t, p in zip(times, frame_scores)],
                                 "faces": [_r2(p) for p in face_scores]}
     peak = times[int(np.argmax(frame_scores))]
-    return _finding(ctx, "ai_generated_video", "ai_video", "AI-generated frames likelihood", raw,
+    return _finding(ctx, "ai_generated_video", "ai_video", "Frame appearance signal (experimental)", raw,
                     {"type": "frame_range", "start": 0.0, "end": float(times[-1])},
                     f"{len(frames)} frames · most AI-like at {fmt_t(peak)}",
                     f"AI-image detector on {len(frames)} evenly spaced frames; median {raw:.2f}",
-                    "Frames of this video look like the output of an image or video generator.",
+                    "A still-image classifier produced these frame scores. This is an experimental appearance signal, not a validated video deepfake result; compression and scene content can produce false alarms.",
                     ["Animation, CGI or heavy colour grading", "Strong compression or upscaling",
                      "Generators the classifier was not trained on can go either way"])
 

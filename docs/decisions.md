@@ -127,3 +127,10 @@ main process peak 0.94 GB, largest child 2.29 GB while the main process holds ab
 The Problem Statement 04 audit identified that editing evidence could inflate the separate deepfake percentage through a noisy-OR combination, including correlated signals already used in fusion. AI-generation estimates now use the learned detector once; forensic editing indicators remain separate context. Missing AI results have no fabricated percentage, partial coverage cannot produce an authentic case label, video identifies transferred image calibration, and legacy scoring requests reanalysis.
 
 Regression tests confirm the existing media-before-text ordering is upload-order independent. CLI runs now persist coverage and tool provenance as API jobs do. R-09 now requires feature registration of the source image to the flagged video frame; matching normalized screen coordinates are not a correspondence proof. Reports export original text, coverage/model provenance and a verifiable pre-export custody snapshot with complete job logs in JSON. Existing originals and report drafts are preserved.
+
+
+## D-24 Abstain on unvalidated video probabilities
+
+A genuine road clip reproduced unstable still-image detector frame scores. Applying still-image Platt calibration to their median inflated the displayed video percentage. Extra crops did not resolve the error. Video now retains raw frame diagnostics but abstains from an authenticity probability or label; short texts likewise have no misleading percentage. Existing v2 video estimates are withdrawn at the API boundary without requiring the user to rerun first. Image/voice models and their measured calibration remain unchanged; no universal-video accuracy claim is made.
+
+Optical-flow spikes require a two-sided baseline, preventing startup/ending frames from being called isolated splices. A regression test retains detection of an interior jump while excluding the startup spike. The compact assessment panel uses neutral borders, a clear status and expandable evidence/limitations; weak region findings no longer crowd the video preview by default. Originals, saved reports and custody history are preserved.

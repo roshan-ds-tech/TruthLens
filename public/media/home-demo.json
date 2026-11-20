@@ -14,7 +14,7 @@
   "why": "an audio splice at 00:08.2 lines up with a motion break at 00:08.0"
  },
  "deepfake": {
-  "version": "ai-only-v2",
+  "version": "ai-only-v3",
   "key": "deepfake",
   "label": "Likely deepfake",
   "p": 0.9622,

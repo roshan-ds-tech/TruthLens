@@ -257,7 +257,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
   const timed = F.filter((f) => onClock(f) && f.v !== 'none' && f.location.end - f.location.start < duration * 0.8);
   const focus = (sel && byId[sel] && onClock(byId[sel]) ? byId[sel] : null) || [...timed].sort((a, b) => b.hi - a.hi)[0];
   const band = focus ? { a: focus.location.start, b: Math.max(focus.location.end, focus.location.start + duration * 0.02) } : null;
-  const boxes = F.filter((f) => onClock(f) && f.location.w && t >= f.location.start - 0.25 && t <= f.location.end + 0.25);
+  const boxes = F.filter((f) => (f.verdict?.key === 'ind' || f.verdict?.key === 'strong' || f.id === sel) && f.verdict?.key !== 'none' && onClock(f) && f.location.w && t >= f.location.start - 0.25 && t <= f.location.end + 0.25);
   const curve = curvePaths(primaryQ.data?.extra?.suspicion_curve, duration);
   const step = duration > 40 ? 10 : duration > 20 ? 5 : duration > 8 ? 2 : 1;
   const ticks = Array.from({ length: Math.floor(duration / step) + 1 }, (_, i) => i * step);
@@ -331,7 +331,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
 
       {cs.deepfake && (() => {
         const drv = evidence.find((e) => e.label === cs.deepfake.driver);
-        return <DeepfakeCard d={cs.deepfake} title="AI-generation assessment · case" onDriver={drv ? () => go(drv.kind, { caseId, evidenceId: drv.id }) : undefined} />;
+        return <DeepfakeCard d={cs.deepfake} title="Case assessment" onDriver={drv ? () => go(drv.kind, { caseId, evidenceId: drv.id }) : undefined} />;
       })()}
 
       {/* Keep the findings column independent so its height cannot stretch the evidence rows. */}

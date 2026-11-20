@@ -35,13 +35,20 @@ def deepfake(v: Optional[dict]) -> Optional[dict]:
                 "why": "This analysis has no AI-generation assessment. Re-run analysis to assess it.",
                 "calibrated": False, "requires_rerun": True}
     from ..scoring.deepfake import ASSESSMENT_VERSION
-    if d.get("version") != ASSESSMENT_VERSION:
+    if d.get("version") == "ai-only-v2" and (d.get("ai") or {}).get("calibration_scope") == "image-transfer":
+        return {"key": "uncertain", "label": "Uncertain", "p": None, "lo": None, "hi": None,
+                "why": "The previous video percentage used still-image calibration and has been withdrawn. Re-run analysis for current diagnostics.",
+                "calibrated": False, "requires_rerun": True}
+    if d.get("version") == "ai-only-v2" and (d.get("ai") or {}).get("short_text"):
+        return {"key": "uncertain", "label": "Uncertain", "p": None, "lo": None, "hi": None,
+                "why": "The text is too short for a reliable AI-writing probability.", "calibrated": False}
+    if d.get("version") not in {ASSESSMENT_VERSION, "ai-only-v2"}:
         return {"key": "uncertain", "label": "Uncertain", "p": None, "lo": None, "hi": None,
                 "why": "This analysis uses an older scoring method. Re-run analysis for a separate AI-generation assessment.",
                 "calibrated": False, "requires_rerun": True}
     return {"version": d["version"], "key": d["label"], "label": d["text"], "p": d.get("p"), "lo": d.get("lo"), "hi": d.get("hi"),
             "why": d.get("why", ""), "driver": d.get("driver"), "calibrated": d.get("calibrated", False),
-            "ai": d.get("ai"), "manipulation": d.get("manipulation")}
+            "ai": d.get("ai"), "manipulation": d.get("manipulation"), "diagnostic_only": d.get("diagnostic_only", False)}
 
 
 def latest_reviews(s: Session, case_id: str) -> dict[str, Review]:

@@ -186,3 +186,18 @@ def test_shot_change_is_not_a_motion_break(tmp_path):
     flows = [f for f in found if f.indicator == "flow_discontinuity"]
     assert len(flows) == 1 and abs(flows[0].location["start"] - (3.0 + 29 / 25)) < 0.1, [f.loc_label for f in flows]
     assert any(abs(c - 3.0) < 0.1 for c in ctx.extra["cuts"]), "the shot change is recorded as a cut"
+
+
+def test_startup_motion_is_not_a_splice_but_an_interior_jump_is(monkeypatch):
+    from app.analyzers.video import flow_jumps
+    from types import SimpleNamespace
+    rng = np.random.default_rng(7)
+    frame = rng.integers(0, 255, (36, 64), dtype=np.uint8)
+    frames = {"gray": [frame.copy() for _ in range(25)], "t": np.arange(25) / 25,
+              "hist": [np.ones(32, np.float32)] * 25}
+    magnitudes = np.ones(25); magnitudes[0] = 0; magnitudes[1] = 20; magnitudes[12] = 20
+    monkeypatch.setattr(flow_jumps, "decode", lambda ctx: frames)
+    monkeypatch.setattr(flow_jumps, "flow_series", lambda gray: magnitudes)
+    ctx = SimpleNamespace(extra={}, log=lambda *args: None)
+    findings = flow_jumps.run(ctx)
+    assert len(findings) == 1 and findings[0].location["frames"] == [11, 12]

@@ -105,12 +105,12 @@ def test_editing_without_ai_detector_never_proves_deepfake():
     assert out["manipulation"]["p"] == 0.97
 
 
-def test_video_calibration_is_identified_as_transferred(monkeypatch):
+def test_video_does_not_borrow_image_probability_calibration(monkeypatch):
     monkeypatch.setattr(df, "_table", lambda: {"detectors": {"ai_video": {"A": 8, "B": -4, "n": 240, "auc": 0.99}}})
     result = df.calibrate("ai_video", 0.5)
     assert result["calibrated"] is False
-    assert result["calibration_scope"] == "image-transfer"
-    assert result["lo"] <= 0.32 and result["hi"] >= 0.68
+    assert result["calibration_scope"] == "unvalidated-video"
+    assert result["p"] == .5 and result["lo"] == 0 and result["hi"] == 1
 
 
 def test_case_is_not_authentic_when_another_item_is_unassessed(monkeypatch):
@@ -131,3 +131,18 @@ def test_pre_detector_analysis_requests_rerun_without_a_score():
     assert deepfake(None) is None
     old = deepfake({"band": "strong", "p": .97})
     assert old["requires_rerun"] and old["p"] is None and old["key"] == "uncertain"
+
+
+@pytest.mark.parametrize("raw", [0.01, 0.63, 0.99])
+def test_unvalidated_video_cannot_claim_authenticity_or_deepfake_probability(raw):
+    out = df.assess_item({"kind": "video", "raw": raw}, {"p": .99, "lo": .9, "hi": .99, "findings": 3}, "video")
+    assert out["p"] is None and out["label"] == "uncertain" and not out["calibrated"]
+    assert out["ai"]["p"] == raw and out["ai"]["diagnostic_only"]
+
+
+def test_existing_video_probability_is_withdrawn_without_rerun():
+    from app.api.adapters import deepfake
+    old = {"version": "ai-only-v2", "label": "deepfake", "text": "Likely deepfake", "p": .94,
+           "ai": {"calibration_scope": "image-transfer"}}
+    out = deepfake({"deepfake": old})
+    assert out["p"] is None and out["key"] == "uncertain" and out["requires_rerun"]

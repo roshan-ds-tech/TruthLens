@@ -92,7 +92,7 @@ export default function VideoViewer({ go, active, caseId, evidenceId }) {
             {[...(ev.extra?.metadata_notes || []), ...(ev.warnings || []),
               'Re-encoding and platform compression can hide frame-level edits.',
               'A cut on a static shot, or a cut that matches the motion, may leave no optical-flow jump.',
-              'The AI-frames detector scores sampled frames with image classifiers; new video generators can go either way.'].filter(Boolean).map((n) => <Muted key={n}>· {n}</Muted>)}
+              'Experimental frame scores are not video probabilities; compression, scene content and unfamiliar generators can mislead the classifier.'].filter(Boolean).map((n) => <Muted key={n}>· {n}</Muted>)}
           </div>
         )}
       </div>
@@ -153,7 +153,7 @@ export default function VideoViewer({ go, active, caseId, evidenceId }) {
             <div onClick={seek} style={{ position: 'relative', flex: 1, height: 56, borderRadius: 10, background: c.surface, cursor: 'crosshair' }}>
               <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', borderTop: `1px dashed ${c.border}` }} />
               {aiFrames.map((f) => (
-                <span key={f.t} title={`${fmt(f.t)} · AI-likeness ${Math.round(f.p * 100)}%`} style={{ position: 'absolute', left: pct(f.t), bottom: 4, width: 10, marginLeft: -5, height: `${Math.max(f.p, 0.04) * 48}px`, borderRadius: 3, background: f.p >= 0.5 ? '#D64545' : '#3E9B5F', opacity: 0.85 }} />
+                <span key={f.t} title={`${fmt(f.t)} · Experimental frame score ${f.p.toFixed(2)} (not a probability)`} style={{ position: 'absolute', left: pct(f.t), bottom: 4, width: 10, marginLeft: -5, height: `${Math.max(f.p, 0.04) * 48}px`, borderRadius: 3, background: c.ink2, opacity: 0.85 }} />
               ))}
               {!aiFrames.length && <Muted style={{ position: 'absolute', left: 12, top: 18, fontSize: 12 }}>{ev.status === 'analyzed' ? 'The AI-frames detector did not run on this video.' : 'Appears after the analysis has run.'}</Muted>}
               <div style={{ position: 'absolute', top: 0, bottom: 0, left: pct(t), width: 2, marginLeft: -1, background: c.ink, pointerEvents: 'none' }} />

@@ -125,7 +125,7 @@
     "E-01": {
       "kind": "video",
       "band": "indicators",
-      "deepfake": "authentic",
+      "deepfake": "uncertain",
       "sha256": "6e848d48f96ed72389915154b7ead5c2d2fbe7ca2718dd04925a38779003cce5"
     },
     "E-02": {

@@ -92,7 +92,7 @@ The bands above summarize forensic/AI indicators for review. The separate AI-gen
 | Modality | Detector | Input |
 |---|---|---|
 | Image | `abacusai/Smaug-AI-Image-Detector` (Apache 2.0), or the best older candidate if validation prefers it | 3 × 528 px crops, logits averaged |
-| Video | the same image detector | 12 evenly spaced frames (1 centre crop each); median. Range widened by ±0.15 because the calibration comes from still images |
+| Video | the same image detector | 12 evenly spaced frames (1 centre crop each); median diagnostic signal only. No video probability or authenticity label without labelled-video validation |
 | Voice | `Gustking/wav2vec2-large-xlsr-deepfake-audio-classification` (XLS-R, trained on ASVspoof2019, Apache 2.0) | 4 s windows at 16 kHz; median |
 | Text | `rasbt/ai-text-detector-modernbert` (Apache 2.0) | first 512 tokens |
 
@@ -103,7 +103,7 @@ to `metrics.json["deepfake"]`). An uncalibrated detector uses its raw score with
 
 **AI estimate per item:** use the learned detector's calibrated score once. Do not combine it with the forensic fusion score: ordinary editing does not establish AI generation, and learned findings also enter the general fusion, making the old noisy-OR combination correlated and potentially overconfident. Separate editing indicators remain visible for review. A missing AI detector produces Uncertain without a percentage.
 
-The estimate stays within 1–99%. Texts under 40 words get a range spanning 45–55%. Sampled video uses transferred still-image calibration with ±0.15 extra width, is marked as not independently video-calibrated, and is not a validated temporal-video probability.
+Calibrated image, voice and sufficiently long text estimates stay within 1–99%. Texts under 40 words and videos abstain: Uncertain with no probability. Still-image calibration must never turn sampled video-frame scores into a claimed video probability. Motion jumps require at least four preceding and three following samples to avoid decoder/startup boundary alarms.
 
 | Label | Condition |
 |---|---|

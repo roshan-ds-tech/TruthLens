@@ -65,8 +65,7 @@ TruthLens reports **indicators**, never "fake" or "real". These are the limits w
 - **Voice detection** is trained on known TTS and voice-conversion systems; heavy noise suppression and phone audio
   can raise the score on human speech.
 - **Compressed video.** On our own heavily compressed 960×540 demo clip of genuine stock footage, a few single frames
-  scored as AI-generated. Video is therefore scored by the median frame, with a wider range, and the video detector
-  has not been validated on a labelled set of real vs generated videos.
+  scored as AI-generated. Median aggregation and extra crops did not resolve the false alarms on the reported road clip. Video frame scores are therefore experimental diagnostics only: no percentage or authentic/deepfake label is issued without labelled-video validation. Temporal editing findings remain available.
 - **"Likely authentic" is not proof of authenticity.** It means the learned AI estimate falls below the configured threshold with a sufficiently low upper bound; editing is assessed separately and a
   generator the detector does not know can still produce it.
 

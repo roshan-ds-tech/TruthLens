@@ -34,7 +34,7 @@ export default function ReportPreview({ go, active, caseId }) {
     );
   }
 
-  const historicalAssessment = r.deepfake && r.deepfake.version !== 'ai-only-v2';
+  const historicalAssessment = r.deepfake && !['ai-only-v2', 'ai-only-v3'].includes(r.deepfake.version);
   const v = r.verdict;
   const ev = r.evidence;
   const half = Math.ceil(r.findings.length / 2);
