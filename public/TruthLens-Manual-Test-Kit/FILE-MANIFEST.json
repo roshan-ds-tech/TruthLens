@@ -1,0 +1,122 @@
+[
+  {
+    "file": "01-clean/control-image.jpg",
+    "bytes": 44534,
+    "sha256": "bca41e13d0d67911b8a5cbfe06b05c8ea8eff4794f08fec428429c00eb56ef22"
+  },
+  {
+    "file": "01-clean/control-video.mp4",
+    "bytes": 100395,
+    "sha256": "36c06037905dd0e6a7be87b5d28a57083c5557c82f29fd4da4d2a36ba2c5d630"
+  },
+  {
+    "file": "01-clean/control-audio.wav",
+    "bytes": 256044,
+    "sha256": "2ce3bf05d182833823a3bf910811de55d42f4852eeb2000251346a9031aa6fb0"
+  },
+  {
+    "file": "02-edited/image-pasted.jpg",
+    "bytes": 44746,
+    "sha256": "39e48fdb9b3a187de03280558c8ceecdbffe4208cf1a1ecf40df2a1358048da3"
+  },
+  {
+    "file": "02-edited/image-copy-move.jpg",
+    "bytes": 21242,
+    "sha256": "9eba07ff9c10f338a117a60b4806dd3fa9c54ad641d204fff0e6c3e9031c7c0d"
+  },
+  {
+    "file": "02-edited/image-metadata-edited.jpg",
+    "bytes": 48351,
+    "sha256": "b601ad8bf36e00275e614c2b3430fbee4295d585235de60bd40a014e9d4487a0"
+  },
+  {
+    "file": "02-edited/video-jump-and-duplicate.mp4",
+    "bytes": 94208,
+    "sha256": "c2049af7e71b7be169bed9e71c0177b2bddbf659897efe7dd0ce7fad298e2625"
+  },
+  {
+    "file": "02-edited/audio-spliced.wav",
+    "bytes": 256044,
+    "sha256": "84e04b3f7dc5a107d81ce4e93e12bf0372d0598e5ead9bf1737cacdc5df9a245"
+  },
+  {
+    "file": "02-edited/audio-bandlimited.wav",
+    "bytes": 529244,
+    "sha256": "8a20e18cdadcbe1bfd65458155b97bc4d081f9464aef18a937b8cd17ac543586"
+  },
+  {
+    "file": "03-real-media/photo-clouds.jpg",
+    "bytes": 63190,
+    "sha256": "db7d0d366994eb8968bb4762e40527f39aa3f3910b7f1554997b2f374a5dba09"
+  },
+  {
+    "file": "03-real-media/photo-park.jpg",
+    "bytes": 95896,
+    "sha256": "ff02a46c972491d2c419b62178a0fdffbeb8b7df153d7c6e6646a41bb8c553bc"
+  },
+  {
+    "file": "03-real-media/road-video.mp4",
+    "bytes": 2572910,
+    "sha256": "0da0cfa7ce3112631593fd38fdc6fff5ac1b27f89604370181c027ee1bf809ae"
+  },
+  {
+    "file": "03-real-media/human-speech-original.wav",
+    "bytes": 538014,
+    "sha256": "a4bf9becd046d7aedb6d05b6e12347a6294a44f74d263089c636fb0a2b1e6561"
+  },
+  {
+    "file": "03-real-media/human-speech-edited.wav",
+    "bytes": 522014,
+    "sha256": "aab95b15156be691555970af48b541f018e279e5c80b1a6f93dbeab495088c32"
+  },
+  {
+    "file": "04-cross-media/clip.mp4",
+    "bytes": 1294532,
+    "sha256": "6e848d48f96ed72389915154b7ead5c2d2fbe7ca2718dd04925a38779003cce5"
+  },
+  {
+    "file": "04-cross-media/photo.jpg",
+    "bytes": 46139,
+    "sha256": "14c611cfe51f1efa2aeae200623ab07a9be15c073e0d07bb47b9da9c9fc38fd0"
+  },
+  {
+    "file": "04-cross-media/caption.txt",
+    "bytes": 224,
+    "sha256": "dd480fd33b4746e96c171c1042d5b6b265582881148208243aa36c7d12cab7e8"
+  },
+  {
+    "file": "05-limits-and-errors/corrupt-image.jpg",
+    "bytes": 1028,
+    "sha256": "2b5793f21e8da2c135c7ecd2d93889df15290fff8f09db536529a19d5b54d615"
+  },
+  {
+    "file": "05-limits-and-errors/unsupported.bin",
+    "bytes": 204,
+    "sha256": "b17d972588cad9aeaa7e3ff710ec8007f8b42f128519dfe102223b890e3c4798"
+  },
+  {
+    "file": "05-limits-and-errors/image-over-20mb.jpg",
+    "bytes": 22020096,
+    "sha256": "378c9d575ea338af2a1777c1face47697045cb3b6eec241a0d8577ac2baef4eb"
+  },
+  {
+    "file": "05-limits-and-errors/audio-121-seconds.wav",
+    "bytes": 3872044,
+    "sha256": "5424f1c2f6ae5da26e9d295173ab8a49fbabb66585a3ec7940cb37959729f059"
+  },
+  {
+    "file": "05-limits-and-errors/video-61-seconds.mp4",
+    "bytes": 1018633,
+    "sha256": "d28cdfec6ddf17f00e49e81c0726be0b662b96ade31c5e7a90c5bc1bee1cfd27"
+  },
+  {
+    "file": "05-limits-and-errors/video-1080p.mp4",
+    "bytes": 395142,
+    "sha256": "a62ed59f0c507fb7c0ca2b1baf6f7671ca9b2c1ca935ad55f0c3c0d513b838c9"
+  },
+  {
+    "file": "05-limits-and-errors/text-upload.txt",
+    "bytes": 65,
+    "sha256": "caeedaede65f585a48985a12a6a49bc29f3762a98c9960dce91b8c28ee5ba11f"
+  }
+]

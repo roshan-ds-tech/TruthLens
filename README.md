@@ -33,6 +33,25 @@ Setup and hosted-mode behaviour: [`docs/deployment.md`](docs/deployment.md).
 CLI: `./truthlens analyze clip.mp4 photo.jpg --caption caption.txt --report`, `./truthlens rerun --case C-0001`,
 `./truthlens validate`.
 
+## Test files (start here)
+
+Ready-made test media lives in **`public/TruthLens-Manual-Test-Kit/`** (also as
+[`TruthLens-Manual-Test-Kit.zip`](public/TruthLens-Manual-Test-Kit.zip), and downloadable from the live site at
+`https://truthlens-six-mu.vercel.app/TruthLens-Manual-Test-Kit.zip`). People and AI agents testing the project
+should use these files instead of hunting for their own. Open `START-HERE.md` in the kit first;
+`docs/manual-walkthrough.md` gives the click-by-click steps.
+
+| Folder | What it contains | What to expect |
+|---|---|---|
+| `01-clean` | Unmodified forensic controls (procedural audio, test image, test video) | No editing indicators. The audio is synthesized, unintelligible speech-like sound, not human speech, so the synthetic-speech check is inconclusive |
+| `02-edited` | Known edits: copy-move, pasted region, metadata rewrite, audio splice, band-limited audio, jump cut + duplicated frames | Editing detected for most. `image-pasted.jpg` is a known partial miss (only "Possible editing") |
+| `03-real-media` | Sourced photos, road video, recorded human speech and an edited copy of it | Original vs edited human speech is the speech control pair |
+| `04-cross-media` | Clip + photo + caption with conflicting claims | Cross-modal rules (for example a caption date conflicting with the photo) |
+| `05-limits-and-errors` | Too long, too large, corrupt or unsupported files | Clear rejections or limitations, never a confident verdict |
+
+Sources, licences and edit history are in `SOURCES.txt`, and SHA-256 hashes are in `FILE-MANIFEST.json`. Ground truth
+covers only the stated edit: these are test media, not a real-world authenticity benchmark.
+
 ## What the demo shows
 
 `samples/demo_case/` follows the design-doc walkthrough: a 25 s clip with a cut at 14.0 s whose speech was recorded
