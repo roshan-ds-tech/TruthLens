@@ -105,7 +105,8 @@ def test_video_estimate_only_when_frames_agree(monkeypatch):
     agree = df.assess_item({"kind": "video", "raw": 0.97, "frames": [{"p": 0.97}] * 12}, None, "video")
     assert agree["p"] is not None and agree["ai"]["experimental"] and agree["ai"]["frames_ai"] == 12
     split = df.assess_item({"kind": "video", "raw": 0.2, "frames": [{"p": 0.9}] * 4 + [{"p": 0.05}] * 8}, None, "video")
-    assert split["p"] is None and "disagree" in split["why"]
+    assert split["p"] is not None and split["label"] == "uncertain" and "disagree" in split["why"]
+    assert split["lo"] < 0.5 < split["hi"]          # a split clip can never be called strong or low
     few = df.assess_item({"kind": "video", "raw": 0.9, "frames": [{"p": 0.9}] * 3}, None, "video")
     assert few["p"] is None
 

@@ -4,11 +4,11 @@ import { c, MONO, MUTED } from './ui.jsx';
 export const DF_COLORS = { deepfake: '#D64545', authentic: '#4A7FB0', uncertain: MUTED };
 export const ED_COLORS = { edited: '#D64545', possible: '#E8A33D', metadata: '#B58A2E', none: '#3E9B5F', unavailable: MUTED };
 const pct = (x) => `${Math.round(x * 100)}%`;
-const hasEstimate = (d) => d?.p != null && d.calibrated !== false && d.key !== 'uncertain';
+const hasEstimate = (d) => d?.p != null && d.calibrated !== false;
 // Plain answers to the two questions people ask: "Is it edited?" and "How likely is it a deepfake?"
 const short = { edited: 'Edited: Yes', possible: 'Edited: Possibly', metadata: 'Edited: Metadata only', none: 'Edited: No indicators', unavailable: 'Edited: Not checked' };
 const editedAnswer = { edited: 'Yes — edited', possible: 'Possibly edited', metadata: 'Metadata only', none: 'No editing found', unavailable: 'Not checked' };
-const aiShort = (d) => (hasEstimate(d) ? 'Deepfake' : 'Deepfake: n/a');
+const aiShort = (d) => (hasEstimate(d) ? (d.key === 'uncertain' ? 'Deepfake (inconclusive)' : 'Deepfake') : d.not_applicable ? 'Deepfake: no speech' : 'Deepfake: n/a');
 
 const dot = (color, size = 6) => <span style={{ width: size, height: size, flex: 'none', borderRadius: '50%', background: color }} />;
 
@@ -48,7 +48,7 @@ export function DeepfakeCard({ d, title = 'Assessment', subject, onDriver }) {
       {ed && <Row title="Edited?" color={ED_COLORS[ed.key]} status={editedAnswer[ed.key]}
         detail={`${ed.label}. ` + (ed.types?.length && ed.key !== 'none' ? `Detected: ${ed.types.join(', ')}. ` : '') + ed.note} />}
       <Row title={`Deepfake probability · ${aiTitle.replace(' assessment', '').toLowerCase()}`} color={DF_COLORS[d.key]}
-        status={estimated ? <><span style={{ fontFamily: MONO }}>{pct(d.p)}</span><span style={{ fontSize: 13, fontWeight: 500, color: c.ink2 }}>range {pct(d.lo)}–{pct(d.hi)}</span></> : 'Not measurable'}
+        status={estimated ? <><span style={{ fontFamily: MONO }}>{pct(d.p)}</span><span style={{ fontSize: 13, fontWeight: 500, color: c.ink2 }}>range {pct(d.lo)}–{pct(d.hi)}</span></> : d.not_applicable ? 'Not applicable' : 'Not measurable'}
         detail={`${d.label}. ${d.why}`} />
     </div>
     <details style={{ borderTop: `1px solid ${c.border}`, paddingTop: 9, fontSize: 12, color: c.ink2, lineHeight: 1.6 }}>

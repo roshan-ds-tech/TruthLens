@@ -157,3 +157,10 @@ frames disagree. The same video was marked "Edited" because frame forensics flag
 every inspected frame: a fixed overlay (the generator's watermark), not a pasted edit. Regions flagged at the same
 place in 3 or more frames spanning at least half the clip are now weakened (score × 0.5) with that alternative named;
 single-frame regions are unchanged.
+
+### D-25 · Percentages are shown for inconclusive results too
+Genuine road footage got "Deepfake: not measurable" because its frames split 6 of 12. Split videos now report the
+average calibrated frame estimate with the 10th–90th percentile spread as the range (always crossing 50 %, so the label
+stays inconclusive); the median alone would have put that real clip at 92 %. The UI shows a percentage whenever one
+exists, marked "inconclusive" when the range crosses the decision point. Audio without speech says "No speech to
+assess" instead of "not measurable".

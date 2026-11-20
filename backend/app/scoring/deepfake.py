@@ -74,11 +74,23 @@ def video_estimate(detector: dict) -> dict:
     frames = [float(f["p"]) for f in detector.get("frames") or []]
     n, high = len(frames), sum(p >= 0.5 for p in frames)
     agree = max(high, n - high) / n if n else 0.0
-    if n < VIDEO_MIN_FRAMES or agree < VIDEO_MIN_AGREEMENT:
+    if n < VIDEO_MIN_FRAMES:
         return {"p": float(detector["raw"]), "lo": 0.0, "hi": 1.0, "calibrated": False, "diagnostic_only": True,
                 "calibration_scope": "unvalidated-video", "frames_ai": high, "frames_n": n,
-                "calibration_note": f"The sampled frames disagree ({high} of {n} look AI-generated), so no reliable "
-                                    "video percentage can be given. Compression and scene changes can affect single frames."}
+                "calibration_note": f"Only {n} frame{'s' if n != 1 else ''} could be sampled; at least "
+                                    f"{VIDEO_MIN_FRAMES} are needed for a video estimate."}
+    if agree < VIDEO_MIN_AGREEMENT:
+        # Frames disagree: report the average calibrated frame probability with the full spread as its range. The
+        # range always crosses 50 %, so the label stays inconclusive; the median alone would overstate a split clip.
+        cal = sorted(calibrate("ai_image", p)["p"] for p in frames)
+        mean = sum(cal) / n
+        lo, hi = cal[int(0.1 * (n - 1))], cal[int(round(0.9 * (n - 1)))]
+        return {"p": mean, "lo": max(P_MIN, min(lo, 0.45)), "hi": min(P_MAX, max(hi, 0.55)), "calibrated": True,
+                "experimental": True, "split": True, "calibration_scope": "video-frames-experimental",
+                "frames_ai": high, "frames_n": n,
+                "calibration_note": f"Frames disagree: {high} of {n} sampled frames look AI-generated, so the result is "
+                                    "inconclusive. The figure is the average frame estimate; compression, motion blur and "
+                                    "scene content can make genuine frames look AI-generated."}
     base = calibrate("ai_image", float(detector["raw"]))
     return {**base, "lo": max(P_MIN, base["lo"] - VIDEO_EXTRA), "hi": min(P_MAX, base["hi"] + VIDEO_EXTRA),
             "experimental": True, "calibration_scope": "video-frames-experimental", "frames_ai": high, "frames_n": n,
@@ -128,7 +140,7 @@ def assess_item(detector: Optional[dict], manip: Optional[dict], kind: str, text
     clip = lambda x: min(max(x, P_MIN), P_MAX)
     p, lo, hi = (clip(ai[k]) for k in ("p", "lo", "hi"))
     lab = label(p, lo, hi)
-    why = f"AI-generation detector {p:.0%}; editing indicators are assessed separately"
+    why = ai["calibration_note"] if ai.get("split") else f"AI-generation detector {p:.0%}; editing indicators are assessed separately"
     return {"version": ASSESSMENT_VERSION, "p": round(p, 4), "lo": round(min(lo, p), 4),
             "hi": round(max(hi, p), 4), "label": lab, "text": LABELS[lab], "why": why,
             "ai": ai, "manipulation": m, "calibrated": ai.get("calibrated", False)}
@@ -147,6 +159,7 @@ def assess_case(items: dict[str, dict]) -> dict:
     missing = [k for k, v in items.items() if v.get("p") is None]
     uncertain = [k for k, v in items.items() if v.get("label") == "uncertain"]
     if top["label"] == "authentic" and (missing or uncertain):
+        # missing coverage cannot make a case look clean; the percentage is still shown
         result.update(label="uncertain", text=LABELS["uncertain"])
         result["why"] += "; other evidence is unassessed or uncertain: " + ", ".join(sorted(set(missing + uncertain)))
     return result

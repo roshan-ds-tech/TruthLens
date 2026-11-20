@@ -60,7 +60,9 @@ AI_WORDS = {  # wording limited to what the detector measures
 AI_DEFAULT = ("Strong AI-generation signal", "Low AI-generation signal", "AI-generation check inconclusive")
 
 
-def ai_label(key: str, kind: Optional[str]) -> str:
+def ai_label(key: str, kind: Optional[str], not_applicable: bool = False) -> str:
+    if not_applicable and kind == "audio":
+        return "No speech to assess"
     words = AI_WORDS.get(kind or "", AI_DEFAULT)
     return {"deepfake": words[0], "authentic": words[1]}.get(key, words[2])
 
@@ -74,7 +76,8 @@ def with_editing(d: Optional[dict], editing_status: Optional[dict], kind: Option
         d = {**d, "key": "uncertain", "p": None, "lo": None, "hi": None, "calibrated": False, "requires_rerun": True,
              "why": "This synthetic-speech result was produced before the speech-applicability check. "
                     "Re-run analysis for a current result."}
-    return {**d, "label": ai_label(d.get("key", "uncertain"), kind), "kind": kind, "editing": editing_status}
+    return {**d, "label": ai_label(d.get("key", "uncertain"), kind, d.get("not_applicable", False)), "kind": kind,
+            "editing": editing_status}
 
 
 def _driver_kind(evs, v: Optional[dict]) -> Optional[str]:
