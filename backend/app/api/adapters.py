@@ -12,6 +12,7 @@ from sqlmodel import Session, select
 from .. import config, custody
 from ..ingest.service import meta_label
 from ..models import Case, Evidence, FindingRow, JsonMixin, Review
+from ..scoring import editing
 
 UI_KEY = {"none": "none", "inconclusive": "inc", "indicators": "ind", "strong": "strong"}
 ICON = {"video": "movie", "audio": "graphic_eq", "image": "image", "text": "notes", "cross-modal": "join_inner"}
@@ -42,13 +43,50 @@ def deepfake(v: Optional[dict]) -> Optional[dict]:
     if d.get("version") == "ai-only-v2" and (d.get("ai") or {}).get("short_text"):
         return {"key": "uncertain", "label": "Uncertain", "p": None, "lo": None, "hi": None,
                 "why": "The text is too short for a reliable AI-writing probability.", "calibrated": False}
-    if d.get("version") not in {ASSESSMENT_VERSION, "ai-only-v2"}:
+    if d.get("version") not in {ASSESSMENT_VERSION, "ai-only-v3", "ai-only-v2"}:
         return {"key": "uncertain", "label": "Uncertain", "p": None, "lo": None, "hi": None,
                 "why": "This analysis uses an older scoring method. Re-run analysis for a separate AI-generation assessment.",
                 "calibrated": False, "requires_rerun": True}
     return {"version": d["version"], "key": d["label"], "label": d["text"], "p": d.get("p"), "lo": d.get("lo"), "hi": d.get("hi"),
             "why": d.get("why", ""), "driver": d.get("driver"), "calibrated": d.get("calibrated", False),
-            "ai": d.get("ai"), "manipulation": d.get("manipulation"), "diagnostic_only": d.get("diagnostic_only", False)}
+            "ai": d.get("ai"), "manipulation": d.get("manipulation"), "diagnostic_only": d.get("diagnostic_only", False),
+            "not_applicable": d.get("not_applicable", False)}
+
+
+AI_WORDS = {  # wording limited to what the detector measures
+    "audio": ("Strong synthetic-speech signal", "Low synthetic-speech signal", "Synthetic-speech check inconclusive"),
+    "text": ("Strong AI-writing signal", "Low AI-writing signal", "AI-writing check inconclusive"),
+}
+AI_DEFAULT = ("Strong AI-generation signal", "Low AI-generation signal", "AI-generation check inconclusive")
+
+
+def ai_label(key: str, kind: Optional[str]) -> str:
+    words = AI_WORDS.get(kind or "", AI_DEFAULT)
+    return {"deepfake": words[0], "authentic": words[1]}.get(key, words[2])
+
+
+def with_editing(d: Optional[dict], editing_status: Optional[dict], kind: Optional[str]) -> Optional[dict]:
+    """Attach the separate editing status and plain AI wording to an assessment for display."""
+    if d is None:
+        return None
+    if kind == "audio" and d.get("version") in ("ai-only-v3", "ai-only-v2") and d.get("p") is not None:
+        # produced before the speech-applicability check; shown as stale, stored result left unchanged
+        d = {**d, "key": "uncertain", "p": None, "lo": None, "hi": None, "calibrated": False, "requires_rerun": True,
+             "why": "This synthetic-speech result was produced before the speech-applicability check. "
+                    "Re-run analysis for a current result."}
+    return {**d, "label": ai_label(d.get("key", "uncertain"), kind), "kind": kind, "editing": editing_status}
+
+
+def _driver_kind(evs, v: Optional[dict]) -> Optional[str]:
+    drv = ((v or {}).get("deepfake") or {}).get("driver")
+    return next((e.kind for e in evs if e.label == drv), None)
+
+
+def _fam(rows) -> dict[int, list[dict]]:
+    out: dict[int, list[dict]] = {}
+    for f in rows:
+        out.setdefault(f.evidence_id, []).append({"family": f.family, "band": f.band})
+    return out
 
 
 def latest_reviews(s: Session, case_id: str) -> dict[str, Review]:
@@ -64,13 +102,16 @@ def display_name(ev: Evidence) -> str:
     return ev.filename
 
 
-def evidence_summary(ev: Evidence, n_findings: int = 0) -> dict[str, Any]:
+def evidence_summary(ev: Evidence, n_findings: int = 0, fs: Optional[list[dict]] = None) -> dict[str, Any]:
     meta = JsonMixin.loads(ev.metadata_json, {})
+    raw_v = JsonMixin.loads(ev.verdict_json)
+    # fs=None means the caller did not load findings: report "unavailable" rather than a false "no indicators"
+    ed = editing.from_verdict(fs, raw_v, ev.status) if fs is not None else editing.item_status([], analysed=False)
     return {"id": ev.id, "label": ev.label, "case_id": ev.case_id, "kind": ev.kind, "icon": ICON[ev.kind],
             "filename": ev.filename, "display_name": display_name(ev), "meta_label": meta_label(ev.kind, ev.size, meta),
             "sha256": ev.sha256, "sha_short": custody.short(ev.sha256), "size": ev.size, "mime": ev.mime,
             "status": ev.status, "derived_from": meta.get("derived_from"), "verdict": verdict(JsonMixin.loads(ev.verdict_json)),
-            "deepfake": deepfake(JsonMixin.loads(ev.verdict_json)),
+            "deepfake": with_editing(deepfake(raw_v), ed, ev.kind), "editing": ed,
             "warnings": meta.get("warnings", []), "findings_count": n_findings,
             "media_url": f"/api/evidence/{ev.id}/media", "thumb_url": f"/api/evidence/{ev.id}/thumb",
             "duration": meta.get("duration"), "width": meta.get("width"), "height": meta.get("height"),
@@ -115,6 +156,9 @@ def case_summary(s: Session, c: Case) -> dict[str, Any]:
     reviews = latest_reviews(s, c.id)
     pending = sum(1 for fid in finding_ids if fid not in reviews or reviews[fid].decision == "pending")
     v = verdict(JsonMixin.loads(c.overall_verdict_json))
+    fam = _fam(s.exec(select(FindingRow).where(FindingRow.case_id == c.id)))
+    ed_case = editing.case_status({e.label: editing.from_verdict(fam.get(e.id, []), JsonMixin.loads(e.verdict_json), e.status)
+                                   for e in evs}) if c.status == "analyzed" else None
     if v is None or c.status != "analyzed":
         why = {"draft": f"{len(evs)} evidence item{'s' if len(evs) != 1 else ''} added, not analyzed yet",
                "queued": "analysis queued", "running": "analysis running", "failed": "analysis failed, see the run log"}
@@ -127,7 +171,9 @@ def case_summary(s: Session, c: Case) -> dict[str, Any]:
     return {"id": c.id, "title": c.title, "description": c.description, "investigator": c.investigator,
             "created_at": c.created_at.isoformat(), "updated_at": c.updated_at.isoformat(), "status": c.status,
             "closed": c.closed, "types": [ICON[k] for k in kinds], "kinds": kinds, "verdict": v, "why": v["why"],
-            "deepfake": deepfake(JsonMixin.loads(c.overall_verdict_json)) if c.status == "analyzed" else None,
+            "deepfake": with_editing(deepfake(JsonMixin.loads(c.overall_verdict_json)), ed_case,
+                                     _driver_kind(evs, JsonMixin.loads(c.overall_verdict_json))) if c.status == "analyzed" else None,
+            "editing": ed_case,
             "findings_count": len(finding_ids), "pending_review": pending,
             "needs_review": c.status == "analyzed" and pending > 0, "evidence_count": len(evs),
             "analysis_seconds": c.analysis_seconds, "run_count": c.run_count}
@@ -136,10 +182,8 @@ def case_summary(s: Session, c: Case) -> dict[str, Any]:
 def case_detail(s: Session, c: Case) -> dict[str, Any]:
     out = case_summary(s, c)
     evs = list(s.exec(select(Evidence).where(Evidence.case_id == c.id).order_by(Evidence.order_idx)))
-    counts: dict[int, int] = {}
-    for f in s.exec(select(FindingRow).where(FindingRow.case_id == c.id)):
-        counts[f.evidence_id] = counts.get(f.evidence_id, 0) + 1
-    out["evidence"] = [evidence_summary(e, counts.get(e.id, 0)) for e in evs]
+    fam = _fam(s.exec(select(FindingRow).where(FindingRow.case_id == c.id)))
+    out["evidence"] = [evidence_summary(e, len(fam.get(e.id, [])), fam.get(e.id, [])) for e in evs]
     out["limitations"] = JsonMixin.loads(c.limitations_json, config.GENERAL_LIMITATIONS)
     return out
 

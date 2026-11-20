@@ -155,8 +155,8 @@ def library(s: Session = Depends(get_session), u: User = Depends(current_user)) 
     visible = {c.id for c in s.exec(select(Case)).all() if can_see(c, u)}
     evs = [e for e in s.exec(select(Evidence).order_by(Evidence.created_at.desc(), Evidence.id.desc())).all()  # type: ignore[attr-defined]
            if e.case_id in visible]
-    counts = dict(s.exec(select(FindingRow.evidence_id, func.count()).group_by(FindingRow.evidence_id)).all())
-    items = [adapters.evidence_summary(e, counts.get(e.id, 0)) for e in evs]
+    fam = adapters._fam(s.exec(select(FindingRow).where(FindingRow.case_id.in_(visible))))  # type: ignore[attr-defined]
+    items = [adapters.evidence_summary(e, len(fam.get(e.id, [])), fam.get(e.id, [])) for e in evs]
     return {"count": len(items), "total_bytes": sum(e.size for e in evs), "items": items}
 
 
@@ -165,7 +165,7 @@ def evidence_detail(evidence_id: int, s: Session = Depends(get_session), u: User
     ev = _evidence(s, evidence_id, u)
     allf = adapters.case_findings(s, ev.case_id)
     mine = [f for f in allf if f["evidence_db_id"] == ev.id]
-    out = adapters.evidence_summary(ev, len(mine))
+    out = adapters.evidence_summary(ev, len(mine), mine)
     extra = JsonMixin.loads(ev.extra_json, {})
     out["metadata"] = JsonMixin.loads(ev.metadata_json, {})
     out["extra"] = {k: v for k, v in extra.items() if k not in ("transcript", "waveform")}

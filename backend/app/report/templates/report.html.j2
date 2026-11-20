@@ -52,6 +52,9 @@
   <p style="margin:0;color:#333">{{ r.summary }}</p>
 </section>
 
+{% if r.editing %}
+<section><div class="eyebrow">Editing assessment</div><p><b>{{ r.editing.label }}</b>{% if r.editing.types %} — detected: {{ r.editing.types|join(', ') }}{% endif %}. {{ r.editing.note }}</p></section>
+{% endif %}
 {% if r.deepfake and r.deepfake.p is not none %}
 {% set dfc = {'deepfake': '#D64545', 'authentic': '#3E9B5F'}.get(r.deepfake.key, '#8A8A85') %}
 <section style="border:1px solid #DDD;border-left:5px solid {{ dfc }};border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:1fr 1.4fr;gap:16px">
@@ -60,7 +63,7 @@
     <div class="vlabel" style="color:{{ dfc }}">{{ r.deepfake.label }} · <span class="mono">{{ (r.deepfake.p*100)|round|int }}%</span></div>
     <div class="muted mono" style="font-size:8pt">range {{ (r.deepfake.lo*100)|round|int }}–{{ (r.deepfake.hi*100)|round|int }}%{% if r.deepfake.driver %} · highest estimate: {{ r.deepfake.driver }}{% endif %}</div>
   </div>
-  <p style="margin:0;color:#333"><b>Based on:</b> {{ r.deepfake.why }}. This estimate uses the AI-generation detector only. A low AI score does not rule out editing or misleading context. Likely deepfake needs 65% or more with the low end at 50% or more; likely authentic needs 35% or less with the high end at 50% or less; anything else is uncertain. Detectors can misclassify authentic content or miss unfamiliar generators. This is a lead for human review, not proof.</p>
+  <p style="margin:0;color:#333"><b>Based on:</b> {{ r.deepfake.why }}. This estimate uses the AI-generation detector only. A low AI score does not rule out editing or misleading context. A strong signal needs 65% or more with the low end at 50% or more; a low signal needs 35% or less with the high end at 50% or less; anything else is inconclusive. Detectors can misclassify authentic content or miss unfamiliar generators. This is a lead for human review, not proof.</p>
 </section>
 {% endif %}
 
@@ -86,7 +89,7 @@
     {% for e in r.evidence %}
     <tr><td class="mono">{{ e.label }}</td><td><b>{{ e.name }}</b><br><span class="muted">{{ e.meta }}{% if e.derived_from %} · derived from {{ e.derived_from }}{% endif %}</span></td><td>{{ e.type }}</td>
       <td>{% if e.verdict %}<span class="dot" style="background:{{ dots.get(e.verdict.band) }}"></span> {{ e.verdict.label }}{% else %}—{% endif %}</td>
-      <td>{% if e.deepfake and e.deepfake.p is not none %}{{ e.deepfake.label }}<br><span class="mono">AI {{ (e.deepfake.p*100)|round|int }}%</span>{% else %}—{% endif %}</td>
+      <td>{% if e.editing %}<b>{{ e.editing.label }}</b>{% if e.editing.types %}<br><span class="muted">{{ e.editing.types|join(', ') }}</span>{% endif %}<br>{% endif %}{% if e.deepfake %}{{ e.deepfake.label }}{% if e.deepfake.p is not none %} <span class="mono">{{ (e.deepfake.p*100)|round|int }}%</span>{% endif %}{% else %}—{% endif %}</td>
       <td class="mono" style="font-size:7pt;word-break:break-all">{{ e.sha256 }}</td></tr>
     {% endfor %}
   </table>

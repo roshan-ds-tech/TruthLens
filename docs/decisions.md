@@ -134,3 +134,16 @@ Regression tests confirm the existing media-before-text ordering is upload-order
 A genuine road clip reproduced unstable still-image detector frame scores. Applying still-image Platt calibration to their median inflated the displayed video percentage. Extra crops did not resolve the error. Video now retains raw frame diagnostics but abstains from an authenticity probability or label; short texts likewise have no misleading percentage. Existing v2 video estimates are withdrawn at the API boundary without requiring the user to rerun first. Image/voice models and their measured calibration remain unchanged; no universal-video accuracy claim is made.
 
 Optical-flow spikes require a two-sided baseline, preventing startup/ending frames from being called isolated splices. A regression test retains detection of an interior jump while excluding the startup spike. The compact assessment panel uses neutral borders, a clear status and expandable evidence/limitations; weak region findings no longer crowd the video preview by default. Originals, saved reports and custody history are preserved.
+
+### D-23 · Editing status shown separately; neutral AI wording; speech-applicability gate (ai-only-v4)
+Reports from a manual test: a procedural control sound got "Likely deepfake AI 97%", and edited photos showed "Likely
+authentic". Causes: (1) the voice anti-spoofing model was applied to non-speech it was never trained on, and Whisper
+hallucinated "B-B-B…" at 0.94 confidence, so a word count alone could not reject it; (2) "Likely authentic" described
+only a low AI-generation score, which says nothing about editing. Changes: every item and case now shows an **editing
+status** derived at read time from stored findings (`scoring/editing.py`: edited / possible / metadata-only / none /
+unavailable; metadata-only never counts as a pixel edit; missing checks never yield "none") next to an AI result
+worded as "Strong / Low AI-generation signal" ("synthetic-speech" for audio, "AI-writing" for text). The voice model
+runs only when speech is confirmed (≥ 2 s, ≥ 25 % active signal, ≥ 3 distinct real words at mean confidence ≥ 0.5, no
+token over half the transcript); otherwise it abstains without a percentage. Stored v3 audio percentages are withdrawn
+for display (re-run needed); archived reports are not rewritten. The pasted-region miss remains a documented
+detection miss: no generalizable fix was validated in the time available.

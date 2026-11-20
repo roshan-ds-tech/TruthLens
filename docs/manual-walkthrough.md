@@ -54,6 +54,21 @@ A **finding** is something one of the checks wants you to examine.
 
 ## 2. Start with the clean control files
 
+> **What "clean" means here.** The `01-clean` files are *unmodified forensic controls*: nothing was cut, pasted or
+> spliced after they were made. They are **not** natural human or camera recordings. `control-audio.wav` is
+> byte-identical to `backend/tests/fixtures/audio_clean.wav` (SHA-256 `2ce3bf05…a6fb0`), produced by
+> `validation.synth.recording()` → `speech_like()`: procedurally synthesized, unintelligible speech-like sound with
+> room noise. It is a negative control for *splice detection* only. It is out of scope for the synthetic-speech
+> model, which now reports **Synthetic-speech check inconclusive** (speech could not be confirmed) instead of a
+> percentage. Recorded human speech and text-to-speech must be tested as separate, sourced controls.
+>
+> Each item shows two separate results: an **editing assessment** ("Edited — indicators detected", "Possible
+> editing — inconclusive", "Metadata changes detected", "No editing indicators detected" or "Editing assessment
+> unavailable") and an **AI-generation / synthetic-speech assessment** ("Strong … signal", "Low … signal" or
+> "… check inconclusive"). A low AI signal never means the file is unedited. "No editing indicators detected" does not
+> prove the file is untouched. Known miss: `image-pasted.jpg` has a pasted region that the current analyzers do not
+> detect; it is a documented detection miss, not an authentic file.
+
 Click **New case**. Use the title **Practice 1 — Clean controls** and any short description.
 Click **browse files**, open `01-clean`, and select all three files. On a Mac, hold Command while clicking
 several files, or use Command+A inside that folder. Click Open.

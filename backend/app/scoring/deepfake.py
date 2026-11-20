@@ -12,12 +12,12 @@ from typing import Optional
 
 from .. import config
 
-ASSESSMENT_VERSION = "ai-only-v3"
+ASSESSMENT_VERSION = "ai-only-v4"
 DEEPFAKE_MIN, DEEPFAKE_MIN_LO = 0.65, 0.50
 AUTHENTIC_MAX, AUTHENTIC_MAX_HI = 0.35, 0.50
 UNCALIBRATED_HALF = 0.20
 P_MIN, P_MAX = 0.01, 0.99
-LABELS = {"deepfake": "Likely deepfake", "authentic": "Likely authentic", "uncertain": "Uncertain"}
+LABELS = {"deepfake": "Strong AI-generation signal", "authentic": "Low AI-generation signal", "uncertain": "AI-generation check inconclusive"}
 
 
 @lru_cache(maxsize=1)
@@ -72,6 +72,11 @@ def label(p: float, lo: float, hi: float) -> str:
 def assess_item(detector: Optional[dict], manip: Optional[dict], kind: str, text_words: Optional[int] = None) -> dict:
     """Assess AI generation only; never promote editing traces into a deepfake probability."""
     ai = None
+    if detector and detector.get("applicable") is False:
+        return {"version": ASSESSMENT_VERSION, "p": None, "lo": None, "hi": None,
+                "label": "uncertain", "text": LABELS["uncertain"], "ai": None, "manipulation": None,
+                "calibrated": False, "not_applicable": True, "gate": detector.get("gate"),
+                "why": f"Synthetic-speech check not applied: {detector.get('reason')}."}
     if detector and detector.get("raw") is not None:
         name = {"image": "ai_image", "video": "ai_video", "audio": "ai_voice", "text": "ai_text"}[kind]
         ai = calibrate(name, detector["raw"])

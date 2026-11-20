@@ -306,19 +306,66 @@ def _voice_scores(y: np.ndarray, sr: int, names: list[str]) -> list[float]:
     return out
 
 
+SPEECH_MIN_SECONDS, SPEECH_MIN_ACTIVE, SPEECH_MIN_WORDS, SPEECH_MIN_CONF = 2.0, 0.25, 3, 0.5
+
+
+def speech_applicability(y: np.ndarray, sr: int, transcript: dict | None) -> tuple[bool, str, dict]:
+    """Is this input in scope for the synthetic-speech model (trained on human and synthetic *speech*)?
+
+    Requires enough audio, enough non-silent signal, and speech confirmed by the transcriber (a few words at moderate
+    confidence). Failing the gate means "not assessed", never "synthetic" or "human": a failed transcript can come
+    from noise, music, other languages or a weak recognizer. Thresholds are generic, not tuned to any file."""
+    dur = len(y) / sr if sr else 0.0
+    frame = max(1, int(0.03 * sr))
+    n = len(y) // frame
+    rms = np.sqrt((y[: n * frame].reshape(n, frame) ** 2).mean(axis=1)) if n else np.zeros(1)
+    floor = float(np.percentile(rms, 10)) if n else 0.0
+    active = float((rms > max(floor * 3.0, 1e-3)).mean()) if n else 0.0
+    words = int((transcript or {}).get("n_words") or 0)
+    conf = float((transcript or {}).get("mean_conf") or 0.0)
+    # Recognizers hallucinate repeated fragments ("B-B-B-B…") on non-speech; count distinct real words instead
+    import re
+    from collections import Counter
+
+    text = " ".join(sg.get("text", "") for sg in (transcript or {}).get("segments", []))
+    tokens = [t for t in re.split(r"[^a-z']+", text.lower()) if len(t) >= 2]
+    top_share = Counter(tokens).most_common(1)[0][1] / len(tokens) if tokens else 1.0
+    distinct = len(set(tokens))
+    gate = {"seconds": round(dur, 2), "active_fraction": round(active, 2), "words": words, "mean_conf": round(conf, 2),
+            "distinct_words": distinct, "top_word_share": round(top_share, 2)}
+    if dur < SPEECH_MIN_SECONDS:
+        return False, f"the clip is too short ({dur:.1f} s; at least {SPEECH_MIN_SECONDS:.0f} s needed)", gate
+    if active < SPEECH_MIN_ACTIVE:
+        return False, "the recording is mostly silence or steady background noise", gate
+    if transcript is None:
+        return False, "speech could not be confirmed because the transcript step did not run", gate
+    if words < SPEECH_MIN_WORDS or conf < SPEECH_MIN_CONF or distinct < SPEECH_MIN_WORDS or top_share > 0.5:
+        return False, ("intelligible speech could not be confirmed (the transcriber found "
+                       f"{distinct} distinct word{'s' if distinct != 1 else ''} at mean confidence {conf:.2f}); "
+                       "the synthetic-speech model only applies to speech"), gate
+    return True, "", gate
+
+
 def run_audio(ctx: AnalysisContext) -> list[RawFinding]:
     from .audio.common import load_16k
 
     y, sr = load_16k(ctx)
+    ok, reason, gate = speech_applicability(y, sr, ctx.extra.get("transcript"))
+    if not ok:
+        # Out of scope for a speech anti-spoofing model: abstain, do not call it human or synthetic
+        ctx.extra["ai_detector"] = {"kind": "audio", "raw": None, "applicable": False, "reason": reason, "gate": gate,
+                                    "models": chosen("ai_voice", AUDIO_MODELS)}
+        ctx.log("audio", f"synthetic-speech check not applied: {reason}")
+        return []
     scores = voice_scores(y, sr)
     raw = _r2(np.median(scores))
     ctx.extra["ai_detector"] = {"kind": "audio", "raw": raw, "models": chosen("ai_voice", AUDIO_MODELS),
                                 "chunks": [{"t": 4.0 * i, "p": _r2(p)} for i, p in enumerate(scores)]}
-    return _finding(ctx, "synthetic_voice", "ai_voice", "Synthetic or cloned voice likelihood", raw,
+    return _finding(ctx, "synthetic_voice", "ai_voice", "Synthetic-speech signal", raw,
                     {"type": "time_range", "start": 0.0, "end": round(len(y) / sr * 2) / 2}, f"Whole track · {len(scores)} × 4 s windows",
                     f"wav2vec2 anti-spoofing classifier ({', '.join(chosen('ai_voice', AUDIO_MODELS))}) on {len(scores)} "
                     f"four-second windows; median {raw:.2f}",
-                    "The voice classifier rates the speech as likely produced by text-to-speech or voice cloning.",
+                    "The speech classifier rates this speech as likely machine-generated (text-to-speech or voice conversion). It does not identify whose voice it is.",
                     ["Heavy noise suppression or voice processing", "Low-quality phone or VoIP recordings",
                      "New cloning systems the classifier was not trained on can go either way"])
 

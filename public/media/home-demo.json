@@ -14,9 +14,9 @@
   "why": "an audio splice at 00:08.2 lines up with a motion break at 00:08.0"
  },
  "deepfake": {
-  "version": "ai-only-v3",
+  "version": "ai-only-v4",
   "key": "deepfake",
-  "label": "Likely deepfake",
+  "label": "Strong synthetic-speech signal",
   "p": 0.9622,
   "lo": 0.9322,
   "hi": 0.99,
@@ -92,7 +92,7 @@
   {
    "id": "F-AUD-002",
    "modality": "audio",
-   "name": "Synthetic or cloned voice likelihood",
+   "name": "Synthetic-speech signal",
    "loc": "Whole track \u00b7 4 \u00d7 4 s windows",
    "start": 0.0,
    "end": 16.0,
@@ -100,7 +100,7 @@
    "hi": 0.99,
    "key": "ind",
    "label": "Indicators of manipulation",
-   "explanation": "The voice classifier rates the speech as likely produced by text-to-speech or voice cloning."
+   "explanation": "The speech classifier rates this speech as likely machine-generated (text-to-speech or voice conversion). It does not identify whose voice it is."
   }
  ],
  "rules": [
