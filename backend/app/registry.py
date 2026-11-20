@@ -20,22 +20,21 @@ ORDER = {
 }
 DEEPFAKE = [
     FnAnalyzer("ai_image", "AI-image detector", ("image",), deepfake.run_image, "AI-generated image detector",
-               "Pretrained classifiers: camera photo vs image generator", "ai-image-detector + distilled",
+               "Pretrained classifiers: camera photo vs image generator", "Smaug-AI-Image-Detector",
                optional_dep="transformers"),
     FnAnalyzer("ai_video", "AI-frames detector", ("video",), deepfake.run_video, "AI-generated video detector",
-               "AI-image classifiers on sampled frames and face crops", "ai-image-detector + distilled",
+               "AI-image classifiers on sampled frames and face crops", "Smaug-AI-Image-Detector",
                optional_dep="transformers"),
     FnAnalyzer("ai_voice", "Voice-clone detector", ("audio",), deepfake.run_audio, "Synthetic voice detector",
-               "wav2vec2 anti-spoofing: human speech vs TTS / voice cloning", "deepfake-audio-detection-v2",
+               "wav2vec2 anti-spoofing: human speech vs TTS / voice cloning", "wav2vec2-large-xlsr",
                optional_dep="transformers"),
     FnAnalyzer("ai_text", "AI-text detector", ("text",), deepfake.run_text, "AI-written text detector",
-               "RoBERTa classifier: human vs language-model writing", "chatgpt-detector-roberta",
+               "ModernBERT classifier: human vs language-model writing", "ai-text-detector-modernbert",
                optional_dep="transformers"),
 ]
 ALL: dict[str, FnAnalyzer] = {a.key: a for a in image.ANALYZERS + video.ANALYZERS + audio.ANALYZERS + text.ANALYZERS + DEEPFAKE}
 DATA_STEPS = {"frames", "transcript", "claims"}   # produce data, not detections; failure is not a detector gap
-# learned deepfake detectors: if one cannot run, the deepfake probability rests on the other evidence instead;
-# the forensic manipulation verdict is not affected
+# A missing learned detector leaves its AI estimate unavailable; editing indicators remain separate.
 AI_STEPS = {"ai_image", "ai_video", "ai_voice", "ai_text"}
 
 

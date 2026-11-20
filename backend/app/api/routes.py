@@ -5,7 +5,7 @@ import hashlib
 import io
 import json
 import re
-from datetime import timedelta
+from datetime import timedelta, timezone
 from pathlib import Path
 from typing import Any, Literal, Optional
 
@@ -375,8 +375,8 @@ def case_custody(case_id: str, s: Session = Depends(get_session), u: User = Depe
 def custody_for(s: Session, case_id: str) -> dict:
     rows = custody.entries(s, case_id)
     return {"chain_valid": custody.verify_chain(rows),
-            "entries": [{"id": r.id, "ts": r.ts.isoformat(), "actor": r.actor, "action": r.action, "tool": r.tool_version,
-                         "input_hash": r.input_hash, "output_hash": r.output_hash, "entry_hash": r.entry_hash} for r in rows]}
+            "entries": [{"id": r.id, "ts": r.ts.replace(tzinfo=r.ts.tzinfo or timezone.utc).isoformat(), "actor": r.actor, "action": r.action, "tool": r.tool_version,
+                         "input_hash": r.input_hash, "output_hash": r.output_hash, "prev_hash": r.prev_hash, "entry_hash": r.entry_hash} for r in rows]}
 
 
 @router.post("/cases/{case_id}/report")

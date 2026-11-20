@@ -67,5 +67,9 @@ TruthLens reports **indicators**, never "fake" or "real". These are the limits w
 - **Compressed video.** On our own heavily compressed 960×540 demo clip of genuine stock footage, a few single frames
   scored as AI-generated. Video is therefore scored by the median frame, with a wider range, and the video detector
   has not been validated on a labelled set of real vs generated videos.
-- **"Likely authentic" is not proof of authenticity.** It means the detectors and forensic analyzers found nothing; a
+- **"Likely authentic" is not proof of authenticity.** It means the learned AI estimate falls below the configured threshold with a sufficiently low upper bound; editing is assessed separately and a
   generator the detector does not know can still produce it.
+
+- AI-generation estimates are separate from ordinary editing indicators. A missing detector has no percentage; older combined-scoring analyses require a re-run. Neither model estimates nor fused indicator bands establish authenticity.
+- Reports include a pre-export history snapshot. Their own generation event is appended later, so the exported chain is verifiable without pretending to include its own future hash.
+- Registered image/frame matches are a geometric correspondence heuristic, not face identity recognition or proof that an edit was malicious.

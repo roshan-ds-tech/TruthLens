@@ -114,6 +114,7 @@ def _why(findings: list[dict], edges: list[rules_mod.Edge], by_id: dict[str, dic
 
 def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "system") -> dict[str, Any]:
     started = time.monotonic()
+    started_utc = utcnow()
     case = s.get(Case, case_id)
     if case is None:
         raise ValueError(f"case {case_id} not found")
@@ -171,6 +172,8 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
                 tr.set_step(item, si, "skipped")
                 tr.log(ev.kind, f"{step.name} skipped on {ev.label}: turned off in Settings")
                 limitations.append(f"{step.name} was turned off in Settings and did not run on {ev.label}.")
+                if step.key not in registry.DATA_STEPS | registry.AI_STEPS:
+                    failed_detectors.setdefault(ev.label, []).append(step.name)
                 continue
             if not registry.dependency_available(step):
                 tr.set_step(item, si, "skipped")
@@ -193,7 +196,7 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
                 tr.log(ev.kind, f"{step.name} failed on {ev.label} · {msg}")
                 if step.key in registry.AI_STEPS:
                     limitations.append(f"{step.name} did not run on {ev.label} ({msg}); the deepfake probability for "
-                                       f"{ev.label} rests on the manipulation evidence only.")
+                                       f"{ev.label} is unavailable; editing indicators are reported separately.")
                 else:
                     limitations.append(f"{step.name} failed on {ev.label} ({msg}); its signal is missing from the verdict.")
                 if step.key not in registry.DATA_STEPS | registry.AI_STEPS:
@@ -255,9 +258,17 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
             pre = f["finding_id"].split("-")[1]
             counters[pre] = counters.get(pre, 0) + 1
             f["finding_id"] = f"F-{pre}-{counters[pre]:03d}"
-    if any(not f["calibrated"] for f in scored):
-        names = sorted({f["indicator"] for f in scored if not f["calibrated"]})
+    if any(not f["calibrated"] and f["family"] not in registry.AI_STEPS for f in scored):
+        names = sorted({f["indicator"] for f in scored if not f["calibrated"] and f["family"] not in registry.AI_STEPS})
         limitations.append("Uncalibrated indicators (no validation data yet): " + ", ".join(names) + ". Their ranges use a fixed ±0.12.")
+
+    if any(c.kind == "video" and c.extra.get("ai_detector") for c in contexts):
+        limitations.append("AI video estimates use image calibration on sampled frames, not labelled-video validation; the range is widened.")
+    if any(not f["calibrated"] and f["family"] in registry.AI_STEPS and f["family"] != "ai_video" for f in scored):
+        limitations.append("Some AI detectors have no labelled calibration; their raw-score ranges are approximate, not calibrated probabilities.")
+
+    from .correlate.visual import verify_regions
+    verify_regions(scored, contexts)
 
     # correlation
     by_id = {f["finding_id"]: f for f in scored}
@@ -294,9 +305,11 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
         if b == "none" and failed:
             b = "inconclusive"
         why = _why(mine, internal, by_id, b, failed)
-        manip_n = sum(1 for f in mine if not f["family"].startswith("ai_"))
+        forensic = [f for f in mine if not f["family"].startswith("ai_")]
+        forensic_fz = fuse.fuse(signals(forensic))
+        manip_n = len(forensic)
         dfa = deepfake_score.assess_item(ctx.extra.get("ai_detector"),
-                                         {"p": fz.p, "lo": fz.lo, "hi": fz.hi, "findings": manip_n}, ev.kind,
+                                         {"p": forensic_fz.p, "lo": forensic_fz.lo, "hi": forensic_fz.hi, "findings": manip_n}, ev.kind,
                                          (ctx.extra.get("ai_detector") or {}).get("words"))
         deepfake_items[ev.label] = dfa
         ev.verdict_json = JsonMixin.dumps({"band": b, "p": fz.p, "lo": fz.lo, "hi": fz.hi, "corroborated": fz.corroborated,
@@ -348,6 +361,16 @@ def run_case(s: Session, case_id: str, job: Optional[Job] = None, actor: str = "
     if job:
         job.status, job.finished_at, job.findings_count = "done", utcnow(), len(scored)
         tr.flush()
+    # Keep coverage/provenance for CLI runs too, not only transient browser jobs.
+    summary = JsonMixin.loads(case.overall_verdict_json, {})
+    summary["analysis"] = {"run_count": run_no, "job_id": job.id if job else None,
+                           "origin": "api-job" if job else "command-line", "status": "done",
+                           "started_at": started_utc.isoformat(), "finished_at": utcnow().isoformat(),
+                           "steps": tr.items, "log": tr.lines[-400:], "tool_versions": registry.versions(),
+                           "ai_models": {c.label: c.extra.get("ai_detector", {}).get("models", []) for c in contexts}}
+    case.overall_verdict_json = JsonMixin.dumps(summary)
+    s.add(case)
+    s.commit()
     return {"findings": len(scored), "digest": digest, "verdict": case_band, "graph": graph,
             "digest_fields": digest_fields(scored)}
 

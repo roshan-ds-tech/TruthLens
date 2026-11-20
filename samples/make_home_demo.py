@@ -119,10 +119,10 @@ def analyse(clip: Path) -> dict:
     return {
         "generated_by": "samples/make_home_demo.py (TruthLens analysis of this exact clip)",
         "ground_truth": {"video_cut_s": CUT_FRAME / FPS, "audio_splice_s": SPLICE_S},
-        "duration": round(len(frames_cache) / FPS, 2),
+        "duration": round(float(next(e["duration"] for e in detail["evidence"] if e["kind"] == "video")), 2),
         "fps": FPS,
         "verdict": {k: detail["verdict"][k] for k in ("key", "label", "lo", "hi", "why")},
-        "deepfake": {k: v for k, v in (detail.get("deepfake") or {}).items() if k in ("key", "label", "p", "lo", "hi", "why", "driver")}
+        "deepfake": {k: v for k, v in (detail.get("deepfake") or {}).items() if k in ("version", "key", "label", "p", "lo", "hi", "why", "driver")}
                     or None,
         "findings": [{"id": f["finding_id"], "modality": f["modality"], "name": f["name"], "loc": f["loc_label"],
                       "start": f["location"].get("start"), "end": f["location"].get("end"), "lo": f["conf_low"],
@@ -140,6 +140,19 @@ frames_cache: list[np.ndarray] = []
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--analyze-only", action="store_true", help="Reanalyze the existing public clip without replacing it")
+    args = parser.parse_args()
+    if args.analyze_only:
+        final = OUT / "home-demo.mp4"
+        if not final.exists():
+            parser.error("home-demo.mp4 is missing; run without --analyze-only to build it")
+        data = analyse(final)
+        (OUT / "home-demo.json").write_text(json.dumps(data, indent=1))
+        print("Reanalyzed existing home clip:", data["deepfake"])
+        return
+
     a = tts(PART_A, SPLICE_S) * 0.85 + synth.room_noise(int(SPLICE_S * SR), 31, -55.0, 0.6)
     b = tts(PART_B, TOTAL_S - SPLICE_S) * 0.85 + synth.room_noise(int((TOTAL_S - SPLICE_S) * SR), 32, -44.0, 0.9)
     audio = np.clip(np.concatenate([a, b]), -1, 1).astype(np.float32)

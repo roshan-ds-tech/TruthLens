@@ -102,9 +102,9 @@ VERDICT_LABELS = {
 
 GENERAL_LIMITATIONS = [
     "Confidence ranges describe how strongly the analyzers agree. They are not the probability that the content was edited.",
-    "Fully AI-generated media without editing traces may not be detected.",
+    "AI detectors can miss unfamiliar generators and can flag authentic recordings; estimates are investigative leads, not proof.",
     "Social-platform recompression can produce error-level patterns similar to editing.",
-    "Analyzers were calibrated on a small self-made test set only. This is not a general accuracy claim.",
+    "Forensic methods use a small seeded test set; AI detectors use small labelled samples also used for model selection. Scores may not generalize.",
     "This report does not establish who created or altered the content.",
 ]
 

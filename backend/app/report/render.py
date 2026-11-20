@@ -17,7 +17,7 @@ from sqlmodel import Session, select
 
 from .. import config, custody
 from ..api import adapters
-from ..models import Case, Evidence, JsonMixin, ReportRow, utcnow
+from ..models import Case, Evidence, Job, JsonMixin, ReportRow, utcnow
 
 TEMPLATES = Path(__file__).parent / "templates"
 
@@ -115,7 +115,7 @@ def _checks(findings: list[dict]) -> list[str]:
             continue
         out.append(f"{f['finding_id']}: rule out \"{f['alternatives'][0]}\" before relying on it.")
     if not out:
-        out.append("No finding needs follow-up; keep the originals and this report together.")
+        out.append("No additional finding-specific check is listed. Verify source provenance and retain the originals; absence of findings is not proof of authenticity.")
     return out
 
 
@@ -127,6 +127,19 @@ def build(s: Session, case_row: Case) -> dict[str, Any]:
     graph = graph_for(s, case_row)
     evs = {e.id: e for e in s.exec(select(Evidence).where(Evidence.case_id == case_row.id))}
     custody_info = custody_for(s, case_row.id)
+    latest_job = s.exec(select(Job).where(Job.case_id == case_row.id).order_by(Job.id.desc())).first()
+    source_context = [{"evidence": e.label, "name": e.filename,
+                       "text": custody.original_path(case_row.id, e.sha256).read_text("utf-8")}
+                      for e in evs.values() if e.kind == "text"]
+    analysis = JsonMixin.loads(case_row.overall_verdict_json, {}).get("analysis") or {"run_count": case_row.run_count, "job_id": latest_job.id if latest_job else None,
+                "status": latest_job.status if latest_job else "unavailable",
+                "started_at": latest_job.started_at.isoformat() if latest_job and latest_job.started_at else None,
+                "finished_at": latest_job.finished_at.isoformat() if latest_job and latest_job.finished_at else None,
+                "steps": JsonMixin.loads(latest_job.progress_json, []) if latest_job else [],
+                "log": JsonMixin.loads(latest_job.log_json, []) if latest_job else [],
+                "tool_versions": {}, "provenance_note": "Tool versions were not recorded by this older analysis; re-run to capture them.",
+                "ai_models": {e.label: JsonMixin.loads(e.extra_json, {}).get("ai_detector", {}).get("models", [])
+                              for e in evs.values()}}
     draft = len(s.exec(select(ReportRow).where(ReportRow.case_id == case_row.id)).all()) + 1
     claims = []
     for e in case["evidence"]:
@@ -149,7 +162,8 @@ def build(s: Session, case_row: Case) -> dict[str, Any]:
         "findings": [{k: f[k] for k in ("finding_id", "evidence_id", "modality", "indicator", "name", "location", "loc_label",
                                         "score", "conf_low", "conf_high", "band", "verdict", "method", "explanation",
                                         "alternatives", "calibrated", "weakened", "review")} for f in findings],
-        "claims": claims,
+        "claims": claims, "source_context": source_context, "analysis": analysis,
+        "analysis_history": custody_info["entries"],
         "correlations": graph["rules"], "graph": {"nodes": graph["nodes"], "edges": graph["edges"]},
         "limitations": case["limitations"],
         "recommended_checks": _checks(findings),
@@ -159,7 +173,8 @@ def build(s: Session, case_row: Case) -> dict[str, Any]:
         "rerun_command": f"truthlens rerun --case {case['id']}",
         "rerun_detail": f"truthlens analyze --case {case['id']} --seed {config.SEED} --evidence "
                         + " ".join(custody.short(h) for h in ev_shas),
-        "custody": {"entries": len(custody_info["entries"]) + 1, "chain_valid": custody_info["chain_valid"]},
+        "custody": {"entries": len(custody_info["entries"]), "chain_valid": custody_info["chain_valid"],
+                    "snapshot": "History through report preparation; this report generation is appended after its hash is computed."},
     }
     report_sha = custody.sha256_json(report)
     report["sha256"] = report_sha

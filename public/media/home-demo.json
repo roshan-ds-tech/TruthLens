@@ -14,12 +14,13 @@
   "why": "an audio splice at 00:08.2 lines up with a motion break at 00:08.0"
  },
  "deepfake": {
+  "version": "ai-only-v2",
   "key": "deepfake",
   "label": "Likely deepfake",
-  "p": 0.99,
-  "lo": 0.9876,
+  "p": 0.9622,
+  "lo": 0.9322,
   "hi": 0.99,
-  "why": "E-02: AI-generation detector 96% and manipulation evidence 92%",
+  "why": "E-02: AI-generation detector 96%; editing indicators are assessed separately",
   "driver": "E-02"
  },
  "findings": [

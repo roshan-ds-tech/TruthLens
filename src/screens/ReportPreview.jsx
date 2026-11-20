@@ -34,6 +34,7 @@ export default function ReportPreview({ go, active, caseId }) {
     );
   }
 
+  const historicalAssessment = r.deepfake && r.deepfake.version !== 'ai-only-v2';
   const v = r.verdict;
   const ev = r.evidence;
   const half = Math.ceil(r.findings.length / 2);
@@ -87,6 +88,12 @@ export default function ReportPreview({ go, active, caseId }) {
             </div>
             <p style={{ margin: 0, color: '#D8D8D2', fontSize: 12.5 }}><b style={{ color: '#fff' }}>Why:</b> {v.why}. The range reflects agreement between analyzers, not a probability of editing.</p>
           </div>
+
+          {r.deepfake && <div style={section}>
+            <span style={label}>AI-generation assessment</span>
+            <strong>{historicalAssessment ? 'Historical assessment — re-run analysis and export a new report' : <>{r.deepfake.label}{r.deepfake.p != null ? ` · AI estimate ${Math.round(r.deepfake.p * 100)}%` : ''}</>}</strong>
+            <span style={{ color: '#5F5F5A' }}>{historicalAssessment ? 'This report preserves a previous scoring method. Its original downloads remain unchanged.' : `${r.deepfake.why}. Editing indicators are separate; this is not proof.`}</span>
+          </div>}
 
           <div style={section}>
             <span style={label}>Evidence</span>
@@ -149,6 +156,19 @@ export default function ReportPreview({ go, active, caseId }) {
             </div>
             <span style={{ color: '#5F5F5A' }}>Reviewed by {r.case.investigator}. Open findings are listed but carry no reviewer decision.</span>
           </div>
+          {!!r.source_context?.length && <div style={section}>
+            <span style={label}>Original text and context</span>
+            {r.source_context.map((source) => <div key={source.evidence}>
+              <b>{source.evidence} · {source.name}</b>
+              <p style={{ margin: '4px 0', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{source.text}</p>
+            </div>)}
+          </div>}
+          {r.analysis && <div style={section}>
+            <span style={label}>Analysis coverage and history</span>
+            <span>Run {r.analysis.run_count} · {r.analysis.status} · {r.analysis_history?.length || 0} recorded events before this export.</span>
+            <span style={{ color: '#5F5F5A' }}>The PDF includes method coverage, model checkpoints, and custody history. The JSON also includes the complete job log and linked hashes.</span>
+          </div>}
+
           <div style={section}>
             <span style={label}>Rerun command</span>
             <div style={{ background: '#F7F7F5', border: '1px solid #E8E8E4', borderRadius: 10, padding: '12px 14px', ...mono, fontSize: 11, lineHeight: 1.6, wordBreak: 'break-all' }}>{r.rerun_command}</div>

@@ -121,3 +121,9 @@ The image, voice and transcription models now run in a short-lived child process
 the image detector is loaded in its stored bfloat16 and converted to float32 per module with the 262k-token
 vocabulary table left in bfloat16 (identical scores), and crops are encoded one at a time. Measured on the demo case:
 main process peak 0.94 GB, largest child 2.29 GB while the main process holds about 0.5 GB, so about 2.8 GB in all.
+
+## D-23 Separate AI generation estimates and verify cross-media evidence
+
+The Problem Statement 04 audit identified that editing evidence could inflate the separate deepfake percentage through a noisy-OR combination, including correlated signals already used in fusion. AI-generation estimates now use the learned detector once; forensic editing indicators remain separate context. Missing AI results have no fabricated percentage, partial coverage cannot produce an authentic case label, video identifies transferred image calibration, and legacy scoring requests reanalysis.
+
+Regression tests confirm the existing media-before-text ordering is upload-order independent. CLI runs now persist coverage and tool provenance as API jobs do. R-09 now requires feature registration of the source image to the flagged video frame; matching normalized screen coordinates are not a correspondence proof. Reports export original text, coverage/model provenance and a verifiable pre-export custody snapshot with complete job logs in JSON. Existing originals and report drafts are preserved.

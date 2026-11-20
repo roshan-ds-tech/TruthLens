@@ -29,8 +29,17 @@ def deepfake(v: Optional[dict]) -> Optional[dict]:
     """The deepfake assessment as the UI shows it: Likely deepfake / Likely authentic / Uncertain, with P and range."""
     d = (v or {}).get("deepfake")
     if not d:
-        return None
-    return {"key": d["label"], "label": d["text"], "p": d.get("p"), "lo": d.get("lo"), "hi": d.get("hi"),
+        if not v:
+            return None
+        return {"key": "uncertain", "label": "Uncertain", "p": None, "lo": None, "hi": None,
+                "why": "This analysis has no AI-generation assessment. Re-run analysis to assess it.",
+                "calibrated": False, "requires_rerun": True}
+    from ..scoring.deepfake import ASSESSMENT_VERSION
+    if d.get("version") != ASSESSMENT_VERSION:
+        return {"key": "uncertain", "label": "Uncertain", "p": None, "lo": None, "hi": None,
+                "why": "This analysis uses an older scoring method. Re-run analysis for a separate AI-generation assessment.",
+                "calibrated": False, "requires_rerun": True}
+    return {"version": d["version"], "key": d["label"], "label": d["text"], "p": d.get("p"), "lo": d.get("lo"), "hi": d.get("hi"),
             "why": d.get("why", ""), "driver": d.get("driver"), "calibrated": d.get("calibrated", False),
             "ai": d.get("ai"), "manipulation": d.get("manipulation")}
 

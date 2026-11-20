@@ -52,12 +52,13 @@ def test_calibrated_detector_uses_platt_and_bootstrap(monkeypatch):
     assert hi_score["lo"] <= hi_score["p"] <= hi_score["hi"]
 
 
-def test_item_combines_detector_and_manipulation(monkeypatch):
+def test_editing_does_not_raise_ai_generation_estimate(monkeypatch):
     _no_calibration(monkeypatch)
     out = df.assess_item({"kind": "image", "raw": 0.5}, {"p": 0.8, "lo": 0.7, "hi": 0.9, "findings": 2}, "image")
-    assert out["p"] == pytest.approx(1 - 0.5 * 0.2)       # 1 − (1 − P_ai)(1 − P_manip)
-    assert out["label"] == "deepfake"
-    assert "AI-generation detector" in out["why"] and "manipulation evidence" in out["why"]
+    assert out["p"] == pytest.approx(0.5)
+    assert out["label"] == "uncertain"
+    assert out["manipulation"]["p"] == 0.8
+    assert "editing indicators are assessed separately" in out["why"]
 
 
 def test_manipulation_without_findings_is_ignored(monkeypatch):
@@ -96,3 +97,37 @@ def test_case_follows_its_most_likely_item(monkeypatch):
              "E-03": df.assess_item(None, None, "text")}
     case = df.assess_case(items)
     assert case["driver"] == "E-02" and case["p"] == items["E-02"]["p"] and case["why"].startswith("E-02")
+
+
+def test_editing_without_ai_detector_never_proves_deepfake():
+    out = df.assess_item(None, {"p": 0.97, "lo": 0.92, "hi": 0.97, "findings": 5}, "image")
+    assert out["p"] is None and out["label"] == "uncertain"
+    assert out["manipulation"]["p"] == 0.97
+
+
+def test_video_calibration_is_identified_as_transferred(monkeypatch):
+    monkeypatch.setattr(df, "_table", lambda: {"detectors": {"ai_video": {"A": 8, "B": -4, "n": 240, "auc": 0.99}}})
+    result = df.calibrate("ai_video", 0.5)
+    assert result["calibrated"] is False
+    assert result["calibration_scope"] == "image-transfer"
+    assert result["lo"] <= 0.32 and result["hi"] >= 0.68
+
+
+def test_case_is_not_authentic_when_another_item_is_unassessed(monkeypatch):
+    _no_calibration(monkeypatch)
+    case = df.assess_case({"E-01": df.assess_item({"kind": "image", "raw": 0.1}, None, "image"),
+                           "E-02": df.assess_item(None, None, "audio")})
+    assert case["label"] == "uncertain" and "E-02" in case["why"]
+
+
+def test_legacy_fused_probabilities_require_rerun():
+    from app.api.adapters import deepfake
+    out = deepfake({"deepfake": {"label": "deepfake", "text": "Likely deepfake", "p": 0.99}})
+    assert out["p"] is None and out["requires_rerun"] and out["key"] == "uncertain"
+
+
+def test_pre_detector_analysis_requests_rerun_without_a_score():
+    from app.api.adapters import deepfake
+    assert deepfake(None) is None
+    old = deepfake({"band": "strong", "p": .97})
+    assert old["requires_rerun"] and old["p"] is None and old["key"] == "uncertain"

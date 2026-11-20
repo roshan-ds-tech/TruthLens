@@ -27,7 +27,7 @@ make demo      # analyze samples/demo_case and compare with samples/expected_rep
 Prerequisites on macOS: `brew install python@3.11 ffmpeg pango` and Node 20+. Other targets: `make test`,
 `make validate`, `make dev` (API with reload on :8000 + Vite on :5173).
 
-**Hosted version:** UI on Vercel, analysis API on a Hugging Face Space, both redeployed from `main`; sign up to use it.
+**Hosted demo:** UI on Vercel; analysis API on the owner’s Mac through a Cloudflare Quick Tunnel. The Mac must remain awake and online. Sign up to use it. Hugging Face supplies downloaded model files, not the active API host.
 Setup and hosted-mode behaviour: [`docs/deployment.md`](docs/deployment.md).
 
 CLI: `./truthlens analyze clip.mp4 photo.jpg --caption caption.txt --report`, `./truthlens rerun --case C-0001`,
@@ -47,8 +47,7 @@ in two rooms (noise steps up at 14.2 s), a still photo whose EXIF says Photoshop
 | F-TXT-001 caption date vs EXIF date | 0.76–0.95 | R-11 |
 | **Case verdict: Strong indicators** | **0.92–0.97** | corroborated by two methods |
 
-Untouched files do not get flagged: the original sample photos shipped with scikit-image and the macOS system sounds
-all come out *No indicators found*. The Hubble JPEG comes out *Inconclusive*, because its EXIF says it was saved by
+The tested untouched scikit-image photos and macOS system sounds come out *No indicators found* in the seeded controls; this does not guarantee that every authentic upload avoids false alarms. The Hubble JPEG comes out *Inconclusive*, because its EXIF says it was saved by
 Photoshop CS5 and one metadata signal is never enough on its own.
 
 ## Screens
@@ -122,3 +121,10 @@ docs/               methodology, limitations, requirements map, decisions, UI in
 Fully AI-generated media without editing traces may not be detected; pixel-level image signals are weak and the
 validation set is small and synthetic; accounts have no password reset. Details:
 [`docs/limitations.md`](docs/limitations.md). Design deviations and why: [`docs/decisions.md`](docs/decisions.md).
+
+
+## Requirement coverage and score interpretation
+
+[`docs/requirements_map.md`](docs/requirements_map.md) maps every Problem Statement 04 capability and report requirement to the implementation and regression tests. AI-generation estimates use the learned detector once; editing traces are separate indicators and do not raise the AI-generation percentage. An unavailable detector gives Uncertain without a fabricated number. Analyses from the previous combined scoring method must be re-run. The video estimate uses image calibration transferred to sampled frames, not an independently validated video probability.
+
+Exports include original caption/text context, method coverage, model provenance and the pre-export custody history. The report-generation event is appended after the report hash is calculated. Existing reports remain historical snapshots.

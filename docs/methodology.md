@@ -85,8 +85,7 @@ sum on the findings' low and high ends, at least ±0.05.
 
 ## Deepfake assessment (`analyzers/deepfake.py`, `scoring/deepfake.py`)
 
-The bands above answer "was this edited?". The deepfake assessment answers "is this AI-generated or manipulated?"
-with one probability per item and per case.
+The bands above summarize forensic/AI indicators for review. The separate AI-generation assessment uses a learned detector estimate, not editing evidence. Neither establishes a final verdict.
 
 **Learned detectors** (pretrained, CPU, offline after `make setup`):
 
@@ -102,23 +101,17 @@ split for images, In-The-Wild for voices, `textsightai/ai-text-detection-benchma
 AUC (within 0.01, the model with documented training data wins), and fits Platt scaling with 200 bootstrap refits (5-fold cross-validated metrics go
 to `metrics.json["deepfake"]`). An uncalibrated detector uses its raw score with a ±0.20 range.
 
-**Combination per item:**
+**AI estimate per item:** use the learned detector's calibrated score once. Do not combine it with the forensic fusion score: ordinary editing does not establish AI generation, and learned findings also enter the general fusion, making the old noisy-OR combination correlated and potentially overconfident. Separate editing indicators remain visible for review. A missing AI detector produces Uncertain without a percentage.
 
-    P(deepfake) = 1 − (1 − P_ai)(1 − P_manip)
-
-`P_ai` is the calibrated detector probability; `P_manip` is the fused manipulation probability above, counted only when
-the item has at least one finding, and never for text (a caption that contradicts the other evidence is misleading,
-not AI-written). P stays within 1–99 %. The low and high ends go through the same formula. Texts under 40 words get a
-range that always spans 45–55 %, so the text detector alone never gives a confident answer on a caption.
+The estimate stays within 1–99%. Texts under 40 words get a range spanning 45–55%. Sampled video uses transferred still-image calibration with ±0.15 extra width, is marked as not independently video-calibrated, and is not a validated temporal-video probability.
 
 | Label | Condition |
 |---|---|
 | Likely deepfake | P ≥ 0.65 and low end ≥ 0.50 |
 | Likely authentic | P ≤ 0.35 and high end ≤ 0.50 |
-| Uncertain | otherwise, or no detector ran and no finding exists |
+| Uncertain | otherwise, or no AI detector ran |
 
-A case takes the assessment of its most likely item and names it ("decided by E-02"). A detector that cannot run does
-not change the manipulation band; it only leaves the deepfake probability to the remaining evidence.
+A case shows the highest learned AI estimate and its source evidence. It cannot be labelled likely authentic if another item is unassessed or uncertain. Old stored combined assessments require a re-run instead of displaying an obsolete probability.
 
 ## Cross-modal rules (`correlate/rules.py`)
 
@@ -127,7 +120,7 @@ not change the manipulation band; it only leaves the deepfake probability to the
 | R-03 | Audio noise-floor step within 0.5 s of a flow jump / duplicate / drop on the same clip | supports (counts as corroboration) |
 | R-05 | Caption quote not found in the transcript | supports the conflict finding |
 | R-07 | Lip-sync drop (mouth opening vs speech RMS, 4 s windows, r < min(0.15, median − 0.3)) overlapping a flagged segment | weak support (not corroboration) |
-| R-09 | Image region IoU ≥ 0.3 with a flagged face / frame region in the video | supports |
+| R-09 | ORB/RANSAC image-to-frame registration, then transformed region IoU ≥ 0.3 | weak support; not independent corroboration |
 | R-11 | Caption date conflicts with capture metadata | links the text finding to the image/video |
 | R-14 | ELA/ghost on an image with no EXIF and q ≤ 85, or covering > 25 % of it | weakens (weight × 0.5, alternative added) |
 
@@ -135,3 +128,8 @@ not change the manipulation band; it only leaves the deepfake probability to the
 
 Each entry stores actor, action, tool version, input and output hashes, and `entry_hash = SHA-256(prev_hash | fields)`.
 SQLite triggers reject UPDATE and DELETE on the table; `GET /api/cases/{id}/custody` reports whether the chain verifies.
+
+
+**Cross-media visual correspondence:** R-09 first registers an image to the flagged video frame using ORB matches and a RANSAC homography. It requires at least 12 inliers, at least 60% inliers among ratio-filtered matches, spatial coverage, a valid projected image outline, and registered region IoU of at least 0.3. Similar screen coordinates in unrelated images cannot corroborate each other.
+
+**Dependency ordering and reports:** media analyzers complete before caption consistency, preserving source IDs but removing upload-order dependence on transcript availability. PDF/HTML/JSON exports include original text, completed/skipped/failed coverage, model/tool provenance and the pre-export custody snapshot. JSON includes job logs and previous/entry hashes. The report's own generation is appended after calculating its hash.

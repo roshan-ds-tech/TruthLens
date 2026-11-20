@@ -331,7 +331,7 @@ export default function CaseWorkspace({ go, active, compact, caseId }) {
 
       {cs.deepfake && (() => {
         const drv = evidence.find((e) => e.label === cs.deepfake.driver);
-        return <DeepfakeCard d={cs.deepfake} title="Is this case a deepfake?" onDriver={drv ? () => go(drv.kind, { caseId, evidenceId: drv.id }) : undefined} />;
+        return <DeepfakeCard d={cs.deepfake} title="AI-generation assessment · case" onDriver={drv ? () => go(drv.kind, { caseId, evidenceId: drv.id }) : undefined} />;
       })()}
 
       {/* Keep the findings column independent so its height cannot stretch the evidence rows. */}

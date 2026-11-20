@@ -115,21 +115,21 @@ def _iou(a: tuple[float, float, float, float], b: tuple[float, float, float, flo
 
 
 def r09_same_location(fs: list[F], evs: dict[str, Ev]) -> list[Edge]:
-    """An image region flagged where the video's flagged face region sits → both point at the same place."""
+    """Require verified image/frame registration; matching coordinates alone prove nothing."""
     out = []
     img = [f for f in fs if f.modality == "image" and f.location.get("type") == "bbox"]
     vid = [f for f in fs if f.indicator in ("face_flicker", "frame_ela_inconsistency", "frame_noise_inconsistency")
            and f.location.get("w")]
     for i in img:
-        bi = (i.location["x"] / i.location["image_w"], i.location["y"] / i.location["image_h"],
-              i.location["w"] / i.location["image_w"], i.location["h"] / i.location["image_h"])
         for v in vid:
-            bv = (v.location["x"] / v.location["image_w"], v.location["y"] / v.location["image_h"],
-                  v.location["w"] / v.location["image_w"], v.location["h"] / v.location["image_h"])
-            iou = _iou(bi, bv)
-            if iou >= 0.3 and i.family != v.family:
-                out.append(Edge("R-09", "Image region overlaps the flagged face region in the video", i.finding_id,
-                                v.finding_id, "supports", f"{i.finding_id} ↔ {v.finding_id} · IoU {iou:.2f}"))
+            source = evs.get(i.evidence)
+            proof = (source.extra.get("region_matches", {}).get(f"{i.finding_id}:{v.finding_id}")
+                     if source else None)
+            if (proof and proof.get("verified") and proof.get("inliers", 0) >= 12
+                    and proof.get("iou", 0) >= 0.3 and i.family != v.family):
+                out.append(Edge("R-09", "Registered image and video regions overlap", i.finding_id,
+                                v.finding_id, "supports", f"{i.finding_id} ↔ {v.finding_id} · "
+                                f"registered IoU {proof['iou']:.2f} · {proof['inliers']} matched features", weak=True))
     return out
 
 
@@ -175,7 +175,7 @@ RULE_DETAILS = {
     "R-03": "Two independent analyzers point at the same moment.",
     "R-05": "What the caption says was spoken is not in the transcript.",
     "R-07": "Weak on its own; adds little weight.",
-    "R-09": "Image and video signals point at the same area.",
+    "R-09": "Image and frame features register, and the transformed flagged regions overlap; this is not identity recognition.",
     "R-11": "The caption's date conflicts with when the media was captured.",
     "R-14": "Lowers the weight of the error-level finding in the combined range.",
 }

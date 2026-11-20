@@ -116,8 +116,8 @@
   },
   "deepfake": {
     "key": "deepfake",
-    "p": 0.99,
-    "lo": 0.99,
+    "p": 0.97,
+    "lo": 0.94,
     "hi": 0.99,
     "driver": "E-02"
   },
@@ -125,7 +125,7 @@
     "E-01": {
       "kind": "video",
       "band": "indicators",
-      "deepfake": "deepfake",
+      "deepfake": "authentic",
       "sha256": "6e848d48f96ed72389915154b7ead5c2d2fbe7ca2718dd04925a38779003cce5"
     },
     "E-02": {
@@ -136,7 +136,7 @@
     "E-03": {
       "kind": "image",
       "band": "inconclusive",
-      "deepfake": "uncertain",
+      "deepfake": "authentic",
       "sha256": "14c611cfe51f1efa2aeae200623ab07a9be15c073e0d07bb47b9da9c9fc38fd0"
     },
     "E-04": {

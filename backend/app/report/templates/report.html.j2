@@ -11,7 +11,7 @@
   * { box-sizing: border-box; }
   body { font-family: Inter, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 9.5pt; line-height: 1.5; margin: 0; }
   .mono { font-family: 'IBM Plex Mono', Menlo, monospace; }
-  .eyebrow { font-size: 7.5pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #5F5F5A; margin-bottom: 6px; }
+  .eyebrow { font-size: 7.5pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #5F5F5A; margin-bottom: 6px; page-break-after: avoid; break-after: avoid; }
   header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 2px solid #111; margin-bottom: 18px; }
   .logo { display: flex; align-items: center; gap: 8px; }
   .meta { text-align: right; font-size: 8pt; color: #5F5F5A; line-height: 1.6; }
@@ -25,6 +25,7 @@
   .bar i { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: #111; }
   .verdict .bar { background: #333; } .verdict .bar i { background: #FFD23F; }
   table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  tr { page-break-inside: avoid; }
   th { text-align: left; font-size: 7pt; letter-spacing: .08em; text-transform: uppercase; color: #5F5F5A; background: #F7F7F5; padding: 6px 8px; }
   td { padding: 6px 8px; border-top: 1px solid #EFEFEB; vertical-align: top; }
   .finding { display: grid; grid-template-columns: 110px 1fr 140px; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EFEFEB; page-break-inside: avoid; }
@@ -34,7 +35,8 @@
   .tag { font-size: 7.5pt; font-weight: 700; padding: 1px 7px; border-radius: 999px; border: 1px solid #E8E8E4; white-space: nowrap; }
   .cmd { background: #F7F7F5; border: 1px solid #E8E8E4; border-radius: 8px; padding: 10px 12px; font-size: 8pt; word-break: break-all; }
   ul { margin: 0; padding-left: 16px; } li { margin-bottom: 3px; }
-  footer { margin-top: 20px; padding-top: 10px; border-top: 2px solid #111; display: flex; justify-content: space-between; font-size: 8pt; }
+  footer { margin-top: 20px; padding-top: 10px; border-top: 2px solid #111; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 8pt; }
+  footer span:first-child { flex-basis: 100%; overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
@@ -54,12 +56,16 @@
 {% set dfc = {'deepfake': '#D64545', 'authentic': '#3E9B5F'}.get(r.deepfake.key, '#8A8A85') %}
 <section style="border:1px solid #DDD;border-left:5px solid {{ dfc }};border-radius:10px;padding:12px 16px;display:grid;grid-template-columns:1fr 1.4fr;gap:16px">
   <div>
-    <div class="eyebrow">Deepfake assessment</div>
+    <div class="eyebrow">AI-generation assessment</div>
     <div class="vlabel" style="color:{{ dfc }}">{{ r.deepfake.label }} · <span class="mono">{{ (r.deepfake.p*100)|round|int }}%</span></div>
-    <div class="muted mono" style="font-size:8pt">range {{ (r.deepfake.lo*100)|round|int }}–{{ (r.deepfake.hi*100)|round|int }}%{% if r.deepfake.driver %} · decided by {{ r.deepfake.driver }}{% endif %}</div>
+    <div class="muted mono" style="font-size:8pt">range {{ (r.deepfake.lo*100)|round|int }}–{{ (r.deepfake.hi*100)|round|int }}%{% if r.deepfake.driver %} · highest estimate: {{ r.deepfake.driver }}{% endif %}</div>
   </div>
-  <p style="margin:0;color:#333"><b>Based on:</b> {{ r.deepfake.why }}. "Deepfake" here means AI-generated or manipulated. Likely deepfake needs 65% or more with the low end at 50% or more; likely authentic needs 35% or less with the high end at 50% or less; anything else is uncertain. Detectors can miss generators they were not trained on.</p>
+  <p style="margin:0;color:#333"><b>Based on:</b> {{ r.deepfake.why }}. This estimate uses the AI-generation detector only. A low AI score does not rule out editing or misleading context. Likely deepfake needs 65% or more with the low end at 50% or more; likely authentic needs 35% or less with the high end at 50% or less; anything else is uncertain. Detectors can misclassify authentic content or miss unfamiliar generators. This is a lead for human review, not proof.</p>
 </section>
+{% endif %}
+
+{% if r.deepfake and r.deepfake.p is none %}
+<section><div class="eyebrow">AI-generation assessment</div><p><b>{{ r.deepfake.label }}</b> — {{ r.deepfake.why }}.</p></section>
 {% endif %}
 
 <section class="verdict">
@@ -76,11 +82,11 @@
 <section>
   <div class="eyebrow">Evidence</div>
   <table>
-    <tr><th>Item</th><th>File</th><th>Type</th><th>Verdict</th><th>Deepfake</th><th>SHA-256</th></tr>
+    <tr><th>Item</th><th>File</th><th>Type</th><th>Verdict</th><th>AI estimate</th><th>SHA-256</th></tr>
     {% for e in r.evidence %}
     <tr><td class="mono">{{ e.label }}</td><td><b>{{ e.name }}</b><br><span class="muted">{{ e.meta }}{% if e.derived_from %} · derived from {{ e.derived_from }}{% endif %}</span></td><td>{{ e.type }}</td>
       <td>{% if e.verdict %}<span class="dot" style="background:{{ dots.get(e.verdict.band) }}"></span> {{ e.verdict.label }}{% else %}—{% endif %}</td>
-      <td>{% if e.deepfake and e.deepfake.p is not none %}{{ e.deepfake.label }} <span class="mono">{{ (e.deepfake.p*100)|round|int }}%</span>{% else %}—{% endif %}</td>
+      <td>{% if e.deepfake and e.deepfake.p is not none %}{{ e.deepfake.label }}<br><span class="mono">AI {{ (e.deepfake.p*100)|round|int }}%</span>{% else %}—{% endif %}</td>
       <td class="mono" style="font-size:7pt;word-break:break-all">{{ e.sha256 }}</td></tr>
     {% endfor %}
   </table>
@@ -109,6 +115,17 @@
   <p class="muted">No analyzer produced a finding above its threshold.</p>
   {% endfor %}
 </section>
+
+{% if r.source_context %}
+<section>
+  <div class="eyebrow">Original text and evidence context</div>
+  {% for source in r.source_context %}
+  <div style="margin-bottom:10px"><b>{{ source.evidence }} · {{ source.name }}</b>
+    <div style="white-space:pre-wrap;overflow-wrap:anywhere;background:#F7F7F5;padding:10px;border:1px solid #E8E8E4">{{ source.text }}</div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
 
 {% if r.claims %}
 <section>
@@ -155,6 +172,33 @@
   </table>
   <p class="muted" style="margin:6px 0 0">Reviewed by {{ r.case.investigator }}. Open findings are listed but carry no reviewer decision.</p>
 </section>
+
+{% if r.analysis %}
+<section>
+  <div class="eyebrow">Analysis coverage and model provenance</div>
+  <p>Run {{ r.analysis.run_count }} · job {{ r.analysis.job_id or 'unavailable' }} · {{ r.analysis.status }}.
+    Started {{ r.analysis.started_at or 'unavailable' }}; finished {{ r.analysis.finished_at or 'unavailable' }}.</p>
+  <table><thead><tr><th>Evidence</th><th>Completed methods</th><th>Skipped / failed</th></tr></thead><tbody>
+  {% for item in r.analysis.steps %}
+    <tr><td>{{ item.evidence }}</td><td>{% for step in item.steps if step.status == 'done' %}{{ step.label }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
+    <td>{% for step in item.steps if step.status != 'done' %}{{ step.label }}: {{ step.status }}{% if not loop.last %}; {% endif %}{% endfor %}</td></tr>
+  {% endfor %}</tbody></table>
+  <p><b>AI checkpoints:</b> {% for evidence, models in r.analysis.ai_models.items() %}{{ evidence }}: {{ models|join(', ') or 'no detector result' }}{% if not loop.last %}; {% endif %}{% endfor %}</p>
+  <p class="muted" style="font-size:7.5pt">Tool versions: {% for tool, version in r.analysis.tool_versions.items() %}{{ tool }} {{ version }}{% if not loop.last %}; {% endif %}{% endfor %}</p>
+</section>
+{% endif %}
+
+{% if r.analysis_history %}
+<section>
+  <div class="eyebrow">Analysis and custody history</div>
+  <p class="muted">{{ r.custody.snapshot }} Linked entry hashes and complete job logs are included in the JSON report.</p>
+  <table><thead><tr><th>Time (UTC)</th><th>Actor</th><th>Action / method</th><th>Entry hash</th></tr></thead><tbody>
+  {% for event in r.analysis_history %}
+    <tr><td class="mono" style="font-size:7pt">{{ event.ts[:19].replace('T', ' ') }}</td><td>{{ event.actor }}</td>
+      <td>{{ event.action }}<br><span class="muted">{{ event.tool }}</span></td><td class="mono" style="font-size:7pt">{{ short(event.entry_hash) }}</td></tr>
+  {% endfor %}</tbody></table>
+</section>
+{% endif %}
 
 <section>
   <div class="eyebrow">Rerun command</div>
